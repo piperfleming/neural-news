@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neural News</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: #f5f6fb;
+        color: #141824;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px 24px 64px;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: 600;
+      }
+
+      .brand-hero {
+        position: relative;
+        padding: 22px 24px;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #0f172a;
+      }
+
+      .brand-hero img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.25;
+      }
+
+      .brand {
+        position: relative;
+        z-index: 1;
+        font-weight: 800;
+        color: #12c76f;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 2.8rem;
+        font-family: "Segoe UI", "Arial", sans-serif;
+      }
+
+      .subtitle {
+        font-size: 1.05rem;
+        color: #4b5563;
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        background: #ffffff;
+        padding: 16px;
+        border-radius: 16px;
+        box-shadow: 0 12px 24px rgba(20, 24, 36, 0.08);
+      }
+
+      .filter-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .filter-button {
+        background: #eef1ff;
+        color: #2b3a9c;
+        border: 1px solid transparent;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .filter-button.active {
+        background: #4457ff;
+        color: #ffffff;
+        border-color: #4457ff;
+      }
+
+      .tag-hint {
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 16px 30px rgba(20, 24, 36, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #edf0ff;
+        object-fit: cover;
+      }
+
+      .hero-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .hero-images img {
+        width: 100%;
+        height: 180px;
+        border-radius: 16px;
+        object-fit: cover;
+        background: #e8ecff;
+      }
+
+      .org {
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      .title {
+        font-size: 1.1rem;
+        margin: 6px 0 0;
+      }
+
+      .summary {
+        color: #4b5563;
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        background: #f1f5ff;
+        color: #2b3a9c;
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .tag.featured {
+        background: #141824;
+        color: #ffffff;
+      }
+
+      .cta {
+        margin-top: auto;
+      }
+
+      .cta a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 14px;
+        background: #141824;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 40px 12px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="brand-hero">
+          <img src="https://www.xrtoday.com/wp-content/uploads/2024/11/The-Neural-Interface-and-Its-Evolving-Role-in-XR-XR-Today-News.jpg" alt="Neural News background" />
+          <span class="brand">Neural News</span>
+        </div>
+        <h1>Hi! What AI news are you looking for?</h1>
+        <div class="hero-images">
+          <!-- Replace this image URL with your AI/news visual -->
+          <img src="https://www.shrm.org/topics-tools/flagships/ai-hi/quick-hits-september-22/_jcr_content/_cq_featuredimage.coreimg.jpeg/1758225618080/istock-2215793124.jpeg" alt="second visual" />
+        </div>
+        <p class="subtitle">
+          Filter by tags to instantly refine the latest AI headlines.
+        </p>
+        <div class="filters">
+          <div id="filterButtons" class="filter-buttons"></div>
+          <span class="tag-hint">Tap a tag to filter the feed.</span>
+        </div>
+      </header>
+
+      <section>
+        <div id="feed" class="grid"></div>
+        <div id="emptyState" class="empty" hidden>
+          No articles found for those tags.
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const feed = document.getElementById("feed");
+      const emptyState = document.getElementById("emptyState");
+      const filterButtons = document.getElementById("filterButtons");
+
+      const filterOptions = [
+        { label: "All", tags: [] },
+        { label: "Research", tags: ["Research"] },
+        { label: "Policy", tags: ["Policy"] },
+        { label: "Models", tags: ["Models"] },
+        { label: "Companies", tags: ["Companies"] },
+        { label: "Hardware/Infrastructure", tags: ["Hardware", "Infrastructure"] },
+        { label: "Security/Misuse", tags: ["Security", "Misuse"] },
+      ];
+
+      const buildTagParams = (tags) =>
+        tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
+
+      const renderArticles = (articles) => {
+        feed.innerHTML = "";
+        if (!articles.length) {
+          emptyState.hidden = false;
+          return;
+        }
+        emptyState.hidden = true;
+
+        articles.forEach((article) => {
+          const card = document.createElement("article");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-header">
+              <!-- Replace logo_url in frontend.py with the publisher's logo URL -->
+              <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
+              <div>
+                <div class="org">${article.org}</div>
+                <h2 class="title">${article.title}</h2>
+              </div>
+            </div>
+            <p class="summary">${article.summary}</p>
+            <div class="meta">
+              <span>${article.date}</span>
+              <span>•</span>
+              <span>${article.author}</span>
+            </div>
+            <div class="tags">
+              ${article.tags
+                .map((tag) => {
+                  const lower = tag.toLowerCase();
+                  const isFeatured =
+                    lower === "reader favorite" || lower === "editors choice";
+                  const label = isFeatured ? `⭐ ${tag}` : tag;
+                  return `<span class="tag${isFeatured ? " featured" : ""}" data-tag="${tag}">${label}</span>`;
+                })
+                .join("")}
+            </div>
+            <div class="cta">
+              <a href="${article.url}" target="_blank" rel="noreferrer">Read article</a>
+            </div>
+          `;
+          feed.appendChild(card);
+        });
+
+        document.querySelectorAll(".tag").forEach((tagEl) => {
+          tagEl.addEventListener("click", () => {
+            setActiveFilter([tagEl.dataset.tag]);
+            fetchArticles([tagEl.dataset.tag]);
+          });
+        });
+      };
+
+      const fetchArticles = async (tags = []) => {
+        const response = await fetch(`/api/articles${buildTagParams(tags)}`);
+        const data = await response.json();
+        renderArticles(data.articles);
+      };
+
+      const setActiveFilter = (tags) => {
+        const normalized = tags.map((tag) => tag.toLowerCase());
+        document.querySelectorAll(".filter-button").forEach((button) => {
+          const buttonTags = button.dataset.tags
+            ? button.dataset.tags.split("|")
+            : [];
+          const isActive =
+            buttonTags.length === 0
+              ? normalized.length === 0
+              : buttonTags.every((tag) => normalized.includes(tag));
+          button.classList.toggle("active", isActive);
+        });
+      };
+
+      const buildFilterButtons = () => {
+        filterButtons.innerHTML = "";
+        filterOptions.forEach((option) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "filter-button";
+          button.textContent = option.label;
+          button.dataset.tags = option.tags.join("|");
+          button.addEventListener("click", () => {
+            setActiveFilter(option.tags);
+            fetchArticles(option.tags);
+          });
+          filterButtons.appendChild(button);
+        });
+      };
+
+      buildFilterButtons();
+      setActiveFilter([]);
+      fetchArticles([]);
+    </script>
+  </body>
+</html>
