@@ -1,0 +1,15 @@
+# FastAPI + server
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
+# Database
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.30.0
+
+# Config & validation
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+
+# Optional: migrations (uncomment when using alembic)
+# alembic>=1.13.0
