@@ -87,6 +87,18 @@
         gap: 10px;
       }
 
+      .profile-button {
+        margin-left: auto;
+        background: #1f9d55;
+        color: #ffffff;
+        border: none;
+        padding: 9px 16px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
       .filter-button {
         background: #e1f3e6;
         color: #1a6a3a;
@@ -220,6 +232,90 @@
         padding: 40px 12px;
         color: #567563;
       }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 31, 20, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 100;
+      }
+
+      .modal.open {
+        display: flex;
+      }
+
+      .modal-card {
+        width: min(520px, 100%);
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 40px rgba(14, 36, 22, 0.2);
+      }
+
+      .modal-card h2 {
+        margin: 0 0 8px;
+        font-size: 1.3rem;
+        color: #0f1f14;
+      }
+
+      .modal-card p {
+        margin: 0 0 16px;
+        color: #4b6b57;
+      }
+
+      .form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .form-row label {
+        font-weight: 600;
+        color: #1a6a3a;
+      }
+
+      .form-row select,
+      .form-row input[type="text"] {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #cfe4d4;
+        font-size: 0.95rem;
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 8px 12px;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .modal-actions button {
+        padding: 9px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .modal-actions .secondary {
+        background: #e1f3e6;
+        color: #1a6a3a;
+      }
+
+      .modal-actions .primary {
+        background: #1f9d55;
+        color: #ffffff;
+      }
     </style>
   </head>
   <body>
@@ -239,8 +335,49 @@
         <div class="filters">
           <div id="filterButtons" class="filter-buttons"></div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
+          <button id="openProfile" class="profile-button" type="button">
+            Personalize feed
+          </button>
         </div>
       </header>
+
+      <div id="profileModal" class="modal" aria-hidden="true">
+        <div class="modal-card">
+          <h2>Tell us about you</h2>
+          <p>We will match articles to your role and AI needs.</p>
+          <form id="profileForm">
+            <div class="form-row">
+              <label for="jobSelect">Your job or role</label>
+              <select id="jobSelect" required>
+                <option value="">Select one...</option>
+                <option value="Founder">Founder / Executive</option>
+                <option value="Engineer">Engineer / Developer</option>
+                <option value="Researcher">Researcher</option>
+                <option value="Policy">Policy / Legal</option>
+                <option value="Security">Security</option>
+                <option value="Product">Product / Design</option>
+                <option value="Marketing">Marketing / Sales</option>
+                <option value="Educator">Educator</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>AI needs</label>
+              <div class="checkbox-grid">
+                <label><input type="checkbox" value="Governance" /> Governance & policy</label>
+                <label><input type="checkbox" value="Models" /> Model updates</label>
+                <label><input type="checkbox" value="Security" /> Security & misuse</label>
+                <label><input type="checkbox" value="Infrastructure" /> Hardware & infrastructure</label>
+                <label><input type="checkbox" value="Research" /> Research insights</label>
+                <label><input type="checkbox" value="Companies" /> Company moves</label>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" id="closeProfile" class="secondary">Cancel</button>
+              <button type="submit" class="primary">Apply filters</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <section>
         <div id="feed" class="grid"></div>
@@ -254,6 +391,11 @@
       const feed = document.getElementById("feed");
       const emptyState = document.getElementById("emptyState");
       const filterButtons = document.getElementById("filterButtons");
+      const profileModal = document.getElementById("profileModal");
+      const openProfile = document.getElementById("openProfile");
+      const closeProfile = document.getElementById("closeProfile");
+      const profileForm = document.getElementById("profileForm");
+      const jobSelect = document.getElementById("jobSelect");
 
       const filterOptions = [
         { label: "All", tags: [] },
@@ -340,6 +482,11 @@
         });
       };
 
+      const applyProfileFilter = (tags) => {
+        setActiveFilter([]);
+        fetchArticles(tags);
+      };
+
       const buildFilterButtons = () => {
         filterButtons.innerHTML = "";
         filterOptions.forEach((option) => {
@@ -355,6 +502,60 @@
           filterButtons.appendChild(button);
         });
       };
+
+      const roleTagMap = {
+        Founder: ["Companies", "Policy"],
+        Engineer: ["Models", "Hardware", "Infrastructure"],
+        Researcher: ["Research", "Models"],
+        Policy: ["Policy"],
+        Security: ["Security", "Misuse"],
+        Product: ["Models", "Companies"],
+        Marketing: ["Companies"],
+        Educator: ["Research"],
+      };
+
+      const needTagMap = {
+        Governance: ["Policy"],
+        Models: ["Models"],
+        Security: ["Security", "Misuse"],
+        Infrastructure: ["Hardware", "Infrastructure"],
+        Research: ["Research"],
+        Companies: ["Companies"],
+      };
+
+      const openModal = () => {
+        profileModal.classList.add("open");
+        profileModal.setAttribute("aria-hidden", "false");
+      };
+
+      const closeModal = () => {
+        profileModal.classList.remove("open");
+        profileModal.setAttribute("aria-hidden", "true");
+      };
+
+      openProfile.addEventListener("click", openModal);
+      closeProfile.addEventListener("click", closeModal);
+      profileModal.addEventListener("click", (event) => {
+        if (event.target === profileModal) {
+          closeModal();
+        }
+      });
+
+      profileForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const tags = new Set();
+        const role = jobSelect.value;
+        (roleTagMap[role] || []).forEach((tag) => tags.add(tag));
+
+        profileForm
+          .querySelectorAll('input[type="checkbox"]:checked')
+          .forEach((input) => {
+            (needTagMap[input.value] || []).forEach((tag) => tags.add(tag));
+          });
+
+        applyProfileFilter(Array.from(tags));
+        closeModal();
+      });
 
       buildFilterButtons();
       setActiveFilter([]);
