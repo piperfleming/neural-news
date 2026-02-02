@@ -36,25 +36,26 @@
       }
 
       .brand-hero {
-        position: relative;
-        padding: 22px 24px;
-        border-radius: 18px;
-        overflow: hidden;
-        background: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
 
-      .brand-hero img {
-        position: absolute;
-        inset: 0;
+      .brand-logo {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        background: transparent;
+      }
+
+      .brand-background img {
         width: 100%;
-        height: 100%;
+        height: 180px;
+        border-radius: 16px;
         object-fit: cover;
-        opacity: 0.25;
       }
 
       .brand {
-        position: relative;
-        z-index: 1;
         font-weight: 800;
         color: #12c76f;
         letter-spacing: 2px;
@@ -224,14 +225,13 @@
     <div class="container">
       <header>
         <div class="brand-hero">
-          <img src="https://www.xrtoday.com/wp-content/uploads/2024/11/The-Neural-Interface-and-Its-Evolving-Role-in-XR-XR-Today-News.jpg" alt="Neural News background" />
+          <img class="brand-logo" src="n2%20logo.png" alt="Neural News logo" />
           <span class="brand">Neural News</span>
         </div>
-        <h1>Hi! What AI news are you looking for?</h1>
-        <div class="hero-images">
-          <!-- Replace this image URL with your AI/news visual -->
-          <img src="https://www.shrm.org/topics-tools/flagships/ai-hi/quick-hits-september-22/_jcr_content/_cq_featuredimage.coreimg.jpeg/1758225618080/istock-2215793124.jpeg" alt="second visual" />
+        <div class="brand-background">
+          <img src="https://www.xrtoday.com/wp-content/uploads/2024/11/The-Neural-Interface-and-Its-Evolving-Role-in-XR-XR-Today-News.jpg" alt="Neural News background" />
         </div>
+        <h1>Hi! What AI news are you looking for?</h1>
         <p class="subtitle">
           Filter by tags to instantly refine the latest AI headlines.
         </p>
