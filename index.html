@@ -8,13 +8,14 @@
       :root {
         color-scheme: light;
         font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-        background: #f5f6fb;
-        color: #141824;
+        background: #eef6ef;
+        color: #0f1f14;
       }
 
       body {
         margin: 0;
         padding: 32px 24px 64px;
+        background: #eef6ef;
       }
 
       .container {
@@ -36,27 +37,28 @@
       }
 
       .brand-hero {
-        position: relative;
-        padding: 22px 24px;
-        border-radius: 18px;
-        overflow: hidden;
-        background: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
 
-      .brand-hero img {
-        position: absolute;
-        inset: 0;
+      .brand-logo {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        background: transparent;
+      }
+
+      .brand-background img {
         width: 100%;
-        height: 100%;
+        height: 180px;
+        border-radius: 16px;
         object-fit: cover;
-        opacity: 0.25;
       }
 
       .brand {
-        position: relative;
-        z-index: 1;
         font-weight: 800;
-        color: #12c76f;
+        color: #1f9d55;
         letter-spacing: 2px;
         text-transform: uppercase;
         font-size: 2.8rem;
@@ -65,7 +67,7 @@
 
       .subtitle {
         font-size: 1.05rem;
-        color: #4b5563;
+        color: #3f5a4a;
       }
 
       .filters {
@@ -73,10 +75,10 @@
         flex-wrap: wrap;
         gap: 12px;
         align-items: center;
-        background: #ffffff;
+        background: #f7fbf7;
         padding: 16px;
         border-radius: 16px;
-        box-shadow: 0 12px 24px rgba(20, 24, 36, 0.08);
+        box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
       }
 
       .filter-buttons {
@@ -85,9 +87,21 @@
         gap: 10px;
       }
 
+      .profile-button {
+        margin-left: auto;
+        background: #1f9d55;
+        color: #ffffff;
+        border: none;
+        padding: 9px 16px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
       .filter-button {
-        background: #eef1ff;
-        color: #2b3a9c;
+        background: #e1f3e6;
+        color: #1a6a3a;
         border: 1px solid transparent;
         padding: 8px 14px;
         border-radius: 999px;
@@ -97,14 +111,14 @@
       }
 
       .filter-button.active {
-        background: #4457ff;
+        background: #1f9d55;
         color: #ffffff;
-        border-color: #4457ff;
+        border-color: #1f9d55;
       }
 
       .tag-hint {
         font-size: 0.85rem;
-        color: #6b7280;
+        color: #4b6b57;
       }
 
       .grid {
@@ -117,7 +131,7 @@
         background: #ffffff;
         border-radius: 18px;
         padding: 20px;
-        box-shadow: 0 16px 30px rgba(20, 24, 36, 0.08);
+        box-shadow: 0 16px 30px rgba(14, 36, 22, 0.08);
         display: flex;
         flex-direction: column;
         gap: 14px;
@@ -163,7 +177,7 @@
       }
 
       .summary {
-        color: #4b5563;
+        color: #3f5a4a;
         font-size: 0.95rem;
         line-height: 1.4;
       }
@@ -173,7 +187,7 @@
         flex-wrap: wrap;
         gap: 10px;
         font-size: 0.85rem;
-        color: #6b7280;
+        color: #567563;
       }
 
       .tags {
@@ -183,8 +197,8 @@
       }
 
       .tag {
-        background: #f1f5ff;
-        color: #2b3a9c;
+        background: #e1f3e6;
+        color: #1a6a3a;
         font-size: 0.8rem;
         padding: 4px 10px;
         border-radius: 999px;
@@ -192,7 +206,7 @@
       }
 
       .tag.featured {
-        background: #141824;
+        background: #0f1f14;
         color: #ffffff;
       }
 
@@ -205,7 +219,7 @@
         align-items: center;
         justify-content: center;
         padding: 9px 14px;
-        background: #141824;
+        background: #1f9d55;
         color: #ffffff;
         text-decoration: none;
         border-radius: 10px;
@@ -216,7 +230,91 @@
       .empty {
         text-align: center;
         padding: 40px 12px;
-        color: #6b7280;
+        color: #567563;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 31, 20, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 100;
+      }
+
+      .modal.open {
+        display: flex;
+      }
+
+      .modal-card {
+        width: min(520px, 100%);
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 40px rgba(14, 36, 22, 0.2);
+      }
+
+      .modal-card h2 {
+        margin: 0 0 8px;
+        font-size: 1.3rem;
+        color: #0f1f14;
+      }
+
+      .modal-card p {
+        margin: 0 0 16px;
+        color: #4b6b57;
+      }
+
+      .form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .form-row label {
+        font-weight: 600;
+        color: #1a6a3a;
+      }
+
+      .form-row select,
+      .form-row input[type="text"] {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #cfe4d4;
+        font-size: 0.95rem;
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 8px 12px;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .modal-actions button {
+        padding: 9px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .modal-actions .secondary {
+        background: #e1f3e6;
+        color: #1a6a3a;
+      }
+
+      .modal-actions .primary {
+        background: #1f9d55;
+        color: #ffffff;
       }
     </style>
   </head>
@@ -224,22 +322,62 @@
     <div class="container">
       <header>
         <div class="brand-hero">
-          <img src="https://www.xrtoday.com/wp-content/uploads/2024/11/The-Neural-Interface-and-Its-Evolving-Role-in-XR-XR-Today-News.jpg" alt="Neural News background" />
+          <img class="brand-logo" src="n2%20logo.png" alt="Neural News logo" />
           <span class="brand">Neural News</span>
         </div>
-        <h1>Hi! What AI news are you looking for?</h1>
-        <div class="hero-images">
-          <!-- Replace this image URL with your AI/news visual -->
-          <img src="https://www.shrm.org/topics-tools/flagships/ai-hi/quick-hits-september-22/_jcr_content/_cq_featuredimage.coreimg.jpeg/1758225618080/istock-2215793124.jpeg" alt="second visual" />
+        <div class="brand-background">
+          <img src="https://www.xrtoday.com/wp-content/uploads/2024/11/The-Neural-Interface-and-Its-Evolving-Role-in-XR-XR-Today-News.jpg" alt="Neural News background" />
         </div>
+        <h1>Hi! What AI news are you looking for?</h1>
         <p class="subtitle">
           Filter by tags to instantly refine the latest AI headlines.
         </p>
         <div class="filters">
           <div id="filterButtons" class="filter-buttons"></div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
+          <button id="openProfile" class="profile-button" type="button">
+            Personalize feed
+          </button>
         </div>
       </header>
+
+      <div id="profileModal" class="modal" aria-hidden="true">
+        <div class="modal-card">
+          <h2>Tell us about you</h2>
+          <p>We will match articles to your role and AI needs.</p>
+          <form id="profileForm">
+            <div class="form-row">
+              <label for="jobSelect">Your job or role</label>
+              <select id="jobSelect" required>
+                <option value="">Select one...</option>
+                <option value="Founder">Founder / Executive</option>
+                <option value="Engineer">Engineer / Developer</option>
+                <option value="Researcher">Researcher</option>
+                <option value="Policy">Policy / Legal</option>
+                <option value="Security">Security</option>
+                <option value="Product">Product / Design</option>
+                <option value="Marketing">Marketing / Sales</option>
+                <option value="Educator">Educator</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>AI needs</label>
+              <div class="checkbox-grid">
+                <label><input type="checkbox" value="Governance" /> Governance & policy</label>
+                <label><input type="checkbox" value="Models" /> Model updates</label>
+                <label><input type="checkbox" value="Security" /> Security & misuse</label>
+                <label><input type="checkbox" value="Infrastructure" /> Hardware & infrastructure</label>
+                <label><input type="checkbox" value="Research" /> Research insights</label>
+                <label><input type="checkbox" value="Companies" /> Company moves</label>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" id="closeProfile" class="secondary">Cancel</button>
+              <button type="submit" class="primary">Apply filters</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <section>
         <div id="feed" class="grid"></div>
@@ -253,6 +391,11 @@
       const feed = document.getElementById("feed");
       const emptyState = document.getElementById("emptyState");
       const filterButtons = document.getElementById("filterButtons");
+      const profileModal = document.getElementById("profileModal");
+      const openProfile = document.getElementById("openProfile");
+      const closeProfile = document.getElementById("closeProfile");
+      const profileForm = document.getElementById("profileForm");
+      const jobSelect = document.getElementById("jobSelect");
 
       const filterOptions = [
         { label: "All", tags: [] },
@@ -339,6 +482,11 @@
         });
       };
 
+      const applyProfileFilter = (tags) => {
+        setActiveFilter([]);
+        fetchArticles(tags);
+      };
+
       const buildFilterButtons = () => {
         filterButtons.innerHTML = "";
         filterOptions.forEach((option) => {
@@ -354,6 +502,60 @@
           filterButtons.appendChild(button);
         });
       };
+
+      const roleTagMap = {
+        Founder: ["Companies", "Policy"],
+        Engineer: ["Models", "Hardware", "Infrastructure"],
+        Researcher: ["Research", "Models"],
+        Policy: ["Policy"],
+        Security: ["Security", "Misuse"],
+        Product: ["Models", "Companies"],
+        Marketing: ["Companies"],
+        Educator: ["Research"],
+      };
+
+      const needTagMap = {
+        Governance: ["Policy"],
+        Models: ["Models"],
+        Security: ["Security", "Misuse"],
+        Infrastructure: ["Hardware", "Infrastructure"],
+        Research: ["Research"],
+        Companies: ["Companies"],
+      };
+
+      const openModal = () => {
+        profileModal.classList.add("open");
+        profileModal.setAttribute("aria-hidden", "false");
+      };
+
+      const closeModal = () => {
+        profileModal.classList.remove("open");
+        profileModal.setAttribute("aria-hidden", "true");
+      };
+
+      openProfile.addEventListener("click", openModal);
+      closeProfile.addEventListener("click", closeModal);
+      profileModal.addEventListener("click", (event) => {
+        if (event.target === profileModal) {
+          closeModal();
+        }
+      });
+
+      profileForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const tags = new Set();
+        const role = jobSelect.value;
+        (roleTagMap[role] || []).forEach((tag) => tags.add(tag));
+
+        profileForm
+          .querySelectorAll('input[type="checkbox"]:checked')
+          .forEach((input) => {
+            (needTagMap[input.value] || []).forEach((tag) => tags.add(tag));
+          });
+
+        applyProfileFilter(Array.from(tags));
+        closeModal();
+      });
 
       buildFilterButtons();
       setActiveFilter([]);
