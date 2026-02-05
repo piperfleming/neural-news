@@ -1,13 +1,19 @@
 """FastAPI application entrypoint."""
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import init_db
 
 from app.routers import articles
+
+# Project root is one level above backend/
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 @asynccontextmanager
@@ -32,9 +38,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(articles.router, prefix="/articles", tags=["articles"])
+app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 
 
 @app.get("/")
 async def root():
-    return {"message": "Team 15 API", "docs": "/docs"}
+    """Serve the frontend."""
+    return FileResponse(PROJECT_ROOT / "index.html")
+
+
+# Serve only the static/ directory (logo, assets) — not the whole project root
+app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")
