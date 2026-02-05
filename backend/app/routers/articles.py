@@ -1,5 +1,5 @@
 """CRUD endpoints for news articles."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,11 +10,27 @@ from app.schemas.article import ArticleCreate, ArticleUpdate, ArticleResponse
 router = APIRouter()
 
 
-@router.get("", response_model=list[ArticleResponse])
-async def list_articles(db: AsyncSession = Depends(get_db)):
-    """Return all news articles."""
-    result = await db.execute(select(Article))
-    return result.scalars().all()
+@router.get("")
+async def list_articles(
+    db: AsyncSession = Depends(get_db),
+    tags: str | None = Query(None, description="Comma-separated tags to filter by"),
+):
+    """Return all news articles, optionally filtered by tags.
+
+    Uses OR logic: articles matching ANY of the requested tags are returned.
+    Response format: {"count": N, "articles": [...]}
+    """
+    query = select(Article)
+
+    if tags:
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        # overlap = OR logic: return articles that have ANY of the requested tags
+        query = query.where(Article.tags.overlap(tag_list))
+
+    result = await db.execute(query)
+    rows = result.scalars().all()
+    articles = [ArticleResponse.model_validate(row).model_dump() for row in rows]
+    return {"count": len(articles), "articles": articles}
 
 
 @router.get("/{article_id}", response_model=ArticleResponse)
@@ -30,7 +46,7 @@ async def get_article(article_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("", response_model=ArticleResponse, status_code=201)
 async def create_article(article: ArticleCreate, db: AsyncSession = Depends(get_db)):
     """Create a new article."""
-    db_article = Article(title=article.title, content=article.content)
+    db_article = Article(**article.model_dump())
     db.add(db_article)
     await db.flush()
     await db.refresh(db_article)
@@ -47,10 +63,9 @@ async def update_article(
     if not db_article:
         raise HTTPException(status_code=404, detail="Article not found")
 
-    if article.title is not None:
-        db_article.title = article.title
-    if article.content is not None:
-        db_article.content = article.content
+    update_data = article.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_article, field, value)
 
     await db.flush()
     await db.refresh(db_article)
