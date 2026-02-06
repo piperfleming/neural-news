@@ -1,5 +1,7 @@
 """News article model aligned with frontend expectations."""
-from sqlalchemy import Column, Integer, Text, String
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, DateTime, Integer, Text, String, func
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from app.models.base import Base
@@ -20,3 +22,7 @@ class Article(Base):
     date = Column(String(20), nullable=False)
     author = Column(String(255), nullable=False)
     tags = Column(ARRAY(String), default=list, nullable=False)
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())

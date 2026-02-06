@@ -71,8 +71,8 @@ class ArticleUpdate(BaseModel):
     tags: list[str] | None = None
 
 
-class ArticleResponse(ArticleBase, ArticleDisplayMeta, ArticleFilterMeta, ArticleAIMeta):
-    """Full article response with all metadata."""
+class ArticleResponse(ArticleBase):
+    """Article response matching the current DB model."""
     id: int
     created_at: datetime
     updated_at: datetime
