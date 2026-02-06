@@ -71,10 +71,21 @@ class ArticleUpdate(BaseModel):
     tags: list[str] | None = None
 
 
+class ArticleIngestRequest(BaseModel):
+    """Schema for the URL ingest endpoint."""
+    url: str
+
+
 class ArticleResponse(ArticleBase):
     """Article response matching the current DB model."""
     id: int
     created_at: datetime
     updated_at: datetime
+
+    # AI-generated (nullable — older articles won't have these)
+    sentiment: str | None = None
+    sentiment_score: float | None = None
+    keywords: list[str] = []
+    bias_rating: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
