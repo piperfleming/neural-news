@@ -8,6 +8,7 @@ from app.models.base import Base
 class Article(Base):
     __tablename__ = "articles"
 
+    # Core fields
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(Text, nullable=False)
     content = Column(Text, nullable=False)
