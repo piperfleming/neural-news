@@ -34,13 +34,20 @@ GRANT ALL PRIVILEGES ON DATABASE parsley_db TO jack_admin;
 cp .env.example .env
 ```
 
-Edit `.env` with your database credentials:
+Edit `.env` with your database credentials and API keys:
 
 ```
 DATABASE_URL=postgresql+asyncpg://jack_admin:parsley194@localhost:5432/parsley_db
 APP_ENV=development
 DEBUG=true
+OPENAI_API_KEY=sk-your-api-key-here
 ```
+
+> **OpenAI API key:** Required for the article ingestion feature (AI-powered
+> summarisation, tagging, sentiment analysis). Get a key at
+> https://platform.openai.com/api-keys and paste it in place of
+> `sk-your-api-key-here`. The app will still start without a key, but the
+> "Add Article" feature on the front page will fail.
 
 ### 4. Seed the database
 
@@ -89,8 +96,11 @@ backend/
     │   └── article.py  — Article model
     ├── schemas/
     │   └── article.py  — Pydantic schemas (create, update, response)
-    └── routers/
-        └── articles.py — CRUD endpoints for /api/articles
+    ├── routers/
+    │   └── articles.py — CRUD + ingest endpoints for /api/articles
+    └── services/
+        ├── article_extractor.py — fetches & extracts article text from URLs
+        └── llm_service.py       — OpenAI integration (summary, tags, sentiment)
 ```
 
 Add new routers in `app/routers/` and include them in `app/main.py`.

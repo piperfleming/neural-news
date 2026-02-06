@@ -16,5 +16,8 @@ class Settings(BaseSettings):
     app_env: str = "development"
     debug: bool = True
 
+    # LLM
+    openai_api_key: str = ""
+
 
 settings = Settings()
