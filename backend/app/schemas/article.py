@@ -38,9 +38,17 @@ class ArticleAIMeta(BaseModel):
 # --- Main schemas ---
 
 class ArticleBase(BaseModel):
-    """Core article fields."""
+    """Fields the frontend needs to render an article card."""
     title: str
     content: str
+    url: str
+    org: str
+    org_initials: str
+    logo_url: str | None = None
+    summary: str
+    date: str
+    author: str
+    tags: list[str] = []
 
 
 class ArticleCreate(ArticleBase, ArticleDisplayMeta, ArticleFilterMeta):
@@ -53,22 +61,14 @@ class ArticleUpdate(BaseModel):
     # Core
     title: str | None = None
     content: str | None = None
-    # Display
-    author: str | None = None
-    source: str | None = None
-    source_url: str | None = None
-    image_url: str | None = None
-    published_at: datetime | None = None
-    # Filtering
-    tags: list[str] | None = None
-    category: str | None = None
-    region: str | None = None
-    # AI
+    url: str | None = None
+    org: str | None = None
+    org_initials: str | None = None
+    logo_url: str | None = None
     summary: str | None = None
-    sentiment: str | None = None
-    sentiment_score: float | None = None
-    keywords: list[str] | None = None
-    bias_rating: str | None = None
+    date: str | None = None
+    author: str | None = None
+    tags: list[str] | None = None
 
 
 class ArticleResponse(ArticleBase, ArticleDisplayMeta, ArticleFilterMeta, ArticleAIMeta):

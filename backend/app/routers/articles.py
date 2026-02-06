@@ -10,28 +10,27 @@ from app.schemas.article import ArticleCreate, ArticleUpdate, ArticleResponse
 router = APIRouter()
 
 
-@router.get("", response_model=list[ArticleResponse])
+@router.get("")
 async def list_articles(
     db: AsyncSession = Depends(get_db),
-    category: str | None = Query(None, description="Filter by category"),
-    tag: str | None = Query(None, description="Filter by tag"),
-    region: str | None = Query(None, description="Filter by region"),
-    sentiment: str | None = Query(None, description="Filter by sentiment"),
+    tags: str | None = Query(None, description="Comma-separated tags to filter by"),
 ):
-    """Return all news articles, optionally filtered."""
+    """Return all news articles, optionally filtered by tags.
+
+    Uses OR logic: articles matching ANY of the requested tags are returned.
+    Response format: {"count": N, "articles": [...]}
+    """
     query = select(Article)
 
-    if category:
-        query = query.where(Article.category == category)
-    if tag:
-        query = query.where(Article.tags.contains([tag]))
-    if region:
-        query = query.where(Article.region == region)
-    if sentiment:
-        query = query.where(Article.sentiment == sentiment)
+    if tags:
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        # overlap = OR logic: return articles that have ANY of the requested tags
+        query = query.where(Article.tags.overlap(tag_list))
 
     result = await db.execute(query)
-    return result.scalars().all()
+    rows = result.scalars().all()
+    articles = [ArticleResponse.model_validate(row).model_dump() for row in rows]
+    return {"count": len(articles), "articles": articles}
 
 
 @router.get("/{article_id}", response_model=ArticleResponse)
