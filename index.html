@@ -389,7 +389,7 @@
         <div class="brand-background">
           <img src="/static/home_banner.jpg" alt="Neural News background" />
         </div>
-        <h1>Hi! What AI news are you looking for?</h1>
+        <h1 id="greeting">Hi! What AI news are you looking for?</h1>
         <p class="subtitle">
           Filter by tags to instantly refine the latest AI headlines.
         </p>
@@ -408,9 +408,9 @@
         <div class="filters">
           <div id="filterButtons" class="filter-buttons"></div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
-          <button id="openProfile" class="profile-button" type="button">
-            Personalize feed
-          </button>
+          <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
+            Log In / Sign Up
+          </a>
         </div>
       </header>
 
@@ -465,7 +465,6 @@
       const emptyState = document.getElementById("emptyState");
       const filterButtons = document.getElementById("filterButtons");
       const profileModal = document.getElementById("profileModal");
-      const openProfile = document.getElementById("openProfile");
       const closeProfile = document.getElementById("closeProfile");
       const profileForm = document.getElementById("profileForm");
       const jobSelect = document.getElementById("jobSelect");
@@ -606,7 +605,6 @@
         profileModal.setAttribute("aria-hidden", "true");
       };
 
-      openProfile.addEventListener("click", openModal);
       closeProfile.addEventListener("click", closeModal);
       profileModal.addEventListener("click", (event) => {
         if (event.target === profileModal) {
@@ -684,6 +682,26 @@
           ingestBtn.textContent = "Add Article";
         }
       });
+
+      // --- Auth-aware personalization ---
+      const nnToken = localStorage.getItem("nn_token");
+      if (nnToken) {
+        fetch("/api/auth/me", {
+          headers: { "Authorization": `Bearer ${nnToken}` },
+        })
+          .then((res) => (res.ok ? res.json() : Promise.reject()))
+          .then((user) => {
+            const firstName = user.name.split(" ")[0];
+            document.getElementById("greeting").textContent =
+              `Hi, ${firstName}! What AI news are you looking for?`;
+            const link = document.getElementById("accountLink");
+            link.textContent = firstName;
+            link.title = "Your account";
+          })
+          .catch(() => {
+            localStorage.removeItem("nn_token");
+          });
+      }
 
       buildFilterButtons();
       setActiveFilter([]);

@@ -19,5 +19,9 @@ class Settings(BaseSettings):
     # LLM
     openai_api_key: str = ""
 
+    # Auth / JWT
+    jwt_secret_key: str = "change-me-in-production"
+    jwt_expiration_minutes: int = 1440  # 24 hours
+
 
 settings = Settings()

@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neural News - Account</title>
+    <style>
+      :root {
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: #eef6ef;
+        color: #0f1f14;
+      }
+      body { margin: 0; padding: 32px 24px 64px; }
+      .container { max-width: 480px; margin: 0 auto; }
+
+      .brand-hero { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+      .brand-logo { width: 56px; height: 56px; object-fit: contain; }
+      .brand { font-weight: 800; color: #1f9d55; letter-spacing: 2px; text-transform: uppercase; font-size: 2.2rem; }
+
+      .panel {
+        background: #fff;
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 16px 30px rgba(14, 36, 22, 0.08);
+        margin-bottom: 20px;
+      }
+      h2 { margin: 0 0 16px; font-size: 1.3rem; }
+      .tabs { display: flex; gap: 0; margin-bottom: 20px; }
+      .tab {
+        flex: 1; padding: 10px; text-align: center; font-weight: 600;
+        cursor: pointer; border: none; background: #e1f3e6; color: #1a6a3a; font-size: 0.95rem;
+      }
+      .tab:first-child { border-radius: 10px 0 0 10px; }
+      .tab:last-child { border-radius: 0 10px 10px 0; }
+      .tab.active { background: #1f9d55; color: #fff; }
+
+      .form-group { margin-bottom: 14px; }
+      .form-group label { display: block; font-weight: 600; color: #1a6a3a; margin-bottom: 6px; font-size: 0.9rem; }
+      .form-group input {
+        width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #cfe4d4;
+        font-size: 0.95rem; box-sizing: border-box; font-family: inherit;
+      }
+      .form-group input:focus { border-color: #1f9d55; outline: none; box-shadow: 0 0 0 3px rgba(31,157,85,0.15); }
+
+      .btn {
+        width: 100%; padding: 12px; border: none; border-radius: 10px;
+        background: #1f9d55; color: #fff; font-weight: 600; font-size: 1rem;
+        cursor: pointer; font-family: inherit; margin-top: 8px;
+      }
+      .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .btn-secondary { background: #e1f3e6; color: #1a6a3a; }
+
+      .alert { padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; margin-bottom: 14px; }
+      .alert-error { background: #fde8e8; color: #c0392b; }
+      .alert-success { background: #e1f3e6; color: #1a6a3a; }
+
+      .profile-field { margin-bottom: 12px; }
+      .profile-field .label { font-size: 0.8rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+      .profile-field .value { font-size: 1.05rem; font-weight: 500; margin-top: 2px; }
+
+      .tag-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+      .tag-chip {
+        padding: 8px 16px; border-radius: 999px; border: 2px solid #cfe4d4;
+        background: #f7fbf7; color: #1a6a3a; font-weight: 600; font-size: 0.85rem;
+        cursor: pointer; transition: all 0.15s;
+      }
+      .tag-chip.selected { background: #1f9d55; color: #fff; border-color: #1f9d55; }
+
+      .back-link { display: inline-block; margin-top: 16px; color: #1f9d55; font-weight: 600; text-decoration: none; font-size: 0.95rem; }
+
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="brand-hero">
+        <img class="brand-logo" src="/static/n2%20logo.png" alt="Neural News logo" />
+        <span class="brand">Neural News</span>
+      </div>
+
+      <!-- Auth Section (shown when logged out) -->
+      <div id="authSection">
+        <div class="panel">
+          <div class="tabs">
+            <button class="tab active" id="tabLogin" onclick="showTab('login')">Log In</button>
+            <button class="tab" id="tabRegister" onclick="showTab('register')">Sign Up</button>
+          </div>
+
+          <div id="authAlert" class="alert hidden"></div>
+
+          <!-- Login Form -->
+          <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label for="loginEmail">Email</label>
+              <input type="email" id="loginEmail" required placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="loginPassword">Password</label>
+              <input type="password" id="loginPassword" required placeholder="Min 8 characters" />
+            </div>
+            <button class="btn" type="submit">Log In</button>
+          </form>
+
+          <!-- Register Form -->
+          <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+            <div class="form-group">
+              <label for="regName">Name</label>
+              <input type="text" id="regName" required placeholder="Your name" />
+            </div>
+            <div class="form-group">
+              <label for="regEmail">Email</label>
+              <input type="email" id="regEmail" required placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="regPassword">Password</label>
+              <input type="password" id="regPassword" required minlength="8" placeholder="Min 8 characters" />
+            </div>
+            <div class="form-group">
+              <label>Pick your favorite topics (optional)</label>
+              <div class="tag-grid" id="regTags"></div>
+            </div>
+            <button class="btn" type="submit">Create Account</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Profile Section (shown when logged in) -->
+      <div id="profileSection" class="hidden">
+        <div class="panel">
+          <h2>Your Profile</h2>
+          <div class="profile-field">
+            <div class="label">Name</div>
+            <div class="value" id="profileName"></div>
+          </div>
+          <div class="profile-field">
+            <div class="label">Email</div>
+            <div class="value" id="profileEmail"></div>
+          </div>
+          <div class="profile-field">
+            <div class="label">Member since</div>
+            <div class="value" id="profileDate"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Your Topic Preferences</h2>
+          <p style="color: #4b6b57; margin: 0 0 12px; font-size: 0.95rem;">
+            Select topics you care about. Your feed will be personalized based on these.
+          </p>
+          <div id="prefAlert" class="alert hidden"></div>
+          <div class="tag-grid" id="prefTags"></div>
+          <button class="btn" style="margin-top: 16px;" onclick="savePreferences()">Save Preferences</button>
+        </div>
+
+        <button class="btn btn-secondary" onclick="logout()">Log Out</button>
+        <a class="back-link" href="/">&larr; Back to feed</a>
+      </div>
+    </div>
+
+    <script>
+      const API = window.location.origin;
+      const TAGS = ["Research", "Policy", "Models", "Companies", "Hardware", "Infrastructure", "Security", "Misuse"];
+      let token = localStorage.getItem("nn_token");
+
+      // --- Tab switching ---
+      function showTab(tab) {
+        document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
+        document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
+        document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+        document.getElementById("tabRegister").classList.toggle("active", tab === "register");
+        hideAlert("authAlert");
+      }
+
+      // --- Alerts ---
+      function showAlert(id, message, type) {
+        const el = document.getElementById(id);
+        el.className = `alert alert-${type}`;
+        el.textContent = message;
+        el.classList.remove("hidden");
+      }
+      function hideAlert(id) {
+        document.getElementById(id).classList.add("hidden");
+      }
+
+      // --- Auth API calls ---
+      async function handleRegister(e) {
+        e.preventDefault();
+        hideAlert("authAlert");
+
+        const selectedTags = [...document.querySelectorAll("#regTags .tag-chip.selected")].map(el => el.dataset.tag);
+        const body = {
+          name: document.getElementById("regName").value,
+          email: document.getElementById("regEmail").value,
+          password: document.getElementById("regPassword").value,
+          preferred_tags: selectedTags,
+        };
+
+        try {
+          const res = await fetch(`${API}/api/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Registration failed");
+
+          token = data.access_token;
+          localStorage.setItem("nn_token", token);
+          showAlert("authAlert", "Account created! Loading profile...", "success");
+          setTimeout(loadProfile, 500);
+        } catch (err) {
+          showAlert("authAlert", err.message, "error");
+        }
+      }
+
+      async function handleLogin(e) {
+        e.preventDefault();
+        hideAlert("authAlert");
+
+        const body = {
+          email: document.getElementById("loginEmail").value,
+          password: document.getElementById("loginPassword").value,
+        };
+
+        try {
+          const res = await fetch(`${API}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Login failed");
+
+          token = data.access_token;
+          localStorage.setItem("nn_token", token);
+          loadProfile();
+        } catch (err) {
+          showAlert("authAlert", err.message, "error");
+        }
+      }
+
+      function logout() {
+        token = null;
+        localStorage.removeItem("nn_token");
+        document.getElementById("authSection").classList.remove("hidden");
+        document.getElementById("profileSection").classList.add("hidden");
+      }
+
+      // --- Profile ---
+      async function loadProfile() {
+        try {
+          const res = await fetch(`${API}/api/auth/me`, {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) { logout(); return; }
+          const user = await res.json();
+
+          document.getElementById("profileName").textContent = user.name;
+          document.getElementById("profileEmail").textContent = user.email;
+          document.getElementById("profileDate").textContent = new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+          document.getElementById("authSection").classList.add("hidden");
+          document.getElementById("profileSection").classList.remove("hidden");
+
+          renderPrefTags(user.preferred_tags || []);
+        } catch {
+          logout();
+        }
+      }
+
+      // --- Preferences ---
+      function renderTagChips(containerId, selectedTags) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        TAGS.forEach(tag => {
+          const chip = document.createElement("span");
+          chip.className = `tag-chip${selectedTags.includes(tag) ? " selected" : ""}`;
+          chip.dataset.tag = tag;
+          chip.textContent = tag;
+          chip.onclick = () => chip.classList.toggle("selected");
+          container.appendChild(chip);
+        });
+      }
+
+      function renderPrefTags(selectedTags) {
+        renderTagChips("prefTags", selectedTags);
+      }
+
+      async function savePreferences() {
+        hideAlert("prefAlert");
+        const selectedTags = [...document.querySelectorAll("#prefTags .tag-chip.selected")].map(el => el.dataset.tag);
+
+        try {
+          const res = await fetch(`${API}/api/users/me`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({ preferred_tags: selectedTags }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Update failed");
+
+          showAlert("prefAlert", "Preferences saved!", "success");
+          renderPrefTags(data.preferred_tags || []);
+        } catch (err) {
+          showAlert("prefAlert", err.message, "error");
+        }
+      }
+
+      // --- Init ---
+      renderTagChips("regTags", []);
+      if (token) {
+        loadProfile();
+      }
+    </script>
+  </body>
+</html>

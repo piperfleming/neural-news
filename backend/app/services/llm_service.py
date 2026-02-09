@@ -6,21 +6,11 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 from app.config import settings
+from app.constants import VALID_TAGS
 
 logger = logging.getLogger(__name__)
 
 client = AsyncOpenAI(api_key=settings.openai_api_key)
-
-VALID_TAGS = [
-    "Research",
-    "Policy",
-    "Models",
-    "Companies",
-    "Hardware",
-    "Infrastructure",
-    "Security",
-    "Misuse",
-]
 
 SYSTEM_PROMPT = (
     "You are an AI news analyst. Analyze the given article and return a JSON object "

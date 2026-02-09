@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.config import settings
 from app.models.base import Base
-from app.models import Article  # noqa: F401 - register table with Base.metadata
+from app.models import Article, User  # noqa: F401 - register tables with Base.metadata
 
 engine = create_async_engine(
     settings.database_url,
