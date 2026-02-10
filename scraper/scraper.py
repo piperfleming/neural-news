@@ -8,13 +8,15 @@ backend handles extraction and LLM analysis on ingest.
 Topic categories match backend VALID_TAGS: Research, Policy, Models, Companies,
 Hardware, Infrastructure, Security, Misuse.
 
-Usage (from project root):
-  python scraper/scraper.py              # run once, ingest to BACKEND_URL
-  python -m scraper                      # same
-  python scraper/scraper.py --dry-run    # only print URLs, do not ingest
-  python scraper/scraper.py --schedule   # run once every 24 hours
+Usage (from scraper folder):
+  python scraper.py              # run once, ingest to BACKEND_URL
+  python scraper.py --dry-run    # only print URLs, do not ingest
+  python scraper.py --schedule   # run once every 24 hours
 
-Requires: pip install -r scraper/requirements.txt  (or: requests, duckduckgo-search)
+Requires (run from scraper folder):
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -r scraper/requirements.txt  (or: requests, duckduckgo-search)
 Environment: BACKEND_URL (default http://localhost:8000). Start the backend first.
 """
 
@@ -25,8 +27,8 @@ import sys
 import time
 from urllib.parse import urlparse
 
-import requests
-from duckduckgo_search import DDGS
+import requests 
+from ddgs import DDGS
 
 # Topic categories aligned with backend app.services.llm_service.VALID_TAGS
 # Search query = "Artificial intelligence" + topic (e.g. "Artificial intelligence research")
