@@ -34,13 +34,11 @@ from ddgs import DDGS
 # Search query = "Artificial intelligence" + topic (e.g. "Artificial intelligence research")
 TOPIC_CATEGORIES = [
     "Research",
-    "Policy",
-    "Models",
-    "Companies",
-    "Hardware",
-    "Infrastructure",
-    "Security",
-    "Misuse",
+    #"Policy",
+    #"Models",
+    #"Companies",
+    #"Hardware and Infrastructure",
+    #"Security and Misuse",
 ]
 
 BASE_QUERY = "Artificial intelligence"
