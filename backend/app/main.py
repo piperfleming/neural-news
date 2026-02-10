@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import init_db
 
-from app.routers import articles
+from app.routers import articles, auth, users
 
 # Project root is one level above backend/
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -39,12 +39,20 @@ app.add_middleware(
 )
 
 app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
 
 
 @app.get("/")
 async def root():
     """Serve the frontend."""
     return FileResponse(PROJECT_ROOT / "index.html")
+
+
+@app.get("/account")
+async def account_page():
+    """Serve the auth / account page."""
+    return FileResponse(PROJECT_ROOT / "auth.html")
 
 
 # Serve only the static/ directory (logo, assets) — not the whole project root
