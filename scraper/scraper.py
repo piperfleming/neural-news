@@ -34,11 +34,11 @@ from ddgs import DDGS
 # Search query = "Artificial intelligence" + topic (e.g. "Artificial intelligence research")
 TOPIC_CATEGORIES = [
     "Research",
-    #"Policy",
-    #"Models",
-    #"Companies",
-    #"Hardware and Infrastructure",
-    #"Security and Misuse",
+    "Policy",
+    "Models",
+    "Companies",
+    "Hardware and Infrastructure",
+    "Security and Misuse",
 ]
 
 BASE_QUERY = "Artificial intelligence"
@@ -138,7 +138,7 @@ def run(dry_run: bool, backend_url: str) -> None:
     for url in all_urls:
         if ingest_url(backend_url, url):
             ingested += 1
-    logger.info("Ingested %d new articles (%d duplicates skipped)", ingested, len(all_urls) - ingested)
+    logger.info("Ingested %d new articles (%d duplicates/invalid URLs skipped)", ingested, len(all_urls) - ingested)
 
 
 def main() -> None:
