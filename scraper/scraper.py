@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Daily scraper: runs "Artificial intelligence" + each topic category search,
-collects top 10 URLs per query, deduplicates, and ingests them into the backend
-via POST /api/articles/ingest. No changes to tagging or summarization — the
-backend handles extraction and LLM analysis on ingest.
+Daily scraper: runs "Artificial intelligence" + each topic category search
+using news-only search, collects top 10 article URLs per query, deduplicates,
+and ingests them into the backend via POST /api/articles/ingest. No changes
+to tagging or summarization — the backend handles extraction and LLM analysis.
 
 Topic categories match backend VALID_TAGS: Research, Policy, Models, Companies,
 Hardware, Infrastructure, Security, Misuse.
@@ -67,15 +67,15 @@ def normalize_url(url: str) -> str:
 
 
 def search_top_urls(query: str, max_results: int = MAX_RESULTS_PER_QUERY) -> list[str]:
-    """Return list of result URLs for the given query (up to max_results)."""
+    """Return list of news article URLs for the given query (up to max_results). Uses news search only."""
     urls = []
     try:
         ddgs = DDGS()
-        results = ddgs.text(query, max_results=max_results)
+        results = ddgs.news(query, max_results=max_results)
         if results is None:
             return urls
         for r in (results if isinstance(results, list) else list(results)):
-            href = r.get("href") or r.get("link")
+            href = r.get("url") or r.get("href") or r.get("link")
             if href and href.startswith("http"):
                 urls.append(href)
     except Exception as e:
