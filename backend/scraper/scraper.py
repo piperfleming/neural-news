@@ -148,24 +148,13 @@ def main() -> None:
         help="Only run searches and print URLs; do not call backend ingest",
     )
     parser.add_argument(
-        "--schedule",
-        action="store_true",
-        help="Run once every 24 hours instead of once",
-    )
-    parser.add_argument(
         "--backend-url",
         default=os.environ.get("BACKEND_URL", DEFAULT_BACKEND_URL),
         help="Backend base URL (default: env BACKEND_URL or http://localhost:8000)",
     )
     args = parser.parse_args()
-
-    if args.schedule:
-        while True:
-            run(args.dry_run, args.backend_url)
-            logger.info("Sleeping 24 hours until next run.")
-            time.sleep(24 * 3600)
-    else:
-        run(args.dry_run, args.backend_url)
+    
+    run(args.dry_run, args.backend_url)
 
 
 if __name__ == "__main__":
