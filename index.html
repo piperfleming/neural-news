@@ -14,7 +14,7 @@
 
       body {
         margin: 0;
-        padding: 32px 24px 64px;
+        padding: 16px 16px 64px;
         background: #eef6ef;
       }
 
@@ -26,8 +26,8 @@
       header {
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        margin-bottom: 32px;
+        gap: 6px;
+        margin-bottom: 16px;
       }
 
       h1 {
@@ -54,14 +54,15 @@
       .brand-hero {
         display: flex;
         align-items: center;
-        gap: 16px;
+        margin: -4px 0 8px 16px;
       }
 
       .brand-logo {
-        width: 56px;
         height: 56px;
+        width: auto;
         object-fit: contain;
         background: transparent;
+        display: block;
       }
 
       .brand-background {
@@ -422,8 +423,7 @@
     <div class="container">
       <header>
         <div class="brand-hero">
-          <img class="brand-logo" src="/static/n2%20logo.png" alt="Neural News logo" />
-          <span class="brand">Neural News</span>
+          <img class="brand-logo" src="/static/neural-news-logo.png?v=2" alt="N²eural News" />
         </div>
         <div class="brand-background">
           <img src="/static/home_banner.jpg" alt="Neural News background" />
