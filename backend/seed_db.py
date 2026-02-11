@@ -151,12 +151,34 @@ async def seed_articles(session: AsyncSession) -> None:
         print(f"  {i}. {a.title} ({', '.join(a.tags)})")
 
 
-async def main():
-    """Main seeding function."""
+async def main(force: bool = False):
+    """Main seeding function.
+
+    Args:
+        force: If True, skip the confirmation prompt (useful for CI / Docker).
+    """
     print("=" * 60)
     print("Neural News (N²) Database Seeder")
     print("=" * 60)
-    
+
+    from app.config import settings
+
+    db_url = settings.database_url
+    is_cloud = "localhost" not in db_url and "127.0.0.1" not in db_url
+
+    if is_cloud:
+        print("\n⚠️  WARNING: You are connected to a CLOUD database!")
+        print(f"   URL: {db_url[:40]}...")
+        print("   This will DROP ALL TABLES and delete all data.\n")
+    else:
+        print(f"\n📍 Target database: local ({db_url[:60]}...)")
+
+    if not force:
+        confirm = input("Type 'yes' to proceed, anything else to abort: ").strip().lower()
+        if confirm != "yes":
+            print("\n🚫 Aborted. No changes were made.")
+            sys.exit(0)
+
     try:
         # Drop and recreate the articles table so schema matches the model
         print("\n📊 Dropping old tables and recreating from model...")
@@ -184,4 +206,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    force_flag = "--force" in sys.argv or "-f" in sys.argv
+    asyncio.run(main(force=force_flag))

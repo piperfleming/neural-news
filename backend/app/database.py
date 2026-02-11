@@ -1,5 +1,7 @@
 """Async SQLAlchemy engine and session for Postgres."""
+import ssl
 from collections.abc import AsyncGenerator
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -7,10 +9,34 @@ from app.config import settings
 from app.models.base import Base
 from app.models import Article, User  # noqa: F401 - register tables with Base.metadata
 
+# ── Prepare the database URL and connect_args ────────────────────────
+# asyncpg does NOT understand libpq-specific query params like
+# `sslmode` and `channel_binding`. We strip them from the URL and
+# handle SSL ourselves via connect_args.
+
+_raw_url = settings.database_url
+_connect_args: dict = {}
+
+_needs_ssl = "sslmode=require" in _raw_url
+
+# Strip params that asyncpg can't handle
+_STRIP_PARAMS = {"sslmode", "channel_binding"}
+_parsed = urlparse(_raw_url)
+_qs = parse_qs(_parsed.query)
+_filtered_qs = {k: v for k, v in _qs.items() if k not in _STRIP_PARAMS}
+_clean_url = urlunparse(_parsed._replace(query=urlencode(_filtered_qs, doseq=True)))
+
+if _needs_ssl:
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    _connect_args["ssl"] = ssl_context
+
 engine = create_async_engine(
-    settings.database_url,
+    _clean_url,
     echo=settings.debug,
     future=True,
+    connect_args=_connect_args,
 )
 
 async_session_maker = async_sessionmaker(
