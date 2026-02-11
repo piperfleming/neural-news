@@ -1,3 +1,0 @@
-# Dependencies for the scraper (install from project root: pip install -r scraper/requirements.txt)
-requests>=2.28.0
-ddgs>=6.0.0

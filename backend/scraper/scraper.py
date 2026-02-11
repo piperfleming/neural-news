@@ -6,18 +6,15 @@ and ingests them into the backend via POST /api/articles/ingest. No changes
 to tagging or summarization — the backend handles extraction and LLM analysis.
 
 Topic categories match backend VALID_TAGS: Research, Policy, Models, Companies,
-Hardware, Infrastructure, Security, Misuse.
+Hardware & Infrastructure, Security & Misuse.
 
-Usage (from scraper folder):
-  python scraper.py              # run once, ingest to BACKEND_URL
-  python scraper.py --dry-run    # only print URLs, do not ingest
-  python scraper.py --schedule   # run once every 24 hours
+Usage (from backend folder):
+  python scraper/scraper.py              # run once, ingest to BACKEND_URL
+  python scraper/scraper.py --dry-run    # only print URLs, do not ingest
+  python scraper/scraper.py --schedule   # run once every 24 hours
 
-Requires (run from scraper folder):
-    python -m venv .venv
-    source .venv/bin/activate
-    pip install -r scraper/requirements.txt  (or: requests, duckduckgo-search)
-Environment: BACKEND_URL (default http://localhost:8000). Start the backend first.
+Environment: BACKEND_URL (default http://localhost:8000).
+Start the backend first and make sure dependencies are installed in virtualenv.
 """
 
 import argparse
