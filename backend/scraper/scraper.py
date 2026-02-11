@@ -11,7 +11,6 @@ Hardware & Infrastructure, Security & Misuse.
 Usage (from backend folder):
   python scraper/scraper.py              # run once, ingest to BACKEND_URL
   python scraper/scraper.py --dry-run    # only print URLs, do not ingest
-  python scraper/scraper.py --schedule   # run once every 24 hours
 
 Environment: BACKEND_URL (default http://localhost:8000).
 Start the backend first and make sure dependencies are installed in virtualenv.
@@ -21,7 +20,6 @@ import argparse
 import logging
 import os
 import sys
-import time
 from urllib.parse import urlparse
 
 import requests 
