@@ -239,6 +239,16 @@
         color: #ffffff;
       }
 
+      .tag.active {
+        background: #1f9d55;
+        color: #ffffff;
+      }
+
+      .tag.featured.active {
+        background: #1f9d55;
+        color: #ffffff;
+      }
+
       .cta {
         margin-top: auto;
       }
@@ -508,7 +518,7 @@
       const buildTagParams = (tags) =>
         tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
 
-      const renderArticles = (articles) => {
+      const renderArticles = (articles, activeFilterTags = []) => {
         feed.innerHTML = "";
         if (!articles.length) {
           emptyState.hidden = false;
@@ -540,8 +550,11 @@
                   const lower = tag.toLowerCase();
                   const isFeatured =
                     lower === "reader favorite" || lower === "editors choice";
+                  const isActive =
+                    activeFilterTags.length > 0 &&
+                    activeFilterTags.some((t) => t.toLowerCase() === lower);
                   const label = isFeatured ? `⭐ ${tag}` : tag;
-                  return `<span class="tag${isFeatured ? " featured" : ""}" data-tag="${tag}">${label}</span>`;
+                  return `<span class="tag${isFeatured ? " featured" : ""}${isActive ? " active" : ""}" data-tag="${tag}">${label}</span>`;
                 })
                 .join("")}
             </div>
@@ -563,7 +576,7 @@
       const fetchArticles = async (tags = []) => {
         const response = await fetch(`/api/articles${buildTagParams(tags)}`);
         const data = await response.json();
-        renderArticles(data.articles);
+        renderArticles(data.articles, tags);
       };
 
       const setActiveFilter = (tags) => {
@@ -575,7 +588,7 @@
           const isActive =
             buttonTags.length === 0
               ? normalized.length === 0
-              : buttonTags.every((tag) => normalized.includes(tag));
+              : buttonTags.every((tag) => normalized.includes(tag.toLowerCase()));
           button.classList.toggle("active", isActive);
         });
       };
