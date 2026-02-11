@@ -389,7 +389,7 @@
         <div class="brand-background">
           <img src="/static/home_banner.jpg" alt="Neural News background" />
         </div>
-        <h1 id="greeting">Hi! What AI news are you looking for?</h1>
+        <h1 id="greeting">Hello, what AI news are you looking for?</h1>
         <p class="subtitle">
           Filter by tags to instantly refine the latest AI headlines.
         </p>
@@ -693,7 +693,7 @@
           .then((user) => {
             const firstName = user.name.split(" ")[0];
             document.getElementById("greeting").textContent =
-              `Hi, ${firstName}! What AI news are you looking for?`;
+              `Hello, ${firstName}! What AI news are you looking for?`;
             const link = document.getElementById("accountLink");
             link.textContent = firstName;
             link.title = "Your account";
