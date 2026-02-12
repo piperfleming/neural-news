@@ -11,7 +11,7 @@
         color: #0f1f14;
       }
       body { margin: 0; padding: 32px 24px 64px; }
-      .container { max-width: 480px; margin: 0 auto; }
+      .container { max-width: 520px; margin: 0 auto; }
 
       .brand-hero { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
       .brand-logo { width: 56px; height: 56px; object-fit: contain; }
@@ -54,21 +54,208 @@
       .alert-error { background: #fde8e8; color: #c0392b; }
       .alert-success { background: #e1f3e6; color: #1a6a3a; }
 
-      .profile-field { margin-bottom: 12px; }
-      .profile-field .label { font-size: 0.8rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
-      .profile-field .value { font-size: 1.05rem; font-weight: 500; margin-top: 2px; }
-
-      .tag-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-      .tag-chip {
-        padding: 8px 16px; border-radius: 999px; border: 2px solid #cfe4d4;
-        background: #f7fbf7; color: #1a6a3a; font-weight: 600; font-size: 0.85rem;
-        cursor: pointer; transition: all 0.15s;
-      }
-      .tag-chip.selected { background: #1f9d55; color: #fff; border-color: #1f9d55; }
-
       .back-link { display: inline-block; margin-top: 16px; color: #1f9d55; font-weight: 600; text-decoration: none; font-size: 0.95rem; }
 
       .hidden { display: none; }
+
+      /* --- Onboarding --- */
+      .onboarding-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      .onboarding-header h2 {
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+      }
+      .onboarding-header p {
+        color: #4b6b57;
+        margin: 0;
+        font-size: 0.95rem;
+      }
+      .step-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      .step-dot {
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        background: #cfe4d4;
+        transition: background 0.2s;
+      }
+      .step-dot.active { background: #1f9d55; }
+
+      /* Role cards */
+      .role-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .role-card {
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 2px solid #cfe4d4;
+        background: #f7fbf7;
+        cursor: pointer;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #1a6a3a;
+        transition: all 0.15s;
+      }
+      .role-card:hover { border-color: #1f9d55; background: #e1f3e6; }
+      .role-card.selected { background: #1f9d55; color: #fff; border-color: #1f9d55; }
+
+      /* Vibes cards */
+      .vibes-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .vibe-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 2px solid #cfe4d4;
+        background: #f7fbf7;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .vibe-card:hover { border-color: #1f9d55; background: #e1f3e6; }
+      .vibe-card.selected { background: #1f9d55; border-color: #1f9d55; }
+      .vibe-card.selected .vibe-label,
+      .vibe-card.selected .vibe-desc { color: #fff; }
+      .vibe-emoji { font-size: 1.6rem; flex-shrink: 0; }
+      .vibe-text { flex: 1; }
+      .vibe-label { font-weight: 700; font-size: 0.95rem; color: #0f1f14; }
+      .vibe-desc { font-size: 0.82rem; color: #4b6b57; margin-top: 2px; }
+
+      .skip-link {
+        display: block;
+        text-align: center;
+        margin-top: 12px;
+        color: #6b7280;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: underline;
+        background: none;
+        border: none;
+        font-family: inherit;
+      }
+      .skip-link:hover { color: #1f9d55; }
+
+      /* --- Profile glow-up --- */
+      .profile-header {
+        background: linear-gradient(135deg, #0f2b1a 0%, #1a5c35 50%, #1f9d55 100%);
+        border-radius: 18px;
+        padding: 32px 28px;
+        color: #fff;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      .profile-header::before {
+        content: "";
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 160px; height: 160px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+      }
+      .profile-header-inner {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        position: relative;
+      }
+      .profile-avatar {
+        width: 56px; height: 56px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        border: 2px solid rgba(255,255,255,0.3);
+      }
+      .profile-info { flex: 1; }
+      .profile-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .profile-meta {
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+      .role-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.15);
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 6px;
+        backdrop-filter: blur(4px);
+      }
+
+      /* Interest display cards */
+      .interest-display-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .interest-display-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: #e1f3e6;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1a6a3a;
+      }
+
+      .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+      .section-subtitle {
+        color: #4b6b57;
+        margin: 0 0 16px;
+        font-size: 0.9rem;
+      }
+
+      .btn-edit {
+        padding: 10px 20px;
+        border: 2px solid #1f9d55;
+        border-radius: 10px;
+        background: transparent;
+        color: #1f9d55;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        font-family: inherit;
+        margin-top: 16px;
+        width: 100%;
+      }
+      .btn-edit:hover { background: #e1f3e6; }
+
+      .profile-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .profile-actions .btn { flex: 1; margin-top: 0; }
     </style>
   </head>
   <body>
@@ -101,7 +288,7 @@
             <button class="btn" type="submit">Log In</button>
           </form>
 
-          <!-- Register Form -->
+          <!-- Register Form (no tag picker) -->
           <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
             <div class="form-group">
               <label for="regName">Name</label>
@@ -115,52 +302,120 @@
               <label for="regPassword">Password</label>
               <input type="password" id="regPassword" required minlength="8" placeholder="Min 8 characters" />
             </div>
-            <div class="form-group">
-              <label>Pick your favorite topics (optional)</label>
-              <div class="tag-grid" id="regTags"></div>
-            </div>
             <button class="btn" type="submit">Create Account</button>
           </form>
         </div>
       </div>
 
+      <!-- Onboarding Section (shown after registration) -->
+      <div id="onboardingSection" class="hidden">
+        <!-- Step 1: Role -->
+        <div id="onboardStep1" class="panel">
+          <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+          </div>
+          <div class="onboarding-header">
+            <h2>What do you do?</h2>
+            <p>Pick the role that fits you best.</p>
+          </div>
+          <div class="role-grid" id="roleGrid"></div>
+          <button class="btn" id="step1Next" disabled onclick="goToStep2()">Next</button>
+          <button class="skip-link" onclick="finishOnboarding()">Skip for now</button>
+        </div>
+
+        <!-- Step 2: Vibes -->
+        <div id="onboardStep2" class="panel hidden">
+          <div class="step-dots">
+            <div class="step-dot active"></div>
+            <div class="step-dot active"></div>
+          </div>
+          <div class="onboarding-header">
+            <h2>What are you curious about?</h2>
+            <p>Pick as many as you like. This shapes your feed.</p>
+          </div>
+          <div class="vibes-grid" id="vibesGrid"></div>
+          <button class="btn" id="finishBtn" onclick="finishOnboarding()">Finish</button>
+          <button class="skip-link" onclick="finishOnboarding()">Skip for now</button>
+        </div>
+      </div>
+
       <!-- Profile Section (shown when logged in) -->
       <div id="profileSection" class="hidden">
-        <div class="panel">
-          <h2>Your Profile</h2>
-          <div class="profile-field">
-            <div class="label">Name</div>
-            <div class="value" id="profileName"></div>
-          </div>
-          <div class="profile-field">
-            <div class="label">Email</div>
-            <div class="value" id="profileEmail"></div>
-          </div>
-          <div class="profile-field">
-            <div class="label">Member since</div>
-            <div class="value" id="profileDate"></div>
+        <!-- Gradient header card -->
+        <div class="profile-header">
+          <div class="profile-header-inner">
+            <div class="profile-avatar" id="profileAvatar"></div>
+            <div class="profile-info">
+              <div class="profile-name" id="profileName"></div>
+              <div class="profile-meta" id="profileMeta"></div>
+              <div class="role-badge hidden" id="profileRoleBadge"></div>
+            </div>
           </div>
         </div>
 
-        <div class="panel">
-          <h2>Your Topic Preferences</h2>
-          <p style="color: #4b6b57; margin: 0 0 12px; font-size: 0.95rem;">
-            Select topics you care about. Your feed will be personalized based on these.
-          </p>
-          <div id="prefAlert" class="alert hidden"></div>
-          <div class="tag-grid" id="prefTags"></div>
-          <button class="btn" style="margin-top: 16px;" onclick="savePreferences()">Save Preferences</button>
+        <!-- About Me & Interests -->
+        <div class="panel" id="interestsPanel">
+          <div class="section-title">About Me & My Interests</div>
+          <div class="section-subtitle" id="interestsSubtitle">Your vibes shape your feed and buzz topics.</div>
+          <div class="interest-display-grid" id="interestsDisplay"></div>
+          <div id="noInterests" class="hidden" style="color: #6b7280; font-size: 0.9rem; margin-top: 8px;">
+            No interests selected yet. Click edit to choose your vibes.
+          </div>
+          <button class="btn-edit" id="editPrefsBtn" onclick="showEditPreferences()">Edit Preferences</button>
         </div>
 
-        <button class="btn btn-secondary" onclick="logout()">Log Out</button>
-        <a class="back-link" href="/">&larr; Back to feed</a>
+        <!-- Edit preferences (hidden by default) -->
+        <div class="panel hidden" id="editPrefsPanel">
+          <div class="section-title">Update Your Vibes</div>
+          <div class="section-subtitle">Pick what you're curious about.</div>
+          <div id="editAlert" class="alert hidden"></div>
+
+          <div style="margin-bottom: 16px;">
+            <div style="font-weight: 600; color: #1a6a3a; margin-bottom: 8px; font-size: 0.9rem;">Your Role</div>
+            <div class="role-grid" id="editRoleGrid"></div>
+          </div>
+
+          <div style="font-weight: 600; color: #1a6a3a; margin-bottom: 8px; font-size: 0.9rem;">Your Interests</div>
+          <div class="vibes-grid" id="editVibesGrid"></div>
+          <button class="btn" style="margin-top: 16px;" onclick="saveEditedPreferences()">Save Changes</button>
+          <button class="btn btn-secondary" style="margin-top: 8px;" onclick="cancelEditPreferences()">Cancel</button>
+        </div>
+
+        <div class="profile-actions">
+          <button class="btn btn-secondary" onclick="logout()">Log Out</button>
+          <a class="btn" href="/" style="text-align: center; text-decoration: none;">Back to Feed</a>
+        </div>
       </div>
     </div>
 
     <script>
       const API = window.location.origin;
-      const TAGS = ["Research", "Policy", "Models", "Companies", "Hardware", "Infrastructure", "Security", "Misuse"];
+
+      const ROLES = [
+        "Founder / Executive",
+        "Engineer / Developer",
+        "Researcher / Scientist",
+        "Policy / Legal",
+        "Security Professional",
+        "Product / Design",
+        "Journalist / Writer",
+        "Student / Learner",
+      ];
+
+      const VIBES = [
+        { emoji: "\u{1F52C}", label: "Breakthrough research", desc: "Papers, discoveries, and scientific progress", tags: ["Research"] },
+        { emoji: "\u{1F916}", label: "New models & benchmarks", desc: "The latest releases and how they stack up", tags: ["Models"] },
+        { emoji: "\u{1F3E2}", label: "Who's building what", desc: "Company moves, funding, and product launches", tags: ["Companies"] },
+        { emoji: "\u{1F4DC}", label: "Policy & regulation", desc: "Government action, laws, and AI governance", tags: ["Policy"] },
+        { emoji: "\u26A1", label: "Chips & infrastructure", desc: "GPUs, compute, and the hardware race", tags: ["Hardware", "Infrastructure"] },
+        { emoji: "\u{1F6E1}\uFE0F", label: "Safety & misuse risks", desc: "Security threats, alignment, and responsible AI", tags: ["Security", "Misuse"] },
+      ];
+
       let token = localStorage.getItem("nn_token");
+      let currentUser = null;
+      let selectedRole = null;
+      let selectedVibeIndices = new Set();
 
       // --- Tab switching ---
       function showTab(tab) {
@@ -182,17 +437,111 @@
         document.getElementById(id).classList.add("hidden");
       }
 
+      // --- Render helpers ---
+      function renderRoleGrid(containerId, onSelect) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        ROLES.forEach(role => {
+          const card = document.createElement("div");
+          card.className = "role-card";
+          card.textContent = role;
+          card.dataset.role = role;
+          card.onclick = () => {
+            container.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
+            card.classList.add("selected");
+            if (onSelect) onSelect(role);
+          };
+          container.appendChild(card);
+        });
+      }
+
+      function renderVibesGrid(containerId, multiSelect) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        VIBES.forEach((vibe, i) => {
+          const card = document.createElement("div");
+          card.className = "vibe-card";
+          card.dataset.index = i;
+          card.innerHTML = `
+            <span class="vibe-emoji">${vibe.emoji}</span>
+            <div class="vibe-text">
+              <div class="vibe-label">${vibe.label}</div>
+              <div class="vibe-desc">${vibe.desc}</div>
+            </div>
+          `;
+          card.onclick = () => {
+            card.classList.toggle("selected");
+          };
+          container.appendChild(card);
+        });
+      }
+
+      function getSelectedVibes(containerId) {
+        const cards = document.querySelectorAll(`#${containerId} .vibe-card.selected`);
+        const tags = [];
+        cards.forEach(card => {
+          const idx = parseInt(card.dataset.index);
+          VIBES[idx].tags.forEach(t => { if (!tags.includes(t)) tags.push(t); });
+        });
+        return tags;
+      }
+
+      function getSelectedVibeIndices(containerId) {
+        const cards = document.querySelectorAll(`#${containerId} .vibe-card.selected`);
+        return [...cards].map(c => parseInt(c.dataset.index));
+      }
+
+      // --- Onboarding ---
+      function renderOnboardingStep1() {
+        renderRoleGrid("roleGrid", (role) => {
+          selectedRole = role;
+          document.getElementById("step1Next").disabled = false;
+        });
+      }
+
+      function goToStep2() {
+        document.getElementById("onboardStep1").classList.add("hidden");
+        document.getElementById("onboardStep2").classList.remove("hidden");
+        renderVibesGrid("vibesGrid");
+      }
+
+      async function finishOnboarding() {
+        // Gather selections
+        const role = selectedRole;
+        const tags = getSelectedVibes("vibesGrid");
+
+        const payload = {};
+        if (role) payload.role = role;
+        if (tags.length > 0) payload.preferred_tags = tags;
+
+        if (Object.keys(payload).length > 0) {
+          try {
+            await fetch(`${API}/api/users/me`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+              },
+              body: JSON.stringify(payload),
+            });
+          } catch (err) {
+            // Best-effort save; redirect regardless
+          }
+        }
+
+        window.location.href = "/";
+      }
+
       // --- Auth API calls ---
       async function handleRegister(e) {
         e.preventDefault();
         hideAlert("authAlert");
 
-        const selectedTags = [...document.querySelectorAll("#regTags .tag-chip.selected")].map(el => el.dataset.tag);
         const body = {
           name: document.getElementById("regName").value,
           email: document.getElementById("regEmail").value,
           password: document.getElementById("regPassword").value,
-          preferred_tags: selectedTags,
+          preferred_tags: [],
         };
 
         try {
@@ -206,8 +555,12 @@
 
           token = data.access_token;
           localStorage.setItem("nn_token", token);
-          showAlert("authAlert", "Account created! Loading profile...", "success");
-          setTimeout(loadProfile, 500);
+
+          // Show onboarding instead of profile
+          document.getElementById("authSection").classList.add("hidden");
+          document.getElementById("onboardingSection").classList.remove("hidden");
+          renderOnboardingStep1();
+          renderVibesGrid("vibesGrid");
         } catch (err) {
           showAlert("authAlert", err.message, "error");
         }
@@ -241,9 +594,11 @@
 
       function logout() {
         token = null;
+        currentUser = null;
         localStorage.removeItem("nn_token");
         document.getElementById("authSection").classList.remove("hidden");
         document.getElementById("profileSection").classList.add("hidden");
+        document.getElementById("onboardingSection").classList.add("hidden");
       }
 
       // --- Profile ---
@@ -253,42 +608,111 @@
             headers: { "Authorization": `Bearer ${token}` },
           });
           if (!res.ok) { logout(); return; }
-          const user = await res.json();
+          currentUser = await res.json();
 
-          document.getElementById("profileName").textContent = user.name;
-          document.getElementById("profileEmail").textContent = user.email;
-          document.getElementById("profileDate").textContent = new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+          renderProfile(currentUser);
 
           document.getElementById("authSection").classList.add("hidden");
+          document.getElementById("onboardingSection").classList.add("hidden");
           document.getElementById("profileSection").classList.remove("hidden");
-
-          renderPrefTags(user.preferred_tags || []);
         } catch {
           logout();
         }
       }
 
-      // --- Preferences ---
-      function renderTagChips(containerId, selectedTags) {
-        const container = document.getElementById(containerId);
+      function renderProfile(user) {
+        // Avatar initial
+        const initial = (user.name || "?").charAt(0).toUpperCase();
+        document.getElementById("profileAvatar").textContent = initial;
+
+        // Name
+        document.getElementById("profileName").textContent = user.name;
+
+        // Meta
+        const memberSince = new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+        document.getElementById("profileMeta").textContent = `${user.email} \u00B7 Joined ${memberSince}`;
+
+        // Role badge
+        const badge = document.getElementById("profileRoleBadge");
+        if (user.role) {
+          badge.textContent = user.role;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+
+        // Interests display
+        renderInterestsDisplay(user.preferred_tags || [], user.role);
+      }
+
+      function renderInterestsDisplay(tags, role) {
+        const container = document.getElementById("interestsDisplay");
+        const noInterests = document.getElementById("noInterests");
         container.innerHTML = "";
-        TAGS.forEach(tag => {
-          const chip = document.createElement("span");
-          chip.className = `tag-chip${selectedTags.includes(tag) ? " selected" : ""}`;
-          chip.dataset.tag = tag;
-          chip.textContent = tag;
-          chip.onclick = () => chip.classList.toggle("selected");
-          container.appendChild(chip);
+
+        // Find matching vibes for the user's tags
+        const matchedVibes = [];
+        VIBES.forEach(vibe => {
+          const hasMatch = vibe.tags.some(t => tags.includes(t));
+          if (hasMatch) matchedVibes.push(vibe);
+        });
+
+        if (matchedVibes.length === 0 && !role) {
+          noInterests.classList.remove("hidden");
+          return;
+        }
+        noInterests.classList.add("hidden");
+
+        matchedVibes.forEach(vibe => {
+          const el = document.createElement("span");
+          el.className = "interest-display-card";
+          el.innerHTML = `<span>${vibe.emoji}</span> ${vibe.label}`;
+          container.appendChild(el);
         });
       }
 
-      function renderPrefTags(selectedTags) {
-        renderTagChips("prefTags", selectedTags);
+      // --- Edit Preferences ---
+      function showEditPreferences() {
+        document.getElementById("interestsPanel").classList.add("hidden");
+        document.getElementById("editPrefsPanel").classList.remove("hidden");
+
+        // Render role grid with current selection
+        renderRoleGrid("editRoleGrid", () => {});
+        if (currentUser && currentUser.role) {
+          const cards = document.querySelectorAll("#editRoleGrid .role-card");
+          cards.forEach(c => {
+            if (c.dataset.role === currentUser.role) c.classList.add("selected");
+          });
+        }
+
+        // Render vibes with current selection
+        renderVibesGrid("editVibesGrid");
+        if (currentUser && currentUser.preferred_tags) {
+          const userTags = currentUser.preferred_tags;
+          const cards = document.querySelectorAll("#editVibesGrid .vibe-card");
+          cards.forEach(card => {
+            const idx = parseInt(card.dataset.index);
+            const hasMatch = VIBES[idx].tags.some(t => userTags.includes(t));
+            if (hasMatch) card.classList.add("selected");
+          });
+        }
       }
 
-      async function savePreferences() {
-        hideAlert("prefAlert");
-        const selectedTags = [...document.querySelectorAll("#prefTags .tag-chip.selected")].map(el => el.dataset.tag);
+      function cancelEditPreferences() {
+        document.getElementById("editPrefsPanel").classList.add("hidden");
+        document.getElementById("interestsPanel").classList.remove("hidden");
+        hideAlert("editAlert");
+      }
+
+      async function saveEditedPreferences() {
+        hideAlert("editAlert");
+
+        const roleCard = document.querySelector("#editRoleGrid .role-card.selected");
+        const role = roleCard ? roleCard.dataset.role : null;
+        const tags = getSelectedVibes("editVibesGrid");
+
+        const payload = { preferred_tags: tags };
+        if (role) payload.role = role;
 
         try {
           const res = await fetch(`${API}/api/users/me`, {
@@ -297,20 +721,23 @@
               "Content-Type": "application/json",
               "Authorization": `Bearer ${token}`,
             },
-            body: JSON.stringify({ preferred_tags: selectedTags }),
+            body: JSON.stringify(payload),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.detail || "Update failed");
 
-          showAlert("prefAlert", "Preferences saved!", "success");
-          renderPrefTags(data.preferred_tags || []);
+          currentUser = data;
+          renderProfile(data);
+          showAlert("editAlert", "Preferences saved!", "success");
+          setTimeout(() => {
+            cancelEditPreferences();
+          }, 800);
         } catch (err) {
-          showAlert("prefAlert", err.message, "error");
+          showAlert("editAlert", err.message, "error");
         }
       }
 
       // --- Init ---
-      renderTagChips("regTags", []);
       if (token) {
         loadProfile();
       }

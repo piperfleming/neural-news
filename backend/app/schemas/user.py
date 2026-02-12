@@ -43,6 +43,7 @@ class UserResponse(BaseModel):
     email: str
     name: str
     preferred_tags: list[str] = []
+    role: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -52,6 +53,7 @@ class UserResponse(BaseModel):
 class UserUpdate(BaseModel):
     name: str | None = None
     preferred_tags: list[str] | None = None
+    role: str | None = None
 
     @field_validator("preferred_tags")
     @classmethod
