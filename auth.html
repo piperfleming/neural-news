@@ -580,8 +580,16 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error("The email or password you entered was incorrect.");
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            if (res.status === 401) {
+              throw new Error("The password you entered was incorrect.");
+            }
+            if (res.status === 422) {
+              throw new Error("Please enter a valid email address.");
+            }
+            throw new Error(typeof data.detail === "string" ? data.detail : "Login failed.");
+          }
 
           token = data.access_token;
           localStorage.setItem("nn_token", token);

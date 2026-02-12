@@ -809,15 +809,6 @@
             link.textContent = firstName;
             link.title = "Your account";
             startGreetingTypewriter(`Hello, ${firstName}! What AI news are you looking for?`);
-          })
-          .catch(() => {
-            localStorage.removeItem("nn_token");
-            startGreetingTypewriter(defaultGreeting);
-          });
-      } else {
-        startGreetingTypewriter(defaultGreeting);
-
-            // Load feed filtered by user's preferred tags
             const prefs = user.preferred_tags || [];
             if (prefs.length > 0) {
               setActiveFilter(prefs);
@@ -826,22 +817,21 @@
               setActiveFilter([]);
               fetchArticles([]);
             }
-
-            // Personalize buzz with user's preferred topics
             userBuzzTopics = prefs;
             if (prefs.length > 0) {
-              document.querySelector(".buzz-header h2").textContent =
-                "Your AI Buzz";
+              document.querySelector(".buzz-header h2").textContent = "Your AI Buzz";
             }
             loadBuzz();
           })
           .catch(() => {
             localStorage.removeItem("nn_token");
+            startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
             fetchArticles([]);
             loadBuzz();
           });
       } else {
+        startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);
         fetchArticles([]);
         loadBuzz();
