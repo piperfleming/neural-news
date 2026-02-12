@@ -30,6 +30,14 @@
         margin-bottom: 16px;
       }
 
+      .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 2px;
+      }
+
       h1 {
         font-size: 1.5rem;
         margin: 0;
@@ -54,7 +62,7 @@
       .brand-hero {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         margin: -4px 0 -8px 0;
       }
@@ -69,11 +77,12 @@
 
       .brand-tagline {
         margin-top: 6px;
+        margin-left: 8px;
         font-size: 1rem;
         font-weight: 700;
         color: #1a6a3a;
         font-family: Arial, sans-serif;
-        text-align: center;
+        text-align: left;
       }
 
       .brand-background {
@@ -433,9 +442,14 @@
   <body>
     <div class="container">
       <header>
-        <div class="brand-hero">
-          <img class="brand-logo" src="/static/neural-news-logo.png?v=2" alt="N²eural News" />
-          <p class="brand-tagline"><strong>Exponential news. Constant time understanding.</strong></p>
+        <div class="header-top">
+          <div class="brand-hero">
+            <img class="brand-logo" src="/static/neural-news-logo.png?v=2" alt="N²eural News" />
+            <p class="brand-tagline"><strong>Exponential news. Constant time understanding.</strong></p>
+          </div>
+          <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
+            Log In / Sign Up
+          </a>
         </div>
         <div class="brand-background">
           <img src="/static/home_banner.jpg" alt="Neural News background" />
@@ -456,9 +470,6 @@
         <div class="filters">
           <div id="filterButtons" class="filter-buttons"></div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
-          <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
-            Log In / Sign Up
-          </a>
         </div>
       </header>
 
