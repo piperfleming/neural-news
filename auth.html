@@ -14,6 +14,7 @@
       .container { max-width: 480px; margin: 0 auto; }
 
       .brand-hero { display: flex; align-items: center; justify-content: center; margin: -4px 0 12px 0; }
+      .brand-logo-link { display: inline-block; text-decoration: none; }
       .brand-logo { height: 72px; width: auto; object-fit: contain; background: transparent; display: block; }
 
       .panel {
@@ -73,7 +74,7 @@
   <body>
     <div class="container">
       <div class="brand-hero">
-        <img class="brand-logo" src="/static/neural-news-logo.png?v=6" alt="N²eural News" />
+        <a href="/" class="brand-logo-link" aria-label="Back to home"><img class="brand-logo" src="/static/neural-news-logo.png?v=6" alt="N²eural News" /></a>
       </div>
 
       <!-- Auth Section (shown when logged out) -->
