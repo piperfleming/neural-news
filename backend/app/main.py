@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import init_db
 
-from app.routers import articles, auth, users
+from app.routers import articles, auth, buzz, users
 
 # Project root is one level above backend/
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -41,6 +41,7 @@ app.add_middleware(
 app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(buzz.router, prefix="/api/buzz", tags=["buzz"])
 
 
 @app.get("/")

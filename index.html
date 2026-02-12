@@ -293,90 +293,6 @@
         color: #567563;
       }
 
-      .modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 31, 20, 0.55);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        z-index: 100;
-      }
-
-      .modal.open {
-        display: flex;
-      }
-
-      .modal-card {
-        width: min(520px, 100%);
-        background: #ffffff;
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 20px 40px rgba(14, 36, 22, 0.2);
-      }
-
-      .modal-card h2 {
-        margin: 0 0 8px;
-        font-size: 1.3rem;
-        color: #0f1f14;
-      }
-
-      .modal-card p {
-        margin: 0 0 16px;
-        color: #4b6b57;
-      }
-
-      .form-row {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-
-      .form-row label {
-        font-weight: 600;
-        color: #1a6a3a;
-      }
-
-      .form-row select,
-      .form-row input[type="text"] {
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px solid #cfe4d4;
-        font-size: 0.95rem;
-      }
-
-      .checkbox-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 8px 12px;
-      }
-
-      .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-      }
-
-      .modal-actions button {
-        padding: 9px 16px;
-        border-radius: 10px;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-      }
-
-      .modal-actions .secondary {
-        background: #e1f3e6;
-        color: #1a6a3a;
-      }
-
-      .modal-actions .primary {
-        background: #1f9d55;
-        color: #ffffff;
-      }
-
       /* --- URL Ingest bar --- */
       .url-ingest {
         background: #f7fbf7;
@@ -437,6 +353,136 @@
         color: #1f9d55;
         font-weight: 600;
       }
+
+      /* --- Social Buzz --- */
+      .buzz-section {
+        background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
+        border-radius: 18px;
+        padding: 24px 28px;
+        margin-bottom: 28px;
+        box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
+      }
+
+      .buzz-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .buzz-header h2 {
+        font-size: 1.1rem;
+        margin: 0;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+
+      .buzz-refresh {
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.25);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.75rem;
+        backdrop-filter: blur(4px);
+      }
+
+      .buzz-refresh:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .buzz-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .buzz-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 14px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 12px;
+        backdrop-filter: blur(4px);
+        transition: background 0.15s;
+      }
+
+      .buzz-item:hover {
+        background: rgba(255,255,255,0.14);
+      }
+
+      .buzz-sentiment-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-top: 6px;
+        flex-shrink: 0;
+      }
+
+      .buzz-sentiment-dot.excited { background: #4ade80; }
+      .buzz-sentiment-dot.concerned { background: #fbbf24; }
+      .buzz-sentiment-dot.divided { background: #f87171; }
+      .buzz-sentiment-dot.curious { background: #60a5fa; }
+      .buzz-sentiment-dot.skeptical { background: #c084fc; }
+
+      .buzz-item-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .buzz-headline {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 3px;
+      }
+
+      .buzz-summary {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.35;
+        margin: 0;
+      }
+
+      .buzz-item-meta {
+        display: flex;
+        gap: 5px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+      }
+
+      .buzz-source {
+        font-size: 0.65rem;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.65);
+        font-weight: 500;
+      }
+
+      .buzz-tag {
+        font-size: 0.65rem;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: rgba(31,157,85,0.3);
+        color: rgba(255,255,255,0.8);
+        font-weight: 500;
+      }
+
+      .buzz-loading {
+        text-align: center;
+        padding: 16px;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.85rem;
+      }
     </style>
   </head>
   <body>
@@ -473,43 +519,15 @@
         </div>
       </header>
 
-      <div id="profileModal" class="modal" aria-hidden="true">
-        <div class="modal-card">
-          <h2>Tell us about you</h2>
-          <p>We will match articles to your role and AI needs.</p>
-          <form id="profileForm">
-            <div class="form-row">
-              <label for="jobSelect">Your job or role</label>
-              <select id="jobSelect" required>
-                <option value="">Select one...</option>
-                <option value="Founder">Founder / Executive</option>
-                <option value="Engineer">Engineer / Developer</option>
-                <option value="Researcher">Researcher</option>
-                <option value="Policy">Policy / Legal</option>
-                <option value="Security">Security</option>
-                <option value="Product">Product / Design</option>
-                <option value="Marketing">Marketing / Sales</option>
-                <option value="Educator">Educator</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label>AI needs</label>
-              <div class="checkbox-grid">
-                <label><input type="checkbox" value="Governance" /> Governance & policy</label>
-                <label><input type="checkbox" value="Models" /> Model updates</label>
-                <label><input type="checkbox" value="Security" /> Security & misuse</label>
-                <label><input type="checkbox" value="Infrastructure" /> Hardware & infrastructure</label>
-                <label><input type="checkbox" value="Research" /> Research insights</label>
-                <label><input type="checkbox" value="Companies" /> Company moves</label>
-              </div>
-            </div>
-            <div class="modal-actions">
-              <button type="button" id="closeProfile" class="secondary">Cancel</button>
-              <button type="submit" class="primary">Apply filters</button>
-            </div>
-          </form>
+      <section class="buzz-section">
+        <div class="buzz-header">
+          <h2>What People Are Saying</h2>
+          <button class="buzz-refresh" id="buzzRefresh" onclick="loadBuzz()">Refresh</button>
         </div>
-      </div>
+        <div id="buzzContent">
+          <div class="buzz-loading">Loading social buzz...</div>
+        </div>
+      </section>
 
       <section>
         <div id="feed" class="grid"></div>
@@ -523,10 +541,7 @@
       const feed = document.getElementById("feed");
       const emptyState = document.getElementById("emptyState");
       const filterButtons = document.getElementById("filterButtons");
-      const profileModal = document.getElementById("profileModal");
-      const closeProfile = document.getElementById("closeProfile");
-      const profileForm = document.getElementById("profileForm");
-      const jobSelect = document.getElementById("jobSelect");
+      const accountLink = document.getElementById("accountLink");
 
       const filterOptions = [
         { label: "All", tags: [] },
@@ -616,11 +631,6 @@
         });
       };
 
-      const applyProfileFilter = (tags) => {
-        setActiveFilter([]);
-        fetchArticles(tags);
-      };
-
       const buildFilterButtons = () => {
         filterButtons.innerHTML = "";
         filterOptions.forEach((option) => {
@@ -636,59 +646,6 @@
           filterButtons.appendChild(button);
         });
       };
-
-      const roleTagMap = {
-        Founder: ["Companies", "Policy"],
-        Engineer: ["Models", "Hardware", "Infrastructure"],
-        Researcher: ["Research", "Models"],
-        Policy: ["Policy"],
-        Security: ["Security", "Misuse"],
-        Product: ["Models", "Companies"],
-        Marketing: ["Companies"],
-        Educator: ["Research"],
-      };
-
-      const needTagMap = {
-        Governance: ["Policy"],
-        Models: ["Models"],
-        Security: ["Security", "Misuse"],
-        Infrastructure: ["Hardware", "Infrastructure"],
-        Research: ["Research"],
-        Companies: ["Companies"],
-      };
-
-      const openModal = () => {
-        profileModal.classList.add("open");
-        profileModal.setAttribute("aria-hidden", "false");
-      };
-
-      const closeModal = () => {
-        profileModal.classList.remove("open");
-        profileModal.setAttribute("aria-hidden", "true");
-      };
-
-      closeProfile.addEventListener("click", closeModal);
-      profileModal.addEventListener("click", (event) => {
-        if (event.target === profileModal) {
-          closeModal();
-        }
-      });
-
-      profileForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const tags = new Set();
-        const role = jobSelect.value;
-        (roleTagMap[role] || []).forEach((tag) => tags.add(tag));
-
-        profileForm
-          .querySelectorAll('input[type="checkbox"]:checked')
-          .forEach((input) => {
-            (needTagMap[input.value] || []).forEach((tag) => tags.add(tag));
-          });
-
-        applyProfileFilter(Array.from(tags));
-        closeModal();
-      });
 
       // --- URL Ingest ---
       const ingestForm = document.getElementById("ingestForm");
@@ -773,7 +730,74 @@
         runTypewriter(message, 55);
       }
 
+      // --- Social Buzz ---
+      const buzzContent = document.getElementById("buzzContent");
+      const buzzRefresh = document.getElementById("buzzRefresh");
+
+      const renderBuzz = (data) => {
+        const topics = data.topics || [];
+        if (!topics.length) {
+          buzzContent.innerHTML = '<div class="buzz-loading">No social buzz found right now.</div>';
+          return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "buzz-list";
+
+        topics.forEach((topic) => {
+          const sources = (topic.sources || [])
+            .map((s) => `<span class="buzz-source">${s}</span>`)
+            .join("");
+          const tags = (topic.tags || [])
+            .map((t) => `<span class="buzz-tag">${t}</span>`)
+            .join("");
+          const li = document.createElement("li");
+          li.className = "buzz-item";
+          li.innerHTML = `
+            <span class="buzz-sentiment-dot ${topic.sentiment || ""}"></span>
+            <div class="buzz-item-content">
+              <p class="buzz-headline">${topic.headline}</p>
+              <p class="buzz-summary">${topic.summary}</p>
+              <div class="buzz-item-meta">${sources}${tags}</div>
+            </div>
+          `;
+          list.appendChild(li);
+        });
+
+        buzzContent.innerHTML = "";
+        buzzContent.appendChild(list);
+      };
+
+      let userBuzzTopics = [];
+
+      const loadBuzz = async (topics) => {
+        const buzzTopics = topics || userBuzzTopics;
+        buzzRefresh.disabled = true;
+        buzzRefresh.textContent = "Loading...";
+        buzzContent.innerHTML = '<div class="buzz-loading">Searching social media and summarizing with AI...</div>';
+
+        const params = buzzTopics.length
+          ? `?topics=${encodeURIComponent(buzzTopics.map(t => `AI ${t}`).join(","))}`
+          : "";
+
+        try {
+          const res = await fetch(`/api/buzz${params}`);
+          if (!res.ok) throw new Error("Failed to load buzz");
+          const data = await res.json();
+          renderBuzz(data);
+        } catch (err) {
+          buzzContent.innerHTML = '<div class="buzz-loading">Could not load social buzz.</div>';
+        } finally {
+          buzzRefresh.disabled = false;
+          buzzRefresh.textContent = "Refresh";
+        }
+      };
+
+      // --- Auth-aware personalization ---
       const nnToken = localStorage.getItem("nn_token");
+
+      buildFilterButtons();
+
       if (nnToken) {
         fetch("/api/auth/me", {
           headers: { "Authorization": `Bearer ${nnToken}` },
@@ -792,11 +816,36 @@
           });
       } else {
         startGreetingTypewriter(defaultGreeting);
-      }
 
-      buildFilterButtons();
-      setActiveFilter([]);
-      fetchArticles([]);
+            // Load feed filtered by user's preferred tags
+            const prefs = user.preferred_tags || [];
+            if (prefs.length > 0) {
+              setActiveFilter(prefs);
+              fetchArticles(prefs);
+            } else {
+              setActiveFilter([]);
+              fetchArticles([]);
+            }
+
+            // Personalize buzz with user's preferred topics
+            userBuzzTopics = prefs;
+            if (prefs.length > 0) {
+              document.querySelector(".buzz-header h2").textContent =
+                "Your AI Buzz";
+            }
+            loadBuzz();
+          })
+          .catch(() => {
+            localStorage.removeItem("nn_token");
+            setActiveFilter([]);
+            fetchArticles([]);
+            loadBuzz();
+          });
+      } else {
+        setActiveFilter([]);
+        fetchArticles([]);
+        loadBuzz();
+      }
     </script>
   </body>
 </html>
