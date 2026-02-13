@@ -14,7 +14,7 @@
 
       body {
         margin: 0;
-        padding: 32px 24px 64px;
+        padding: 16px 16px 64px;
         background: #eef6ef;
       }
 
@@ -26,27 +26,67 @@
       header {
         display: flex;
         flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+
+      .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         gap: 16px;
-        margin-bottom: 32px;
+        margin-bottom: 2px;
       }
 
       h1 {
         font-size: 1.5rem;
         margin: 0;
         font-weight: 600;
+        min-height: 1.5em;
+      }
+
+      .typing-cursor {
+        display: inline-block;
+        font-weight: 300;
+        animation: blink 0.7s step-end infinite;
+      }
+
+      h1.static .typing-cursor {
+        display: none;
+      }
+
+      @keyframes blink {
+        50% { opacity: 0; }
       }
 
       .brand-hero {
         display: flex;
-        align-items: center;
-        gap: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        margin: -4px 0 -8px 0;
       }
 
       .brand-logo {
-        width: 56px;
-        height: 56px;
+        height: 72px;
+        width: auto;
         object-fit: contain;
         background: transparent;
+        display: block;
+      }
+
+      .brand-tagline {
+        margin-top: 6px;
+        margin-left: 8px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a6a3a;
+        font-family: Arial, sans-serif;
+        text-align: left;
+      }
+
+      .brand-background {
+        position: relative;
       }
 
       .brand-background img {
@@ -56,18 +96,28 @@
         object-fit: cover;
       }
 
+      .brand-background .banner-greeting {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 16px;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        border-radius: 16px;
+      }
+
       .brand {
         font-weight: 800;
         color: #1f9d55;
         letter-spacing: 2px;
         text-transform: uppercase;
         font-size: 2.8rem;
-        font-family: "Segoe UI", "Arial", sans-serif;
-      }
-
-      .subtitle {
-        font-size: 1.05rem;
-        color: #3f5a4a;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
       }
 
       .filters {
@@ -207,6 +257,16 @@
 
       .tag.featured {
         background: #0f1f14;
+        color: #ffffff;
+      }
+
+      .tag.active {
+        background: #1f9d55;
+        color: #ffffff;
+      }
+
+      .tag.featured.active {
+        background: #1f9d55;
         color: #ffffff;
       }
 
@@ -428,17 +488,19 @@
   <body>
     <div class="container">
       <header>
-        <div class="brand-hero">
-          <img class="brand-logo" src="/static/n2%20logo.png" alt="Neural News logo" />
-          <span class="brand">Neural News</span>
+        <div class="header-top">
+          <div class="brand-hero">
+            <img class="brand-logo" src="/static/neural-news-logo.png?v=2" alt="N²eural News" />
+            <p class="brand-tagline"><strong>Exponential news. Constant time understanding.</strong></p>
+          </div>
+          <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
+            Log In / Sign Up
+          </a>
         </div>
         <div class="brand-background">
           <img src="/static/home_banner.jpg" alt="Neural News background" />
+          <h1 id="greeting" class="banner-greeting"><span id="greetingText"></span><span id="greetingCursor" class="typing-cursor" aria-hidden="true">|</span></h1>
         </div>
-        <h1 id="greeting">Hi! What AI news are you looking for?</h1>
-        <p class="subtitle">
-          Filter by tags to instantly refine the latest AI headlines.
-        </p>
         <div class="url-ingest">
           <form id="ingestForm">
             <input
@@ -454,9 +516,6 @@
         <div class="filters">
           <div id="filterButtons" class="filter-buttons"></div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
-          <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
-            Log In / Sign Up
-          </a>
         </div>
       </header>
 
@@ -497,7 +556,7 @@
       const buildTagParams = (tags) =>
         tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
 
-      const renderArticles = (articles) => {
+      const renderArticles = (articles, activeFilterTags = []) => {
         feed.innerHTML = "";
         if (!articles.length) {
           emptyState.hidden = false;
@@ -529,8 +588,11 @@
                   const lower = tag.toLowerCase();
                   const isFeatured =
                     lower === "reader favorite" || lower === "editors choice";
+                  const isActive =
+                    activeFilterTags.length > 0 &&
+                    activeFilterTags.some((t) => t.toLowerCase() === lower);
                   const label = isFeatured ? `⭐ ${tag}` : tag;
-                  return `<span class="tag${isFeatured ? " featured" : ""}" data-tag="${tag}">${label}</span>`;
+                  return `<span class="tag${isFeatured ? " featured" : ""}${isActive ? " active" : ""}" data-tag="${tag}">${label}</span>`;
                 })
                 .join("")}
             </div>
@@ -552,7 +614,7 @@
       const fetchArticles = async (tags = []) => {
         const response = await fetch(`/api/articles${buildTagParams(tags)}`);
         const data = await response.json();
-        renderArticles(data.articles);
+        renderArticles(data.articles, tags);
       };
 
       const setActiveFilter = (tags) => {
@@ -564,7 +626,7 @@
           const isActive =
             buttonTags.length === 0
               ? normalized.length === 0
-              : buttonTags.every((tag) => normalized.includes(tag));
+              : buttonTags.every((tag) => normalized.includes(tag.toLowerCase()));
           button.classList.toggle("active", isActive);
         });
       };
@@ -639,6 +701,34 @@
           ingestBtn.textContent = "Add Article";
         }
       });
+
+      // --- Typewriter greeting & subtitle ---
+      function runTypewriter(text, speedMs, onDone) {
+        if (typeof speedMs !== "number") speedMs = 55;
+        const greetingEl = document.getElementById("greeting");
+        const textEl = document.getElementById("greetingText");
+        const cursorEl = document.getElementById("greetingCursor");
+        if (!textEl || !cursorEl) return;
+        textEl.textContent = "";
+        greetingEl.classList.remove("static");
+        let i = 0;
+        function type() {
+          if (i < text.length) {
+            textEl.textContent += text[i];
+            i++;
+            setTimeout(type, speedMs);
+          } else {
+            greetingEl.classList.add("static");
+            if (typeof onDone === "function") onDone();
+          }
+        }
+        type();
+      }
+
+      const defaultGreeting = "Hello, what AI news are you looking for?";
+      function startGreetingTypewriter(message) {
+        runTypewriter(message, 55);
+      }
 
       // --- Social Buzz ---
       const buzzContent = document.getElementById("buzzContent");
@@ -715,13 +805,10 @@
           .then((res) => (res.ok ? res.json() : Promise.reject()))
           .then((user) => {
             const firstName = user.name.split(" ")[0];
-            document.getElementById("greeting").textContent =
-              `Hi, ${firstName}! What AI news are you looking for?`;
             const link = document.getElementById("accountLink");
             link.textContent = firstName;
             link.title = "Your account";
-
-            // Load feed filtered by user's preferred tags
+            startGreetingTypewriter(`Hello, ${firstName}! What AI news are you looking for?`);
             const prefs = user.preferred_tags || [];
             if (prefs.length > 0) {
               setActiveFilter(prefs);
@@ -730,22 +817,21 @@
               setActiveFilter([]);
               fetchArticles([]);
             }
-
-            // Personalize buzz with user's preferred topics
             userBuzzTopics = prefs;
             if (prefs.length > 0) {
-              document.querySelector(".buzz-header h2").textContent =
-                "Your AI Buzz";
+              document.querySelector(".buzz-header h2").textContent = "Your AI Buzz";
             }
             loadBuzz();
           })
           .catch(() => {
             localStorage.removeItem("nn_token");
+            startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
             fetchArticles([]);
             loadBuzz();
           });
       } else {
+        startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);
         fetchArticles([]);
         loadBuzz();

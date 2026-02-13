@@ -145,6 +145,8 @@ class NewsHandler(SimpleHTTPRequestHandler):
 
         if parsed.path == "/":
             self.path = "/index.html"
+        elif parsed.path == "/account":
+            self.path = "/auth.html"
         return super().do_GET()
 
     def _filter_articles(self, tags):
