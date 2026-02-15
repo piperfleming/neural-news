@@ -483,6 +483,159 @@
         color: rgba(255,255,255,0.6);
         font-size: 0.85rem;
       }
+
+      /* --- Morning Buzz Hero --- */
+      .morning-buzz {
+        background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
+        border-radius: 18px;
+        padding: 28px 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
+      }
+
+      .morning-buzz.animate-in {
+        animation: fadeInUp 0.5s ease-out forwards;
+      }
+
+      .morning-buzz-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+
+      .morning-buzz-header h2 {
+        font-size: 1.2rem;
+        margin: 0;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+
+      .morning-buzz-body {
+        color: rgba(255,255,255,0.88);
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      .morning-buzz-body p {
+        margin: 0 0 12px;
+      }
+
+      .morning-buzz-body p:last-child {
+        margin-bottom: 0;
+      }
+
+      .briefing-refresh {
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.25);
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.8rem;
+        backdrop-filter: blur(4px);
+        font-family: inherit;
+      }
+
+      .briefing-refresh:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      @keyframes shimmer {
+        0%   { opacity: 0.5; }
+        50%  { opacity: 1; }
+        100% { opacity: 0.5; }
+      }
+
+      .briefing-loading {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.9rem;
+        animation: shimmer 1.5s ease-in-out infinite;
+      }
+
+      .briefing-buzz-divider {
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.15);
+        margin: 20px 0 16px;
+      }
+
+      .briefing-buzz-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+      }
+
+      .buzz-source-link {
+        font-size: 0.65rem;
+        padding: 1px 7px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.75);
+        font-weight: 500;
+        text-decoration: none;
+        transition: background 0.15s;
+      }
+
+      .buzz-source-link:hover {
+        background: rgba(255,255,255,0.25);
+        color: #fff;
+      }
+
+      /* --- Explore Further Accordion --- */
+      .explore-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        background: #f7fbf7;
+        border: none;
+        padding: 16px 20px;
+        border-radius: 14px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f1f14;
+        margin-bottom: 0;
+        box-shadow: 0 8px 20px rgba(14, 36, 22, 0.06);
+        transition: background 0.15s, box-shadow 0.15s;
+        font-family: inherit;
+      }
+
+      .explore-toggle:hover {
+        background: #eef6ef;
+        box-shadow: 0 10px 24px rgba(14, 36, 22, 0.1);
+      }
+
+      .explore-toggle .arrow {
+        display: inline-block;
+        transition: transform 0.3s ease;
+        font-size: 0.85rem;
+        color: #567563;
+      }
+
+      .explore-toggle.open .arrow {
+        transform: rotate(90deg);
+      }
+
+      .explore-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease;
+      }
+
+      .explore-content.open {
+        max-height: 5000px;
+      }
+
+      .explore-inner {
+        padding-top: 20px;
+      }
     </style>
   </head>
   <body>
@@ -519,29 +672,91 @@
         </div>
       </header>
 
-      <section class="buzz-section">
-        <div class="buzz-header">
-          <h2>What People Are Saying</h2>
-          <button class="buzz-refresh" id="buzzRefresh" onclick="loadBuzz()">Refresh</button>
+      <!-- Morning Buzz hero (logged-in users only) -->
+      <section id="morningBuzz" class="morning-buzz" hidden>
+        <div class="morning-buzz-header">
+          <h2>&#9728; Your Morning Buzz</h2>
+          <button class="briefing-refresh" id="briefingRefresh">Refresh Briefing</button>
         </div>
-        <div id="buzzContent">
-          <div class="buzz-loading">Loading social buzz...</div>
+        <div id="briefingBody" class="morning-buzz-body">
+          <p class="briefing-loading">Brewing your morning briefing...</p>
         </div>
+        <div id="briefingBuzz"></div>
       </section>
 
-      <section>
-        <div id="feed" class="grid"></div>
-        <div id="emptyState" class="empty" hidden>
-          No articles found for those tags.
+      <!-- Explore Further accordion (logged-in users only) -->
+      <div id="exploreWrapper" hidden>
+        <button class="explore-toggle" id="exploreToggle">
+          <span>Explore Further</span>
+          <span class="arrow">&#9654;</span>
+        </button>
+        <div class="explore-content" id="exploreContent">
+          <div class="explore-inner">
+            <section>
+              <div id="feed" class="grid"></div>
+              <div id="emptyState" class="empty" hidden>
+                No articles found for those tags.
+              </div>
+            </section>
+          </div>
         </div>
-      </section>
+      </div>
+
+      <!-- Default layout for anonymous users -->
+      <div id="anonLayout">
+        <section class="buzz-section">
+          <div class="buzz-header">
+            <h2>What People Are Saying</h2>
+            <button class="buzz-refresh" id="buzzRefreshAnon" onclick="loadBuzz()">Refresh</button>
+          </div>
+          <div id="buzzContentAnon">
+            <div class="buzz-loading">Loading social buzz...</div>
+          </div>
+        </section>
+
+        <section>
+          <div id="feedAnon" class="grid"></div>
+          <div id="emptyStateAnon" class="empty" hidden>
+            No articles found for those tags.
+          </div>
+        </section>
+      </div>
     </div>
 
     <script>
-      const feed = document.getElementById("feed");
-      const emptyState = document.getElementById("emptyState");
       const filterButtons = document.getElementById("filterButtons");
       const accountLink = document.getElementById("accountLink");
+
+      // Layout elements
+      const morningBuzzSection = document.getElementById("morningBuzz");
+      const exploreWrapper = document.getElementById("exploreWrapper");
+      const anonLayout = document.getElementById("anonLayout");
+
+      // Track whether we're in logged-in mode
+      let isLoggedIn = false;
+
+      // Active feed & empty state references (set based on layout)
+      let feed, emptyState, buzzContent, buzzRefresh;
+
+      function activateAnonLayout() {
+        anonLayout.hidden = false;
+        morningBuzzSection.hidden = true;
+        exploreWrapper.hidden = true;
+        feed = document.getElementById("feedAnon");
+        emptyState = document.getElementById("emptyStateAnon");
+        buzzContent = document.getElementById("buzzContentAnon");
+        buzzRefresh = document.getElementById("buzzRefreshAnon");
+      }
+
+      function activateLoggedInLayout() {
+        isLoggedIn = true;
+        anonLayout.hidden = true;
+        morningBuzzSection.hidden = false;
+        requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
+        exploreWrapper.hidden = false;
+        feed = document.getElementById("feed");
+        emptyState = document.getElementById("emptyState");
+      }
 
       const filterOptions = [
         { label: "All", tags: [] },
@@ -569,7 +784,6 @@
           card.className = "card";
           card.innerHTML = `
             <div class="card-header">
-              <!-- Replace logo_url in frontend.py with the publisher's logo URL -->
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
               <div>
                 <div class="org">${article.org}</div>
@@ -591,7 +805,7 @@
                   const isActive =
                     activeFilterTags.length > 0 &&
                     activeFilterTags.some((t) => t.toLowerCase() === lower);
-                  const label = isFeatured ? `⭐ ${tag}` : tag;
+                  const label = isFeatured ? `\u2B50 ${tag}` : tag;
                   return `<span class="tag${isFeatured ? " featured" : ""}${isActive ? " active" : ""}" data-tag="${tag}">${label}</span>`;
                 })
                 .join("")}
@@ -603,7 +817,7 @@
           feed.appendChild(card);
         });
 
-        document.querySelectorAll(".tag").forEach((tagEl) => {
+        feed.querySelectorAll(".tag").forEach((tagEl) => {
           tagEl.addEventListener("click", () => {
             setActiveFilter([tagEl.dataset.tag]);
             fetchArticles([tagEl.dataset.tag]);
@@ -658,7 +872,6 @@
         const url = articleUrl.value.trim();
         if (!url) return;
 
-        // Show loading state
         ingestBtn.disabled = true;
         ingestBtn.textContent = "Processing\u2026";
         ingestStatus.hidden = false;
@@ -690,7 +903,6 @@
           ingestStatus.textContent = "Article added successfully!";
           articleUrl.value = "";
 
-          // Refresh feed to show the new article
           setActiveFilter([]);
           fetchArticles([]);
         } catch (error) {
@@ -731,9 +943,6 @@
       }
 
       // --- Social Buzz ---
-      const buzzContent = document.getElementById("buzzContent");
-      const buzzRefresh = document.getElementById("buzzRefresh");
-
       const renderBuzz = (data) => {
         const topics = data.topics || [];
         if (!topics.length) {
@@ -793,6 +1002,91 @@
         }
       };
 
+      // --- Morning Briefing ---
+      const briefingBody = document.getElementById("briefingBody");
+      const briefingBuzz = document.getElementById("briefingBuzz");
+      const briefingRefreshBtn = document.getElementById("briefingRefresh");
+
+      const renderBriefing = (data) => {
+        const paragraphs = data.briefing_text
+          .split("\n")
+          .filter((p) => p.trim())
+          .map((p) => `<p>${p}</p>`)
+          .join("");
+        briefingBody.innerHTML = paragraphs;
+
+        // Render buzz topics with inline source links (embedded per topic)
+        const topics = data.buzz_topics || [];
+        if (!topics.length) { briefingBuzz.innerHTML = ""; return; }
+
+        const buzzHtml = topics.map((topic) => {
+          const sourceLinks = (topic.source_links || []).map((l) =>
+            `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${l.source} &#8599;</a>`
+          ).join("");
+          const tags = (topic.tags || [])
+            .map((t) => `<span class="buzz-tag">${t}</span>`)
+            .join("");
+
+          return `
+            <li class="buzz-item">
+              <span class="buzz-sentiment-dot ${topic.sentiment || ""}"></span>
+              <div class="buzz-item-content">
+                <p class="buzz-headline">${topic.headline}</p>
+                <p class="buzz-summary">${topic.summary}</p>
+                <div class="buzz-item-meta">${sourceLinks}${tags}</div>
+              </div>
+            </li>`;
+        }).join("");
+
+        briefingBuzz.innerHTML = `
+          <hr class="briefing-buzz-divider">
+          <div class="briefing-buzz-label">Trending conversations</div>
+          <ul class="buzz-list">${buzzHtml}</ul>`;
+      };
+
+      const loadBriefing = async (token) => {
+        briefingBody.innerHTML = '<p class="briefing-loading">Brewing your morning briefing...</p>';
+        try {
+          const res = await fetch("/api/briefing/today", {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to load briefing");
+          const data = await res.json();
+          renderBriefing(data);
+        } catch (err) {
+          briefingBody.innerHTML = '<p class="briefing-loading">Could not load your briefing. Try refreshing.</p>';
+        }
+      };
+
+      const refreshBriefing = async (token) => {
+        briefingRefreshBtn.disabled = true;
+        briefingRefreshBtn.textContent = "Refreshing...";
+        briefingBody.innerHTML = '<p class="briefing-loading">Generating a fresh briefing...</p>';
+        try {
+          const res = await fetch("/api/briefing/refresh", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to refresh briefing");
+          const data = await res.json();
+          renderBriefing(data);
+        } catch (err) {
+          briefingBody.innerHTML = '<p class="briefing-loading">Could not refresh your briefing.</p>';
+        } finally {
+          briefingRefreshBtn.disabled = false;
+          briefingRefreshBtn.textContent = "Refresh Briefing";
+        }
+      };
+
+      // --- Explore Further toggle ---
+      const exploreToggle = document.getElementById("exploreToggle");
+      const exploreContent = document.getElementById("exploreContent");
+
+      exploreToggle.addEventListener("click", () => {
+        exploreToggle.classList.toggle("open");
+        exploreContent.classList.toggle("open");
+      });
+
       // --- Auth-aware personalization ---
       const nnToken = localStorage.getItem("nn_token");
 
@@ -804,6 +1098,9 @@
         })
           .then((res) => (res.ok ? res.json() : Promise.reject()))
           .then((user) => {
+            // Activate logged-in layout
+            activateLoggedInLayout();
+
             const firstName = user.name.split(" ")[0];
             const link = document.getElementById("accountLink");
             link.textContent = firstName;
@@ -818,19 +1115,21 @@
               fetchArticles([]);
             }
             userBuzzTopics = prefs;
-            if (prefs.length > 0) {
-              document.querySelector(".buzz-header h2").textContent = "Your AI Buzz";
-            }
-            loadBuzz();
+
+            // Load morning briefing (includes buzz topics)
+            loadBriefing(nnToken);
+            briefingRefreshBtn.addEventListener("click", () => refreshBriefing(nnToken));
           })
           .catch(() => {
             localStorage.removeItem("nn_token");
+            activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
             fetchArticles([]);
             loadBuzz();
           });
       } else {
+        activateAnonLayout();
         startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);
         fetchArticles([]);
