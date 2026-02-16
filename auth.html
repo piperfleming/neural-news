@@ -41,6 +41,7 @@
         font-size: 0.95rem; box-sizing: border-box; font-family: inherit;
       }
       .form-group input:focus { border-color: #1f9d55; outline: none; box-shadow: 0 0 0 3px rgba(31,157,85,0.15); }
+      textarea:focus { border-color: #1f9d55; outline: none; box-shadow: 0 0 0 3px rgba(31,157,85,0.15); }
 
       .btn {
         width: 100%; padding: 12px; border: none; border-radius: 10px;
@@ -388,6 +389,13 @@
           <div id="noInterests" class="hidden" style="color: #6b7280; font-size: 0.9rem; margin-top: 8px;">
             No interests selected yet. Click edit to choose your vibes.
           </div>
+
+          <!-- Custom Interests Display -->
+          <div id="customInterestsDisplay" class="hidden" style="margin-top: 16px;">
+            <div style="font-weight: 600; color: #1a6a3a; margin-bottom: 6px; font-size: 0.9rem;">What You Told the AI</div>
+            <div id="customInterestsText" style="background: #f7fbf7; border-radius: 12px; padding: 12px 16px; color: #3f5a4a; font-size: 0.9rem; line-height: 1.5; border: 1px solid #e1f3e6; white-space: pre-wrap;"></div>
+          </div>
+
           <button class="btn-edit" id="editPrefsBtn" onclick="showEditPreferences()">Edit Preferences</button>
         </div>
 
@@ -404,6 +412,18 @@
 
           <div style="font-weight: 600; color: #1a6a3a; margin-bottom: 8px; font-size: 0.9rem;">Your Interests</div>
           <div class="vibes-grid" id="editVibesGrid"></div>
+
+          <div style="margin-top: 16px;">
+            <div style="font-weight: 600; color: #1a6a3a; margin-bottom: 8px; font-size: 0.9rem;">Tell the AI What You Want</div>
+            <textarea
+              id="customInterestsInput"
+              rows="4"
+              placeholder="Describe what you're interested in, e.g. 'I want more coverage of open-source LLMs, especially fine-tuning techniques and efficiency breakthroughs...'"
+              style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #cfe4d4; font-size: 0.9rem; font-family: inherit; box-sizing: border-box; resize: vertical; line-height: 1.5;"
+            ></textarea>
+            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Free-form text. Tell the AI exactly what kind of news you care about.</div>
+          </div>
+
           <button class="btn" style="margin-top: 16px;" onclick="saveEditedPreferences()">Save Changes</button>
           <button class="btn btn-secondary" style="margin-top: 8px;" onclick="cancelEditPreferences()">Cancel</button>
         </div>
@@ -692,10 +712,10 @@
         }
 
         // Interests display
-        renderInterestsDisplay(user.preferred_tags || [], user.role);
+        renderInterestsDisplay(user.preferred_tags || [], user.role, user.custom_interests);
       }
 
-      function renderInterestsDisplay(tags, role) {
+      function renderInterestsDisplay(tags, role, customInterests) {
         const container = document.getElementById("interestsDisplay");
         const noInterests = document.getElementById("noInterests");
         container.innerHTML = "";
@@ -707,11 +727,11 @@
           if (hasMatch) matchedVibes.push(vibe);
         });
 
-        if (matchedVibes.length === 0 && !role) {
+        if (matchedVibes.length === 0 && !role && !customInterests) {
           noInterests.classList.remove("hidden");
-          return;
+        } else {
+          noInterests.classList.add("hidden");
         }
-        noInterests.classList.add("hidden");
 
         matchedVibes.forEach((vibe, index) => {
           const el = document.createElement("span");
@@ -720,6 +740,16 @@
           el.innerHTML = `<span>${vibe.emoji}</span> ${vibe.label}`;
           container.appendChild(el);
         });
+
+        // Custom interests display
+        const ciDisplay = document.getElementById("customInterestsDisplay");
+        const ciText = document.getElementById("customInterestsText");
+        if (customInterests && customInterests.trim()) {
+          ciText.textContent = customInterests;
+          ciDisplay.classList.remove("hidden");
+        } else {
+          ciDisplay.classList.add("hidden");
+        }
       }
 
       // --- Edit Preferences ---
@@ -747,6 +777,10 @@
             if (hasMatch) card.classList.add("selected");
           });
         }
+
+        // Populate custom interests textarea
+        const ciInput = document.getElementById("customInterestsInput");
+        ciInput.value = (currentUser && currentUser.custom_interests) || "";
       }
 
       function cancelEditPreferences() {
@@ -761,8 +795,9 @@
         const roleCard = document.querySelector("#editRoleGrid .role-card.selected");
         const role = roleCard ? roleCard.dataset.role : null;
         const tags = getSelectedVibes("editVibesGrid");
+        const customInterests = document.getElementById("customInterestsInput").value.trim();
 
-        const payload = { preferred_tags: tags };
+        const payload = { preferred_tags: tags, custom_interests: customInterests || null };
         if (role) payload.role = role;
 
         try {
