@@ -256,6 +256,33 @@
         margin-top: 20px;
       }
       .profile-actions .btn { flex: 1; margin-top: 0; }
+
+      /* --- Animated Transitions --- */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .animate-in {
+        opacity: 0;
+        animation: fadeInUp 0.45s ease-out forwards;
+      }
+
+      .interest-display-card {
+        opacity: 0;
+        animation: fadeInUp 0.35s ease-out forwards;
+      }
+
+      .role-card,
+      .vibe-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .role-card:hover,
+      .vibe-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(14, 36, 22, 0.10);
+      }
     </style>
   </head>
   <body>
@@ -416,6 +443,18 @@
       let selectedRole = null;
       let selectedVibeIndices = new Set();
 
+      // --- Animation helper ---
+      function animateSection(sectionEl) {
+        // Animate direct children that should fade in
+        const targets = sectionEl.querySelectorAll(".profile-header, .panel:not(.hidden), .profile-actions");
+        targets.forEach((el, i) => {
+          el.classList.remove("animate-in");
+          void el.offsetWidth; // force reflow to restart animation
+          el.style.animationDelay = `${i * 0.1}s`;
+          el.classList.add("animate-in");
+        });
+      }
+
       // --- Tab switching ---
       function showTab(tab) {
         document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
@@ -557,7 +596,9 @@
 
           // Show onboarding instead of profile
           document.getElementById("authSection").classList.add("hidden");
-          document.getElementById("onboardingSection").classList.remove("hidden");
+          const onboardEl = document.getElementById("onboardingSection");
+          onboardEl.classList.remove("hidden");
+          animateSection(onboardEl);
           renderOnboardingStep1();
           renderVibesGrid("vibesGrid");
         } catch (err) {
@@ -621,7 +662,9 @@
 
           document.getElementById("authSection").classList.add("hidden");
           document.getElementById("onboardingSection").classList.add("hidden");
-          document.getElementById("profileSection").classList.remove("hidden");
+          const profileEl = document.getElementById("profileSection");
+          profileEl.classList.remove("hidden");
+          animateSection(profileEl);
         } catch {
           logout();
         }
@@ -670,9 +713,10 @@
         }
         noInterests.classList.add("hidden");
 
-        matchedVibes.forEach(vibe => {
+        matchedVibes.forEach((vibe, index) => {
           const el = document.createElement("span");
           el.className = "interest-display-card";
+          el.style.animationDelay = `${index * 0.05}s`;
           el.innerHTML = `<span>${vibe.emoji}</span> ${vibe.label}`;
           container.appendChild(el);
         });
@@ -747,6 +791,8 @@
       // --- Init ---
       if (token) {
         loadProfile();
+      } else {
+        animateSection(document.getElementById("authSection"));
       }
     </script>
   </body>
