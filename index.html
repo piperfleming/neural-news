@@ -695,7 +695,7 @@
           <img src="/static/home_banner.jpg" alt="Neural News background" />
           <h1 id="greeting" class="banner-greeting"><span id="greetingText"></span><span id="greetingCursor" class="typing-cursor" aria-hidden="true">|</span></h1>
         </div>
-        <div class="url-ingest">
+        <div id="urlIngest" class="url-ingest" hidden>
           <form id="ingestForm">
             <input
               type="url"
@@ -776,6 +776,7 @@
       // Layout elements
       const morningBuzzSection = document.getElementById("morningBuzz");
       const exploreWrapper = document.getElementById("exploreWrapper");
+      const urlIngest = document.getElementById("urlIngest");
       const anonLayout = document.getElementById("anonLayout");
 
       // Track whether we're in logged-in mode
@@ -788,6 +789,7 @@
         anonLayout.hidden = false;
         morningBuzzSection.hidden = true;
         exploreWrapper.hidden = true;
+        urlIngest.hidden = true;
         feed = document.getElementById("feedAnon");
         emptyState = document.getElementById("emptyStateAnon");
         buzzContent = document.getElementById("buzzContentAnon");
@@ -800,6 +802,7 @@
         morningBuzzSection.hidden = false;
         requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
         exploreWrapper.hidden = false;
+        urlIngest.hidden = false;
         feed = document.getElementById("feed");
         emptyState = document.getElementById("emptyState");
       }
