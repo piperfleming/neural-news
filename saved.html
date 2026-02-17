@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saved Articles - Neural News</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: #eef6ef;
+        color: #0f1f14;
+      }
+
+      body {
+        margin: 0;
+        padding: 16px 16px 64px;
+        background: #eef6ef;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 9px 16px;
+        background: #e1f3e6;
+        color: #1a6a3a;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .back-link:hover {
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .profile-button {
+        background: #1f9d55;
+        color: #ffffff;
+        border: none;
+        padding: 9px 16px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 20px;
+        font-weight: 600;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 16px 30px rgba(14, 36, 22, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(14, 36, 22, 0.14);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #edf0ff;
+        object-fit: cover;
+      }
+
+      .org {
+        font-size: 0.85rem;
+        color: #6b7280;
+      }
+
+      .title {
+        font-size: 1.1rem;
+        margin: 6px 0 0;
+      }
+
+      .summary {
+        color: #3f5a4a;
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 0.85rem;
+        color: #567563;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        background: #e1f3e6;
+        color: #1a6a3a;
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 999px;
+      }
+
+      .tag.featured {
+        background: #0f1f14;
+        color: #ffffff;
+      }
+
+      .cta {
+        margin-top: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .cta a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 14px;
+        background: #1f9d55;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .save-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: none;
+        background: #1f9d55;
+        color: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .save-btn:hover {
+        background: #1a6a3a;
+        color: #fff;
+      }
+
+      .save-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .save-btn .icon-outline { display: none; }
+      .save-btn .icon-filled { display: block; }
+
+      .empty {
+        text-align: center;
+        padding: 40px 12px;
+        color: #567563;
+      }
+
+      .page-loading {
+        text-align: center;
+        padding: 40px 12px;
+        color: #567563;
+      }
+
+      .auth-required {
+        text-align: center;
+        padding: 40px 20px;
+        background: #f7fbf7;
+        border-radius: 18px;
+        box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
+      }
+
+      .auth-required p {
+        margin: 0 0 16px;
+        font-size: 1rem;
+        color: #3f5a4a;
+      }
+
+      .auth-required a {
+        display: inline-flex;
+        padding: 10px 20px;
+        background: #1f9d55;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+
+      .auth-required a:hover {
+        background: #1a6a3a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="header-top">
+          <a href="/" class="back-link">&larr; Back to Feed</a>
+          <div class="header-actions">
+            <a id="accountLink" href="/account" class="profile-button">Account</a>
+          </div>
+        </div>
+        <h1>Saved Articles</h1>
+      </header>
+
+      <div id="content">
+        <div id="loading" class="page-loading">Loading your saved articles...</div>
+        <div id="authRequired" class="auth-required" hidden>
+          <p>Please log in to view your saved articles.</p>
+          <a href="/account">Log In</a>
+        </div>
+        <div id="feed" class="grid" hidden></div>
+        <div id="emptyState" class="empty" hidden>
+          You haven't saved any articles yet. Save articles from the main feed to see them here.
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const feed = document.getElementById("feed");
+      const loading = document.getElementById("loading");
+      const authRequired = document.getElementById("authRequired");
+      const emptyState = document.getElementById("emptyState");
+
+      const token = localStorage.getItem("nn_token");
+
+      async function loadSavedArticles() {
+        if (!token) {
+          loading.hidden = true;
+          authRequired.hidden = false;
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/users/me/saved", {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (res.status === 401) {
+            localStorage.removeItem("nn_token");
+            loading.hidden = true;
+            authRequired.hidden = false;
+            return;
+          }
+          if (!res.ok) throw new Error("Failed to load saved articles");
+
+          const data = await res.json();
+          loading.hidden = true;
+
+          // Update account link with user name
+          fetch("/api/auth/me", {
+            headers: { "Authorization": `Bearer ${token}` },
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((user) => {
+              if (user) {
+                const firstName = user.name.split(" ")[0];
+                const link = document.getElementById("accountLink");
+                link.textContent = firstName;
+                link.title = "Your account";
+              }
+            })
+            .catch(() => {});
+
+          if (!data.articles || !data.articles.length) {
+            emptyState.hidden = false;
+            return;
+          }
+
+          emptyState.hidden = true;
+          feed.hidden = false;
+          feed.innerHTML = "";
+
+          data.articles.forEach((article, index) => {
+            const card = document.createElement("article");
+            card.className = "card";
+            card.innerHTML = `
+              <div class="card-header">
+                <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
+                <div>
+                  <div class="org">${article.org}</div>
+                  <h2 class="title">${article.title}</h2>
+                </div>
+              </div>
+              <p class="summary">${article.summary}</p>
+              <div class="meta">
+                <span>${article.date}</span>
+                <span>•</span>
+                <span>${article.author}</span>
+              </div>
+              <div class="tags">
+                ${(article.tags || [])
+                  .map((tag) => {
+                    const lower = tag.toLowerCase();
+                    const isFeatured =
+                      lower === "reader favorite" || lower === "editors choice";
+                    const label = isFeatured ? `\u2B50 ${tag}` : tag;
+                    return `<span class="tag${isFeatured ? " featured" : ""}">${label}</span>`;
+                  })
+                  .join("")}
+              </div>
+              <div class="cta">
+                <a href="${article.url}" target="_blank" rel="noreferrer">Read article</a>
+                <button type="button" class="save-btn" data-article-id="${article.id}" aria-label="Unsave article">
+                  <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                </button>
+              </div>
+            `;
+            feed.appendChild(card);
+          });
+
+          feed.querySelectorAll(".save-btn").forEach((btn) => {
+            btn.addEventListener("click", () => unsaveArticle(parseInt(btn.dataset.articleId, 10), btn));
+          });
+        } catch (err) {
+          console.error(err);
+          loading.textContent = "Could not load saved articles. Try again later.";
+        }
+      }
+
+      async function unsaveArticle(articleId, btn) {
+        if (!token) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch(`/api/users/me/saved/${articleId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to unsave");
+          const card = btn.closest(".card");
+          if (card) card.remove();
+          const remaining = feed.querySelectorAll(".card");
+          if (remaining.length === 0) {
+            feed.hidden = true;
+            emptyState.hidden = false;
+          }
+        } catch (err) {
+          console.error("Unsave failed:", err);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      loadSavedArticles();
+    </script>
+  </body>
+</html>

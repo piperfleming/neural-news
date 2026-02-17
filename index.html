@@ -312,6 +312,82 @@
         color: #567563;
       }
 
+      .save-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: none;
+        background: #e1f3e6;
+        color: #1a6a3a;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .save-btn:hover {
+        background: #cfe4d4;
+        color: #1a6a3a;
+      }
+
+      .save-btn.saved {
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .save-btn.saved:hover {
+        background: #1a6a3a;
+        color: #fff;
+      }
+
+      .save-btn svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      .save-btn .icon-outline { display: block; }
+      .save-btn .icon-filled { display: none; }
+      .save-btn.saved .icon-outline { display: none; }
+      .save-btn.saved .icon-filled { display: block; }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .saved-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        background: #e1f3e6;
+        color: #1a6a3a;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .saved-link:hover {
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .saved-link svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .saved-link .icon-outline { display: block; }
+      .saved-link .icon-filled { display: none; }
+      .saved-link:hover .icon-outline { display: none; }
+      .saved-link:hover .icon-filled { display: block; }
+
       /* --- URL Ingest bar --- */
       .url-ingest {
         background: #f7fbf7;
@@ -687,9 +763,11 @@
             <img class="brand-logo" src="/static/neural-news-logo.png?v=2" alt="N²eural News" />
             <p class="brand-tagline"><strong>Exponential news. Constant time understanding.</strong></p>
           </div>
-          <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
-            Log In / Sign Up
-          </a>
+          <div class="header-actions" id="headerActions">
+            <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
+              Log In
+            </a>
+          </div>
         </div>
         <div class="brand-background">
           <img src="/static/home_banner.jpg" alt="Neural News background" />
@@ -785,7 +863,29 @@
       // Active feed & empty state references (set based on layout)
       let feed, emptyState, buzzContent, buzzRefresh;
 
+      function removeSavedLink() {
+        const savedLink = document.getElementById("savedLink");
+        if (savedLink) savedLink.remove();
+      }
+
+      function ensureSavedLink() {
+        if (document.getElementById("savedLink")) return;
+        const actions = document.getElementById("headerActions");
+        const accountLink = document.getElementById("accountLink");
+        if (!actions || !accountLink) return;
+        const a = document.createElement("a");
+        a.id = "savedLink";
+        a.href = "/saved";
+        a.className = "saved-link";
+        a.title = "Saved articles";
+        a.setAttribute("aria-label", "Saved articles");
+        a.innerHTML = '<svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+        actions.insertBefore(a, accountLink);
+      }
+
       function activateAnonLayout() {
+        isLoggedIn = false;
+        removeSavedLink();
         anonLayout.hidden = false;
         morningBuzzSection.hidden = true;
         exploreWrapper.hidden = true;
@@ -820,7 +920,51 @@
       const buildTagParams = (tags) =>
         tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
 
-      const renderArticles = (articles, activeFilterTags = []) => {
+      let savedArticleIds = new Set();
+
+      const fetchSavedIds = async () => {
+        const token = localStorage.getItem("nn_token");
+        if (!token) return;
+        try {
+          const res = await fetch("/api/users/me/saved/ids", {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          savedArticleIds = new Set(data.article_ids || []);
+        } catch (err) {
+          console.error("Could not load saved articles:", err);
+        }
+      };
+
+      const toggleSave = async (articleId, btn) => {
+        const token = localStorage.getItem("nn_token");
+        if (!token || !isLoggedIn) return;
+        const isSaved = savedArticleIds.has(articleId);
+        btn.disabled = true;
+        try {
+          if (isSaved) {
+            await fetch(`/api/users/me/saved/${articleId}`, {
+              method: "DELETE",
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            savedArticleIds.delete(articleId);
+          } else {
+            await fetch(`/api/users/me/saved/${articleId}`, {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            savedArticleIds.add(articleId);
+          }
+          btn.classList.toggle("saved", !isSaved);
+        } catch (err) {
+          console.error("Save/unsave failed:", err);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      const renderArticles = (articles, activeFilterTags = [], showSaveButton = false) => {
         feed.innerHTML = "";
         if (!articles.length) {
           emptyState.hidden = false;
@@ -829,9 +973,17 @@
         emptyState.hidden = true;
 
         articles.forEach((article, index) => {
+          const isSaved = savedArticleIds.has(article.id);
+          const saveBtnHtml = showSaveButton
+            ? `<button type="button" class="save-btn ${isSaved ? "saved" : ""}" data-article-id="${article.id}" aria-label="${isSaved ? "Unsave" : "Save"} article">
+                <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </button>`
+            : "";
           const card = document.createElement("article");
           card.className = "card";
           card.style.animationDelay = `${index * 0.05}s`;
+          card.dataset.articleId = article.id;
           card.innerHTML = `
             <div class="card-header">
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
@@ -860,8 +1012,9 @@
                 })
                 .join("")}
             </div>
-            <div class="cta">
+            <div class="cta" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
               <a href="${article.url}" target="_blank" rel="noreferrer">Read article</a>
+              ${saveBtnHtml}
             </div>
           `;
           feed.appendChild(card);
@@ -873,12 +1026,16 @@
             fetchArticles([tagEl.dataset.tag]);
           });
         });
+
+        feed.querySelectorAll(".save-btn").forEach((btn) => {
+          btn.addEventListener("click", () => toggleSave(parseInt(btn.dataset.articleId, 10), btn));
+        });
       };
 
       const fetchArticles = async (tags = []) => {
         const response = await fetch(`/api/articles${buildTagParams(tags)}`);
         const data = await response.json();
-        renderArticles(data.articles, tags);
+        renderArticles(data.articles, tags, isLoggedIn);
       };
 
       const setActiveFilter = (tags) => {
@@ -1168,11 +1325,15 @@
           headers: { "Authorization": `Bearer ${nnToken}` },
         })
           .then((res) => (res.ok ? res.json() : Promise.reject()))
-          .then((user) => {
+          .then(async (user) => {
             // Activate logged-in layout
             activateLoggedInLayout();
             const myPrefsBtn = document.getElementById("myPrefsBtn");
             if (myPrefsBtn) myPrefsBtn.hidden = false;
+
+            ensureSavedLink();
+
+            await fetchSavedIds();
 
             const firstName = user.name.split(" ")[0];
             const link = document.getElementById("accountLink");
