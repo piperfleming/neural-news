@@ -1,5 +1,5 @@
 """User account model."""
-from sqlalchemy import Column, DateTime, Integer, String, func
+from sqlalchemy import Column, DateTime, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from app.models.base import Base
@@ -14,6 +14,7 @@ class User(Base):
     name = Column(String(255), nullable=False)
     preferred_tags = Column(ARRAY(String), default=list, nullable=False)
     role = Column(String(100), nullable=True)
+    custom_interests = Column(Text, nullable=True)
 
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())

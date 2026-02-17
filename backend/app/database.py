@@ -67,3 +67,4 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
         # Add columns that were added to the model after the table was first created
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(100)"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_interests TEXT"))

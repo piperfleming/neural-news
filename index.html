@@ -635,6 +635,26 @@
 
       .explore-inner {
         padding-top: 20px;
+      /* --- Animated Transitions --- */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .card {
+        opacity: 0;
+        animation: fadeInUp 0.4s ease-out forwards;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(14, 36, 22, 0.14);
+      }
+
+      .buzz-item {
+        opacity: 0;
+        animation: fadeInUp 0.35s ease-out forwards;
       }
     </style>
   </head>
@@ -779,9 +799,10 @@
         }
         emptyState.hidden = true;
 
-        articles.forEach((article) => {
+        articles.forEach((article, index) => {
           const card = document.createElement("article");
           card.className = "card";
+          card.style.animationDelay = `${index * 0.05}s`;
           card.innerHTML = `
             <div class="card-header">
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
@@ -953,7 +974,7 @@
         const list = document.createElement("ul");
         list.className = "buzz-list";
 
-        topics.forEach((topic) => {
+        topics.forEach((topic, index) => {
           const sources = (topic.sources || [])
             .map((s) => `<span class="buzz-source">${s}</span>`)
             .join("");
@@ -962,6 +983,7 @@
             .join("");
           const li = document.createElement("li");
           li.className = "buzz-item";
+          li.style.animationDelay = `${index * 0.05}s`;
           li.innerHTML = `
             <span class="buzz-sentiment-dot ${topic.sentiment || ""}"></span>
             <div class="buzz-item-content">
