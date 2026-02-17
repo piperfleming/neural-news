@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.config import settings
 from app.models.base import Base
-from app.models import Article, User  # noqa: F401 - register tables with Base.metadata
+from app.models import Article, DailyBriefing, User  # noqa: F401 - register tables with Base.metadata
 
 # ── Prepare the database URL and connect_args ────────────────────────
 # asyncpg does NOT understand libpq-specific query params like

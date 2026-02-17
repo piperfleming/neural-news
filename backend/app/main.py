@@ -1,4 +1,6 @@
 """FastAPI application entrypoint."""
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -9,18 +11,34 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import init_db
+from app.services.feed_service import refresh_article_feed
 
-from app.routers import articles, auth, buzz, users
+from app.routers import articles, auth, briefing, buzz, users
+
+logger = logging.getLogger(__name__)
 
 # Project root is one level above backend/
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
+async def _periodic_feed():
+    """Run the article feed on a schedule (every 6 hours)."""
+    await asyncio.sleep(10)  # brief delay after startup
+    while True:
+        try:
+            await refresh_article_feed()
+        except Exception:
+            logger.exception("Feed refresh failed")
+        await asyncio.sleep(12 * 3600)  # every 12 hours
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: init DB (create tables if needed)."""
+    """Startup: init DB, launch periodic feed task."""
     await init_db()
+    task = asyncio.create_task(_periodic_feed())
     yield
+    task.cancel()
 
 
 app = FastAPI(
@@ -41,6 +59,7 @@ app.add_middleware(
 app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(briefing.router, prefix="/api/briefing", tags=["briefing"])
 app.include_router(buzz.router, prefix="/api/buzz", tags=["buzz"])
 
 
