@@ -122,13 +122,28 @@
 
       .filters {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         gap: 12px;
-        align-items: center;
         background: #f7fbf7;
         padding: 16px;
         border-radius: 16px;
         box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
+      }
+
+      .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .my-prefs-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 120px;
+        align-self: stretch;
       }
 
       .filter-buttons {
@@ -169,6 +184,10 @@
       .tag-hint {
         font-size: 0.85rem;
         color: #4b6b57;
+      }
+
+      .my-prefs-btn {
+        /* Centered by .my-prefs-wrap */
       }
 
       .grid {
@@ -689,7 +708,12 @@
           <div id="ingestStatus" class="ingest-status" hidden></div>
         </div>
         <div class="filters">
-          <div id="filterButtons" class="filter-buttons"></div>
+          <div class="filters-row">
+            <div id="filterButtons" class="filter-buttons"></div>
+            <div class="my-prefs-wrap">
+              <button id="myPrefsBtn" class="filter-button my-prefs-btn" type="button" hidden>My Preferences</button>
+            </div>
+          </div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
         </div>
       </header>
@@ -882,6 +906,26 @@
           });
           filterButtons.appendChild(button);
         });
+        const myPrefsBtn = document.getElementById("myPrefsBtn");
+        if (myPrefsBtn) {
+          myPrefsBtn.addEventListener("click", async () => {
+            const token = localStorage.getItem("nn_token");
+            if (!token) return;
+            try {
+              const res = await fetch("/api/users/me/preferences", {
+                headers: { "Authorization": `Bearer ${token}` },
+              });
+              if (!res.ok) throw new Error("Failed to load preferences");
+              const data = await res.json();
+              const prefs = data.preferred_tags || [];
+              myPrefsBtn.dataset.tags = prefs.join("|");
+              setActiveFilter(prefs);
+              fetchArticles(prefs);
+            } catch (err) {
+              console.error("Could not load preferences:", err);
+            }
+          });
+        }
       };
 
       // --- URL Ingest ---
@@ -1124,6 +1168,8 @@
           .then((user) => {
             // Activate logged-in layout
             activateLoggedInLayout();
+            const myPrefsBtn = document.getElementById("myPrefsBtn");
+            if (myPrefsBtn) myPrefsBtn.hidden = false;
 
             const firstName = user.name.split(" ")[0];
             const link = document.getElementById("accountLink");
@@ -1132,6 +1178,8 @@
             startGreetingTypewriter(`Hello, ${firstName}! What AI news are you looking for?`);
             const prefs = user.preferred_tags || [];
             if (prefs.length > 0) {
+              const myPrefsBtn = document.getElementById("myPrefsBtn");
+              if (myPrefsBtn) myPrefsBtn.dataset.tags = prefs.join("|");
               setActiveFilter(prefs);
               fetchArticles(prefs);
             } else {
@@ -1146,6 +1194,8 @@
           })
           .catch(() => {
             localStorage.removeItem("nn_token");
+            const myPrefsBtn = document.getElementById("myPrefsBtn");
+            if (myPrefsBtn) myPrefsBtn.hidden = true;
             activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
@@ -1153,6 +1203,8 @@
             loadBuzz();
           });
       } else {
+        const myPrefsBtn = document.getElementById("myPrefsBtn");
+        if (myPrefsBtn) myPrefsBtn.hidden = true;
         activateAnonLayout();
         startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);
