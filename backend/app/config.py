@@ -1,16 +1,24 @@
 """Application configuration from environment."""
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Locate .env: try backend/.env first (local dev), then project root .env (Docker)
+_backend_dir = Path(__file__).resolve().parent.parent
+_env_file = _backend_dir / ".env"
+if not _env_file.exists():
+    _env_file = _backend_dir.parent / ".env"
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(_env_file),
         env_file_encoding="utf-8",
         extra="ignore",
     )
 
     # Database
-    database_url: str = "postgresql+asyncpg://localhost:5432/parsley_db"
+    database_url: str = "postgresql+asyncpg://localhost:5432/neuralnews"
 
     # App
     app_env: str = "development"

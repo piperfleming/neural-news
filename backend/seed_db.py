@@ -1,4 +1,4 @@
-"""Seed the database with sample articles from frontend.py."""
+"""Seed the database with sample articles."""
 import asyncio
 import sys
 from pathlib import Path
@@ -13,7 +13,7 @@ from app.models.base import Base
 from app.models.article import Article
 
 
-# Sample articles from frontend.py
+# Sample articles for seeding
 SAMPLE_ARTICLES = [
     {
         "title": "Jake Sullivan interview on AI chips and Nvidia",
