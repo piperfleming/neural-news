@@ -790,8 +790,16 @@
         { label: "Security/Misuse", tags: ["Security", "Misuse"] },
       ];
 
-      const buildTagParams = (tags) =>
-        tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
+      let userPreferredTags = [];
+
+      const buildTagParams = (filterTags) => {
+        const params = new URLSearchParams();
+        if (filterTags.length) params.set("tags", filterTags.join(","));
+        if (userPreferredTags.length)
+          params.set("sort_by_tags", userPreferredTags.join(","));
+        const qs = params.toString();
+        return qs ? `?${qs}` : "";
+      };
 
       const renderArticles = (articles, activeFilterTags = []) => {
         feed.innerHTML = "";
@@ -1131,6 +1139,8 @@
             link.title = "Your account";
             startGreetingTypewriter(`Hello, ${firstName}! What AI news are you looking for?`);
             const prefs = user.preferred_tags || [];
+            userPreferredTags = prefs;
+            userBuzzTopics = prefs;
             if (prefs.length > 0) {
               setActiveFilter(prefs);
               fetchArticles(prefs);
@@ -1138,7 +1148,6 @@
               setActiveFilter([]);
               fetchArticles([]);
             }
-            userBuzzTopics = prefs;
 
             // Load morning briefing (includes buzz topics)
             loadBriefing(nnToken);

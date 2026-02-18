@@ -100,22 +100,39 @@ async def ingest_article(
 async def list_articles(
     db: AsyncSession = Depends(get_db),
     tags: str | None = Query(None, description="Comma-separated tags to filter by"),
+    sort_by_tags: str | None = Query(
+        None,
+        description="Comma-separated user preferred tags used for relevance sorting",
+    ),
 ):
-    """Return all news articles, optionally filtered by tags.
+    """Return all news articles, optionally filtered and sorted by tag relevance.
 
     Uses OR logic: articles matching ANY of the requested tags are returned.
-    Response format: {"count": N, "articles": [...]}
+    When *sort_by_tags* is provided, articles are ranked by the number of
+    matching preferred tags (descending) then by recency (newest first).
+    Otherwise articles are simply ordered newest-first.
     """
     query = select(Article)
 
     if tags:
         tag_list = [t.strip() for t in tags.split(",") if t.strip()]
-        # overlap = OR logic: return articles that have ANY of the requested tags
         query = query.where(Article.tags.overlap(tag_list))
+
+    query = query.order_by(Article.created_at.desc())
 
     result = await db.execute(query)
     rows = result.scalars().all()
     articles = [ArticleResponse.model_validate(row).model_dump() for row in rows]
+
+    if sort_by_tags:
+        pref_set = {t.strip() for t in sort_by_tags.split(",") if t.strip()}
+        if pref_set:
+            # Stable sort: articles already ordered by date DESC, so ties in
+            # relevance preserve the newest-first ordering.
+            articles.sort(
+                key=lambda a: -len(pref_set.intersection(a.get("tags", [])))
+            )
+
     return {"count": len(articles), "articles": articles}
 
 
