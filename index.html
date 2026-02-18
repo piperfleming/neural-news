@@ -388,67 +388,6 @@
       .saved-link:hover .icon-outline { display: none; }
       .saved-link:hover .icon-filled { display: block; }
 
-      /* --- URL Ingest bar --- */
-      .url-ingest {
-        background: #f7fbf7;
-        padding: 16px;
-        border-radius: 16px;
-        box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
-      }
-
-      .url-ingest form {
-        display: flex;
-        gap: 10px;
-      }
-
-      .url-ingest input[type="url"] {
-        flex: 1;
-        padding: 10px 14px;
-        border-radius: 999px;
-        border: 1px solid #cfe4d4;
-        font-size: 0.95rem;
-        outline: none;
-        font-family: inherit;
-      }
-
-      .url-ingest input[type="url"]:focus {
-        border-color: #1f9d55;
-        box-shadow: 0 0 0 3px rgba(31, 157, 85, 0.15);
-      }
-
-      .url-ingest button {
-        background: #1f9d55;
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 999px;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 0.9rem;
-        white-space: nowrap;
-        font-family: inherit;
-      }
-
-      .url-ingest button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .ingest-status {
-        margin-top: 10px;
-        font-size: 0.9rem;
-        color: #3f5a4a;
-      }
-
-      .ingest-status.error {
-        color: #c0392b;
-      }
-
-      .ingest-status.success {
-        color: #1f9d55;
-        font-weight: 600;
-      }
-
       /* --- Social Buzz --- */
       .buzz-section {
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
@@ -773,18 +712,6 @@
           <img src="/static/home_banner.jpg" alt="Neural News background" />
           <h1 id="greeting" class="banner-greeting"><span id="greetingText"></span><span id="greetingCursor" class="typing-cursor" aria-hidden="true">|</span></h1>
         </div>
-        <div id="urlIngest" class="url-ingest" hidden>
-          <form id="ingestForm">
-            <input
-              type="url"
-              id="articleUrl"
-              placeholder="Paste an article URL to add it to the feed..."
-              required
-            />
-            <button type="submit" id="ingestBtn">Add Article</button>
-          </form>
-          <div id="ingestStatus" class="ingest-status" hidden></div>
-        </div>
         <div class="filters">
           <div class="filters-row">
             <div id="filterButtons" class="filter-buttons"></div>
@@ -854,7 +781,6 @@
       // Layout elements
       const morningBuzzSection = document.getElementById("morningBuzz");
       const exploreWrapper = document.getElementById("exploreWrapper");
-      const urlIngest = document.getElementById("urlIngest");
       const anonLayout = document.getElementById("anonLayout");
 
       // Track whether we're in logged-in mode
@@ -889,7 +815,6 @@
         anonLayout.hidden = false;
         morningBuzzSection.hidden = true;
         exploreWrapper.hidden = true;
-        urlIngest.hidden = true;
         feed = document.getElementById("feedAnon");
         emptyState = document.getElementById("emptyStateAnon");
         buzzContent = document.getElementById("buzzContentAnon");
@@ -902,7 +827,6 @@
         morningBuzzSection.hidden = false;
         requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
         exploreWrapper.hidden = false;
-        urlIngest.hidden = false;
         feed = document.getElementById("feed");
         emptyState = document.getElementById("emptyState");
       }
@@ -1087,59 +1011,6 @@
           });
         }
       };
-
-      // --- URL Ingest ---
-      const ingestForm = document.getElementById("ingestForm");
-      const articleUrl = document.getElementById("articleUrl");
-      const ingestBtn = document.getElementById("ingestBtn");
-      const ingestStatus = document.getElementById("ingestStatus");
-
-      ingestForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const url = articleUrl.value.trim();
-        if (!url) return;
-
-        ingestBtn.disabled = true;
-        ingestBtn.textContent = "Processing\u2026";
-        ingestStatus.hidden = false;
-        ingestStatus.className = "ingest-status";
-        ingestStatus.textContent =
-          "Fetching article and running AI analysis \u2014 this may take a few seconds\u2026";
-
-        try {
-          const response = await fetch("/api/articles/ingest", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url }),
-          });
-
-          if (response.status === 409) {
-            throw new Error("This article has already been added.");
-          }
-          if (response.status === 429) {
-            throw new Error(
-              "Rate limit reached. Please wait a minute and try again."
-            );
-          }
-          if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || "Failed to process article.");
-          }
-
-          ingestStatus.className = "ingest-status success";
-          ingestStatus.textContent = "Article added successfully!";
-          articleUrl.value = "";
-
-          setActiveFilter([]);
-          fetchArticles([]);
-        } catch (error) {
-          ingestStatus.className = "ingest-status error";
-          ingestStatus.textContent = error.message;
-        } finally {
-          ingestBtn.disabled = false;
-          ingestBtn.textContent = "Add Article";
-        }
-      });
 
       // --- Typewriter greeting & subtitle ---
       function runTypewriter(text, speedMs, onDone) {
