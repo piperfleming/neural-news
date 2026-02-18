@@ -1,6 +1,6 @@
 services:
 
-  # ── PostgreSQL ────────────────────────────────────────────────
+  # PostgreSQL
   db:
     image: postgres:16-alpine
     environment:
@@ -18,7 +18,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── FastAPI backend ───────────────────────────────────────────
+  # FastAPI backend
   backend:
     build:
       context: ./backend
