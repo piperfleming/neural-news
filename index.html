@@ -125,7 +125,7 @@
         flex-direction: column;
         gap: 12px;
         background: #f7fbf7;
-        padding: 16px;
+        padding: 16px 28px;
         border-radius: 16px;
         box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
       }
@@ -416,12 +416,13 @@
         background: rgba(255,255,255,0.15);
         color: #fff;
         border: 1px solid rgba(255,255,255,0.25);
-        padding: 5px 12px;
+        padding: 6px 14px;
         border-radius: 999px;
         font-weight: 600;
         cursor: pointer;
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         backdrop-filter: blur(4px);
+        font-family: inherit;
       }
 
       .buzz-refresh:disabled {
@@ -522,13 +523,91 @@
       .morning-buzz {
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
         border-radius: 18px;
-        padding: 28px 32px;
+        padding: 28px 28px;
         margin-bottom: 28px;
         box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
       }
 
       .morning-buzz.animate-in {
         animation: fadeInUp 0.5s ease-out forwards;
+      }
+
+      .buzz-teaser {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .buzz-teaser-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+      }
+
+      .buzz-teaser-title {
+        font-size: 1.2rem;
+        margin: 0;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+
+      .buzz-teaser-arrow {
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.9;
+      }
+
+      .buzz-teaser-arrow:hover {
+        opacity: 1;
+      }
+
+      .buzz-teaser-arrow:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .buzz-teaser-arrow .arrow-icon {
+        font-size: 1rem;
+        line-height: 1;
+        display: block;
+        transition: transform 0.2s ease;
+      }
+
+      .buzz-teaser-arrow.expanded .arrow-icon {
+        transform: rotate(90deg);
+      }
+
+      .briefing-teaser-loading {
+        margin: 0;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.9rem;
+        animation: shimmer 1.5s ease-in-out infinite;
+      }
+
+      .morning-buzz-expanded[hidden],
+      .buzz-section-expanded[hidden] {
+        display: none !important;
+      }
+
+      .morning-buzz-expanded {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .buzz-section-expanded {
+        display: flex;
+        flex-direction: column;
       }
 
       .morning-buzz-header {
@@ -544,6 +623,15 @@
         color: #fff;
         font-weight: 700;
         letter-spacing: 0.3px;
+      }
+
+      .morning-buzz-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-top: 15px;
+        margin-bottom: 18px;
       }
 
       .morning-buzz-body {
@@ -629,7 +717,7 @@
         width: 100%;
         background: #f7fbf7;
         border: none;
-        padding: 16px 20px;
+        padding: 16px 38px 16px 28px;
         border-radius: 14px;
         cursor: pointer;
         font-size: 1rem;
@@ -725,14 +813,22 @@
 
       <!-- Morning Buzz hero (logged-in users only) -->
       <section id="morningBuzz" class="morning-buzz" hidden>
-        <div class="morning-buzz-header">
-          <h2>&#9728; Your Morning Buzz</h2>
-          <button class="briefing-refresh" id="briefingRefresh">Refresh Briefing</button>
+        <div class="buzz-teaser" id="morningBuzzTeaser">
+          <div class="buzz-teaser-row">
+            <h2 class="buzz-teaser-title">&#9728; Your Morning Buzz</h2>
+            <button type="button" class="buzz-teaser-arrow" id="viewBriefingBtn" aria-label="Expand briefing" disabled><span class="arrow-icon">&#9654;</span></button>
+          </div>
+          <p class="briefing-teaser-loading" id="briefingTeaserLoading">Brewing your morning briefing...</p>
         </div>
-        <div id="briefingBody" class="morning-buzz-body">
-          <p class="briefing-loading">Brewing your morning briefing...</p>
+        <div id="morningBuzzExpanded" class="morning-buzz-expanded" hidden>
+          <div class="morning-buzz-actions">
+            <button class="briefing-refresh" id="briefingRefresh">Refresh Briefing</button>
+          </div>
+          <div id="briefingBody" class="morning-buzz-body">
+            <p class="briefing-loading">Brewing your morning briefing...</p>
+          </div>
+          <div id="briefingBuzz"></div>
         </div>
-        <div id="briefingBuzz"></div>
       </section>
 
       <!-- Explore Further accordion (logged-in users only) -->
@@ -756,12 +852,20 @@
       <!-- Default layout for anonymous users -->
       <div id="anonLayout">
         <section class="buzz-section">
-          <div class="buzz-header">
-            <h2>What People Are Saying</h2>
-            <button class="buzz-refresh" id="buzzRefreshAnon" onclick="loadBuzz()">Refresh</button>
+          <div class="buzz-teaser" id="buzzSectionTeaser">
+            <div class="buzz-teaser-row">
+              <h2 class="buzz-teaser-title">What People Are Saying</h2>
+              <button type="button" class="buzz-teaser-arrow" id="viewTrendingBtn" aria-label="Expand trending" disabled><span class="arrow-icon">&#9654;</span></button>
+            </div>
+            <p class="briefing-teaser-loading" id="buzzTeaserLoading">Loading social buzz...</p>
           </div>
-          <div id="buzzContentAnon">
-            <div class="buzz-loading">Loading social buzz...</div>
+          <div id="buzzSectionExpanded" class="buzz-section-expanded" hidden>
+            <div class="buzz-header morning-buzz-actions">
+              <button class="buzz-refresh" id="buzzRefreshAnon" onclick="loadBuzz()">Refresh</button>
+            </div>
+            <div id="buzzContentAnon">
+              <div class="buzz-loading">Loading social buzz...</div>
+            </div>
           </div>
         </section>
 
@@ -829,6 +933,10 @@
         exploreWrapper.hidden = false;
         feed = document.getElementById("feed");
         emptyState = document.getElementById("emptyState");
+        const expanded = document.getElementById("morningBuzzExpanded");
+        const briefingArrow = document.getElementById("viewBriefingBtn");
+        if (expanded) expanded.hidden = true;
+        if (briefingArrow) briefingArrow.classList.remove("expanded");
       }
 
       const filterOptions = [
@@ -1045,6 +1153,10 @@
         const topics = data.topics || [];
         if (!topics.length) {
           buzzContent.innerHTML = '<div class="buzz-loading">No social buzz found right now.</div>';
+          const buzzLoadEl = document.getElementById("buzzTeaserLoading");
+          if (buzzLoadEl) { buzzLoadEl.textContent = "Click the arrow to view"; buzzLoadEl.style.animation = "none"; }
+          const btn = document.getElementById("viewTrendingBtn");
+          if (btn) btn.disabled = false;
           return;
         }
 
@@ -1074,12 +1186,22 @@
 
         buzzContent.innerHTML = "";
         buzzContent.appendChild(list);
+
+        const buzzLoadingEl = document.getElementById("buzzTeaserLoading");
+        const viewTrendingBtn = document.getElementById("viewTrendingBtn");
+        if (buzzLoadingEl) {
+          buzzLoadingEl.textContent = "Click the arrow to view";
+          buzzLoadingEl.style.animation = "none";
+        }
+        if (viewTrendingBtn) viewTrendingBtn.disabled = false;
       };
 
       let userBuzzTopics = [];
 
       const loadBuzz = async (topics) => {
         const buzzTopics = topics || userBuzzTopics;
+        const viewTrendingBtn = document.getElementById("viewTrendingBtn");
+        if (viewTrendingBtn) viewTrendingBtn.disabled = true;
         buzzRefresh.disabled = true;
         buzzRefresh.textContent = "Loading...";
         buzzContent.innerHTML = '<div class="buzz-loading">Searching social media and summarizing with AI...</div>';
@@ -1095,6 +1217,8 @@
           renderBuzz(data);
         } catch (err) {
           buzzContent.innerHTML = '<div class="buzz-loading">Could not load social buzz.</div>';
+          const buzzLoadingEl = document.getElementById("buzzTeaserLoading");
+          if (buzzLoadingEl) { buzzLoadingEl.textContent = "Could not load social buzz."; buzzLoadingEl.style.animation = "none"; }
         } finally {
           buzzRefresh.disabled = false;
           buzzRefresh.textContent = "Refresh";
@@ -1107,16 +1231,27 @@
       const briefingRefreshBtn = document.getElementById("briefingRefresh");
 
       const renderBriefing = (data) => {
-        const paragraphs = data.briefing_text
+        const paragraphs = (data.briefing_text || "")
           .split("\n")
           .filter((p) => p.trim())
           .map((p) => `<p>${p}</p>`)
           .join("");
-        briefingBody.innerHTML = paragraphs;
+        briefingBody.innerHTML = paragraphs || "<p>No briefing content.</p>";
+
+        const teaserLoading = document.getElementById("briefingTeaserLoading");
+        const viewBtn = document.getElementById("viewBriefingBtn");
+        if (teaserLoading) {
+          teaserLoading.textContent = "Click the arrow to view";
+          teaserLoading.style.animation = "none";
+        }
+        if (viewBtn) viewBtn.disabled = false;
 
         // Render buzz topics with inline source links (embedded per topic)
         const topics = data.buzz_topics || [];
-        if (!topics.length) { briefingBuzz.innerHTML = ""; return; }
+        if (!topics.length) {
+          briefingBuzz.innerHTML = "";
+          return;
+        }
 
         const buzzHtml = topics.map((topic) => {
           const sourceLinks = (topic.source_links || []).map((l) =>
@@ -1144,6 +1279,8 @@
       };
 
       const loadBriefing = async (token) => {
+        const viewBtn = document.getElementById("viewBriefingBtn");
+        if (viewBtn) viewBtn.disabled = true;
         briefingBody.innerHTML = '<p class="briefing-loading">Brewing your morning briefing...</p>';
         try {
           const res = await fetch("/api/briefing/today", {
@@ -1154,8 +1291,46 @@
           renderBriefing(data);
         } catch (err) {
           briefingBody.innerHTML = '<p class="briefing-loading">Could not load your briefing. Try refreshing.</p>';
+          const loadingEl = document.getElementById("briefingTeaserLoading");
+          if (loadingEl) { loadingEl.textContent = "Could not load your briefing."; loadingEl.style.animation = "none"; }
         }
       };
+
+      const viewBriefingBtn = document.getElementById("viewBriefingBtn");
+      const morningBuzzExpanded = document.getElementById("morningBuzzExpanded");
+      if (viewBriefingBtn && morningBuzzExpanded) {
+        viewBriefingBtn.addEventListener("click", () => {
+          if (viewBriefingBtn.disabled) return;
+          const isExpanded = !morningBuzzExpanded.hidden;
+          if (isExpanded) {
+            morningBuzzExpanded.hidden = true;
+            viewBriefingBtn.classList.remove("expanded");
+            viewBriefingBtn.setAttribute("aria-label", "Expand briefing");
+          } else {
+            morningBuzzExpanded.hidden = false;
+            viewBriefingBtn.classList.add("expanded");
+            viewBriefingBtn.setAttribute("aria-label", "Collapse briefing");
+          }
+        });
+      }
+
+      const viewTrendingBtnEl = document.getElementById("viewTrendingBtn");
+      const buzzSectionExpanded = document.getElementById("buzzSectionExpanded");
+      if (viewTrendingBtnEl && buzzSectionExpanded) {
+        viewTrendingBtnEl.addEventListener("click", () => {
+          if (viewTrendingBtnEl.disabled) return;
+          const isExpanded = !buzzSectionExpanded.hidden;
+          if (isExpanded) {
+            buzzSectionExpanded.hidden = true;
+            viewTrendingBtnEl.classList.remove("expanded");
+            viewTrendingBtnEl.setAttribute("aria-label", "Expand trending");
+          } else {
+            buzzSectionExpanded.hidden = false;
+            viewTrendingBtnEl.classList.add("expanded");
+            viewTrendingBtnEl.setAttribute("aria-label", "Collapse trending");
+          }
+        });
+      }
 
       const refreshBriefing = async (token) => {
         briefingRefreshBtn.disabled = true;
