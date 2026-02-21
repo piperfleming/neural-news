@@ -1016,6 +1016,8 @@
           card.className = "card";
           card.style.animationDelay = `${index * 0.05}s`;
           card.dataset.articleId = article.id;
+          card.dataset.articleUrl = article.url;
+          card.dataset.articleTags = (article.tags || []).join("|");
           card.innerHTML = `
             <div class="card-header">
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
@@ -1362,7 +1364,91 @@
       });
 
       // --- Auth-aware personalization ---
-      const nnToken = localStorage.getItem("nn_token");
+      let nnToken = localStorage.getItem("nn_token");
+
+      // --- User metrics (best-effort, authenticated only) ---
+      let nnSessionId = sessionStorage.getItem("nn_session_id");
+      if (!nnSessionId) {
+        nnSessionId =
+          (window.crypto && window.crypto.randomUUID && window.crypto.randomUUID()) ||
+          `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        sessionStorage.setItem("nn_session_id", nnSessionId);
+      }
+
+      let metricsHeartbeatTimer = null;
+
+      const postMetrics = async (path, body, token) => {
+        if (!token) return;
+        try {
+          await fetch(path, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(body),
+            keepalive: true,
+          });
+        } catch (_) {
+          // Swallow analytics errors — never block the product experience.
+        }
+      };
+
+      const startMetrics = (token) => {
+        if (!token || metricsHeartbeatTimer) return;
+
+        const heartbeat = () =>
+          postMetrics(
+            "/api/metrics/heartbeat",
+            {
+              session_id: nnSessionId,
+              page_path: window.location.pathname,
+              user_agent: navigator.userAgent,
+            },
+            token
+          );
+
+        heartbeat();
+        metricsHeartbeatTimer = setInterval(() => {
+          if (document.visibilityState !== "visible") return;
+          heartbeat();
+        }, 30_000);
+
+        const endSession = () =>
+          postMetrics("/api/metrics/session-end", { session_id: nnSessionId }, token);
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") endSession();
+        });
+        window.addEventListener("beforeunload", () => endSession());
+      };
+
+      // Track article clicks (event delegation; works across re-renders)
+      document.addEventListener("click", (e) => {
+        const link = e.target.closest && e.target.closest(".cta a");
+        if (!link) return;
+        if (!nnToken) return;
+        const card = link.closest && link.closest(".card");
+        if (!card) return;
+
+        const articleId = parseInt(card.dataset.articleId || "", 10);
+        const tags = (card.dataset.articleTags || "")
+          .split("|")
+          .map((t) => t.trim())
+          .filter(Boolean);
+
+        postMetrics(
+          "/api/metrics/article-click",
+          {
+            session_id: nnSessionId,
+            article_id: Number.isFinite(articleId) ? articleId : null,
+            article_url: card.dataset.articleUrl || link.href,
+            tags,
+            page_path: window.location.pathname,
+          },
+          nnToken
+        );
+      });
 
       buildFilterButtons();
 
@@ -1380,6 +1466,7 @@
             ensureSavedLink();
 
             await fetchSavedIds();
+            startMetrics(nnToken);
 
             const firstName = user.name.split(" ")[0];
             const link = document.getElementById("accountLink");
@@ -1406,6 +1493,7 @@
             localStorage.removeItem("nn_token");
             const myPrefsBtn = document.getElementById("myPrefsBtn");
             if (myPrefsBtn) myPrefsBtn.hidden = true;
+            nnToken = null;
             activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
