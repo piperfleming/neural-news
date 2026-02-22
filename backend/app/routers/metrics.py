@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,9 @@ from app.models.article import Article
 from app.models.user import User
 from app.models.user_metrics import ArticleClick, UserSession
 from app.schemas.metrics import (
+    AdminUserDetail,
+    AdminUserListItem,
+    AdminUsersResponse,
     AdminMetricsSummary,
     ArticleClickIn,
     DailyMetric,
@@ -21,6 +24,7 @@ from app.schemas.metrics import (
     HeartbeatResponse,
     MetricsSummary,
     SessionEndIn,
+    SessionMetric,
     TagMetric,
     TopArticle,
 )
@@ -385,5 +389,246 @@ async def admin_summary(
         total_clicks=int(total_clicks or 0),
         top_tags=top_tags,
         top_articles=top_articles,
+    )
+
+
+@router.get("/admin/users", response_model=AdminUsersResponse)
+async def admin_users(
+    days: int = Query(30, ge=1, le=365),
+    limit: int = Query(100, ge=1, le=500),
+    _: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    now = _utcnow()
+    start = now - timedelta(days=days)
+
+    sessions_agg = (
+        select(
+            UserSession.user_id.label("user_id"),
+            func.count(UserSession.id).label("total_sessions"),
+            func.coalesce(func.sum(UserSession.active_seconds), 0).label("total_active_seconds"),
+            func.max(UserSession.last_seen_at).label("last_seen_at"),
+        )
+        .where(UserSession.started_at >= start)
+        .group_by(UserSession.user_id)
+        .subquery()
+    )
+    clicks_agg = (
+        select(
+            ArticleClick.user_id.label("user_id"),
+            func.count(ArticleClick.id).label("total_clicks"),
+        )
+        .where(ArticleClick.clicked_at >= start)
+        .group_by(ArticleClick.user_id)
+        .subquery()
+    )
+
+    rows = (
+        await db.execute(
+            select(
+                User.id,
+                User.name,
+                User.email,
+                User.role,
+                User.created_at,
+                sessions_agg.c.last_seen_at,
+                func.coalesce(sessions_agg.c.total_sessions, 0).label("total_sessions"),
+                func.coalesce(sessions_agg.c.total_active_seconds, 0).label("total_active_seconds"),
+                func.coalesce(clicks_agg.c.total_clicks, 0).label("total_clicks"),
+            )
+            .join(sessions_agg, sessions_agg.c.user_id == User.id, isouter=True)
+            .join(clicks_agg, clicks_agg.c.user_id == User.id, isouter=True)
+            .order_by(
+                desc(func.coalesce(sessions_agg.c.total_active_seconds, 0)),
+                desc(func.coalesce(clicks_agg.c.total_clicks, 0)),
+                User.created_at.desc(),
+            )
+            .limit(limit)
+        )
+    ).all()
+
+    users = [
+        AdminUserListItem(
+            user_id=row[0],
+            name=row[1],
+            email=row[2],
+            role=row[3],
+            created_at=row[4],
+            last_seen_at=row[5],
+            total_sessions=int(row[6] or 0),
+            total_active_seconds=int(row[7] or 0),
+            total_clicks=int(row[8] or 0),
+        )
+        for row in rows
+    ]
+    return AdminUsersResponse(days=days, users=users)
+
+
+@router.get("/admin/users/{user_id}", response_model=AdminUserDetail)
+async def admin_user_detail(
+    user_id: int,
+    days: int = Query(30, ge=1, le=365),
+    _: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    now = _utcnow()
+    start = now - timedelta(days=days)
+
+    user = (
+        await db.execute(
+            select(User).where(User.id == user_id)
+        )
+    ).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    total_sessions = (
+        await db.execute(
+            select(func.count(UserSession.id)).where(
+                UserSession.user_id == user_id,
+                UserSession.started_at >= start,
+            )
+        )
+    ).scalar_one()
+    total_active_seconds = (
+        await db.execute(
+            select(func.coalesce(func.sum(UserSession.active_seconds), 0)).where(
+                UserSession.user_id == user_id,
+                UserSession.started_at >= start,
+            )
+        )
+    ).scalar_one()
+    total_clicks = (
+        await db.execute(
+            select(func.count(ArticleClick.id)).where(
+                ArticleClick.user_id == user_id,
+                ArticleClick.clicked_at >= start,
+            )
+        )
+    ).scalar_one()
+
+    last_seen_at = (
+        await db.execute(
+            select(func.max(UserSession.last_seen_at)).where(UserSession.user_id == user_id)
+        )
+    ).scalar_one()
+
+    day_sessions = func.date(UserSession.started_at)
+    sessions_daily_rows = (
+        await db.execute(
+            select(
+                day_sessions.label("day"),
+                func.count(UserSession.id).label("sessions"),
+                func.coalesce(func.sum(UserSession.active_seconds), 0).label("active_seconds"),
+            )
+            .where(UserSession.user_id == user_id, UserSession.started_at >= start)
+            .group_by(day_sessions)
+            .order_by(day_sessions)
+        )
+    ).all()
+
+    day_clicks = func.date(ArticleClick.clicked_at)
+    clicks_daily_rows = (
+        await db.execute(
+            select(
+                day_clicks.label("day"),
+                func.count(ArticleClick.id).label("clicks"),
+            )
+            .where(ArticleClick.user_id == user_id, ArticleClick.clicked_at >= start)
+            .group_by(day_clicks)
+            .order_by(day_clicks)
+        )
+    ).all()
+
+    daily_map: dict[str, DailyMetric] = {}
+    for day, sessions, active_seconds in sessions_daily_rows:
+        key = str(day)
+        daily_map[key] = DailyMetric(
+            date=key,
+            sessions=int(sessions or 0),
+            active_seconds=int(active_seconds or 0),
+            clicks=0,
+        )
+    for day, clicks in clicks_daily_rows:
+        key = str(day)
+        if key not in daily_map:
+            daily_map[key] = DailyMetric(date=key, sessions=0, active_seconds=0, clicks=int(clicks or 0))
+        else:
+            daily_map[key].clicks = int(clicks or 0)
+    daily = [daily_map[k] for k in sorted(daily_map.keys())]
+
+    clicks_by_tag_rows = (
+        await db.execute(
+            text(
+                """
+                SELECT tag, COUNT(*)::int AS clicks
+                FROM (
+                    SELECT unnest(tags) AS tag
+                    FROM article_clicks
+                    WHERE user_id = :user_id
+                      AND clicked_at >= :start
+                ) t
+                GROUP BY tag
+                ORDER BY clicks DESC
+                """
+            ),
+            {"user_id": user_id, "start": start},
+        )
+    ).all()
+    clicks_by_tag = {row[0]: int(row[1]) for row in clicks_by_tag_rows if row[0]}
+
+    top_article_rows = (
+        await db.execute(
+            select(
+                ArticleClick.article_id,
+                Article.title,
+                func.count(ArticleClick.id).label("clicks"),
+            )
+            .join(Article, Article.id == ArticleClick.article_id, isouter=True)
+            .where(ArticleClick.user_id == user_id, ArticleClick.clicked_at >= start)
+            .group_by(ArticleClick.article_id, Article.title)
+            .order_by(desc(func.count(ArticleClick.id)))
+            .limit(10)
+        )
+    ).all()
+    top_articles = [
+        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0))
+        for row in top_article_rows
+    ]
+
+    recent_session_rows = (
+        await db.execute(
+            select(UserSession)
+            .where(UserSession.user_id == user_id, UserSession.started_at >= start)
+            .order_by(UserSession.started_at.desc())
+            .limit(20)
+        )
+    ).scalars().all()
+    recent_sessions = [
+        SessionMetric(
+            session_id=session.session_id,
+            started_at=session.started_at,
+            last_seen_at=session.last_seen_at,
+            ended_at=session.ended_at,
+            active_seconds=int(session.active_seconds or 0),
+        )
+        for session in recent_session_rows
+    ]
+
+    return AdminUserDetail(
+        days=days,
+        user_id=user.id,
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        created_at=user.created_at,
+        last_seen_at=last_seen_at,
+        total_sessions=int(total_sessions or 0),
+        total_active_seconds=int(total_active_seconds or 0),
+        total_clicks=int(total_clicks or 0),
+        daily=daily,
+        clicks_by_tag=clicks_by_tag,
+        top_articles=top_articles,
+        recent_sessions=recent_sessions,
     )
 
