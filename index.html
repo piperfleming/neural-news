@@ -137,19 +137,23 @@
         align-items: center;
       }
 
-      .my-prefs-wrap {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        min-width: 120px;
-        align-self: stretch;
-      }
-
       .filter-buttons {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+      }
+
+      .sort-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .controls-inline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
       }
 
       .profile-button {
@@ -186,8 +190,32 @@
         color: #4b6b57;
       }
 
+      .control-button {
+        background: rgba(18, 40, 76, 0.06);
+        color: #1a3158;
+        border: 1px solid rgba(18, 40, 76, 0.2);
+        padding: 7px 13px;
+        border-radius: 999px;
+        font-weight: 500;
+        font-size: 0.88rem;
+        font-style: italic;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+
+      .control-button:hover {
+        background: rgba(18, 40, 76, 0.1);
+        border-color: rgba(18, 40, 76, 0.32);
+      }
+
+      .control-button.active {
+        background: rgba(18, 40, 76, 0.17);
+        color: #10274a;
+        border-color: rgba(18, 40, 76, 0.42);
+      }
+
       .my-prefs-btn {
-        /* Centered by .my-prefs-wrap */
+        white-space: nowrap;
       }
 
       .grid {
@@ -204,6 +232,23 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
+        position: relative;
+      }
+
+      .trending-alert {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #dc2626, #f97316);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        box-shadow: 0 6px 14px rgba(185, 28, 28, 0.28);
       }
 
       .card-header {
@@ -277,6 +322,12 @@
       .tag.featured {
         background: #0f1f14;
         color: #ffffff;
+      }
+
+      .tag.trending {
+        background: #ffedd5;
+        color: #9a3412;
+        font-weight: 700;
       }
 
       .tag.active {
@@ -803,8 +854,11 @@
         <div class="filters">
           <div class="filters-row">
             <div id="filterButtons" class="filter-buttons"></div>
-            <div class="my-prefs-wrap">
-              <button id="myPrefsBtn" class="filter-button my-prefs-btn" type="button" hidden>My Preferences</button>
+          </div>
+          <div class="filters-row">
+            <div class="controls-inline">
+              <button id="myPrefsBtn" class="control-button my-prefs-btn" type="button" hidden>My Preferences</button>
+              <div id="sortButtons" class="sort-buttons"></div>
             </div>
           </div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
@@ -831,23 +885,13 @@
         </div>
       </section>
 
-      <!-- Explore Further accordion (logged-in users only) -->
-      <div id="exploreWrapper" hidden>
-        <button class="explore-toggle" id="exploreToggle">
-          <span>Explore Further</span>
-          <span class="arrow">&#9654;</span>
-        </button>
-        <div class="explore-content" id="exploreContent">
-          <div class="explore-inner">
-            <section>
-              <div id="feed" class="grid"></div>
-              <div id="emptyState" class="empty" hidden>
-                No articles found for those tags.
-              </div>
-            </section>
-          </div>
+      <!-- Logged-in feed (always visible below Morning Buzz) -->
+      <section id="loggedInFeed" hidden>
+        <div id="feed" class="grid"></div>
+        <div id="emptyState" class="empty" hidden>
+          No articles found for those tags.
         </div>
-      </div>
+      </section>
 
       <!-- Default layout for anonymous users -->
       <div id="anonLayout">
@@ -880,11 +924,12 @@
 
     <script>
       const filterButtons = document.getElementById("filterButtons");
+      const sortButtons = document.getElementById("sortButtons");
       const accountLink = document.getElementById("accountLink");
 
       // Layout elements
       const morningBuzzSection = document.getElementById("morningBuzz");
-      const exploreWrapper = document.getElementById("exploreWrapper");
+      const loggedInFeed = document.getElementById("loggedInFeed");
       const anonLayout = document.getElementById("anonLayout");
 
       // Track whether we're in logged-in mode
@@ -918,7 +963,7 @@
         removeSavedLink();
         anonLayout.hidden = false;
         morningBuzzSection.hidden = true;
-        exploreWrapper.hidden = true;
+        loggedInFeed.hidden = true;
         feed = document.getElementById("feedAnon");
         emptyState = document.getElementById("emptyStateAnon");
         buzzContent = document.getElementById("buzzContentAnon");
@@ -930,7 +975,7 @@
         anonLayout.hidden = true;
         morningBuzzSection.hidden = false;
         requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
-        exploreWrapper.hidden = false;
+        loggedInFeed.hidden = false;
         feed = document.getElementById("feed");
         emptyState = document.getElementById("emptyState");
         const expanded = document.getElementById("morningBuzzExpanded");
@@ -949,8 +994,20 @@
         { label: "Security/Misuse", tags: ["Security", "Misuse"] },
       ];
 
-      const buildTagParams = (tags) =>
-        tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
+      const sortOptions = [
+        { label: "Trending", value: "attention" },
+        { label: "Most Recent", value: "recent" },
+      ];
+
+      let currentSortBy = "attention";
+
+      const buildArticleParams = (tags, sortBy) => {
+        const params = new URLSearchParams();
+        if (tags.length) params.set("tags", tags.join(","));
+        params.set("sort_by", sortBy);
+        const query = params.toString();
+        return query ? `?${query}` : "";
+      };
 
       let savedArticleIds = new Set();
 
@@ -1019,6 +1076,7 @@
           card.dataset.articleUrl = article.url;
           card.dataset.articleTags = (article.tags || []).join("|");
           card.innerHTML = `
+            ${article.is_trending ? '<div class="trending-alert">TRENDING</div>' : ""}
             <div class="card-header">
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
               <div>
@@ -1033,8 +1091,11 @@
               <span>${article.author}</span>
             </div>
             <div class="tags">
-              ${article.tags
-                .map((tag) => {
+              ${[
+                article.is_trending
+                  ? '<span class="tag trending">Trending</span>'
+                  : "",
+                ...(article.tags || []).map((tag) => {
                   const lower = tag.toLowerCase();
                   const isFeatured =
                     lower === "reader favorite" || lower === "editors choice";
@@ -1043,8 +1104,8 @@
                     activeFilterTags.some((t) => t.toLowerCase() === lower);
                   const label = isFeatured ? `\u2B50 ${tag}` : tag;
                   return `<span class="tag${isFeatured ? " featured" : ""}${isActive ? " active" : ""}" data-tag="${tag}">${label}</span>`;
-                })
-                .join("")}
+                }),
+              ].join("")}
             </div>
             <div class="cta" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
               <a href="${article.url}" target="_blank" rel="noreferrer">Read article</a>
@@ -1054,10 +1115,10 @@
           feed.appendChild(card);
         });
 
-        feed.querySelectorAll(".tag").forEach((tagEl) => {
+        feed.querySelectorAll(".tag[data-tag]").forEach((tagEl) => {
           tagEl.addEventListener("click", () => {
             setActiveFilter([tagEl.dataset.tag]);
-            fetchArticles([tagEl.dataset.tag]);
+            fetchArticles([tagEl.dataset.tag], currentSortBy);
           });
         });
 
@@ -1066,15 +1127,47 @@
         });
       };
 
-      const fetchArticles = async (tags = []) => {
-        const response = await fetch(`/api/articles${buildTagParams(tags)}`);
+      const setActiveSort = (sortBy) => {
+        document.querySelectorAll(".sort-button").forEach((button) => {
+          button.classList.toggle("active", button.dataset.sortBy === sortBy);
+        });
+      };
+
+      const buildSortButtons = () => {
+        if (!sortButtons) return;
+        sortButtons.innerHTML = "";
+        sortOptions.forEach((option) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "control-button sort-button";
+          button.textContent = option.label;
+          button.dataset.sortBy = option.value;
+          button.addEventListener("click", () => {
+            currentSortBy = option.value;
+            setActiveSort(currentSortBy);
+            const activeTags = Array.from(
+              document.querySelectorAll(".tag-filter-button.active[data-tags]")
+            )
+              .flatMap((btn) => (btn.dataset.tags || "").split("|"))
+              .filter(Boolean);
+            fetchArticles(activeTags, currentSortBy);
+          });
+          sortButtons.appendChild(button);
+        });
+        setActiveSort(currentSortBy);
+      };
+
+      const fetchArticles = async (tags = [], sortBy = currentSortBy) => {
+        currentSortBy = sortBy;
+        setActiveSort(currentSortBy);
+        const response = await fetch(`/api/articles${buildArticleParams(tags, currentSortBy)}`);
         const data = await response.json();
         renderArticles(data.articles, tags, isLoggedIn);
       };
 
       const setActiveFilter = (tags) => {
         const normalized = tags.map((tag) => tag.toLowerCase());
-        document.querySelectorAll(".filter-button").forEach((button) => {
+        document.querySelectorAll(".tag-filter-button").forEach((button) => {
           const buttonTags = button.dataset.tags
             ? button.dataset.tags.split("|")
             : [];
@@ -1091,12 +1184,12 @@
         filterOptions.forEach((option) => {
           const button = document.createElement("button");
           button.type = "button";
-          button.className = "filter-button";
+          button.className = "filter-button tag-filter-button";
           button.textContent = option.label;
           button.dataset.tags = option.tags.join("|");
           button.addEventListener("click", () => {
             setActiveFilter(option.tags);
-            fetchArticles(option.tags);
+            fetchArticles(option.tags, currentSortBy);
           });
           filterButtons.appendChild(button);
         });
@@ -1114,7 +1207,7 @@
               const prefs = data.preferred_tags || [];
               myPrefsBtn.dataset.tags = prefs.join("|");
               setActiveFilter(prefs);
-              fetchArticles(prefs);
+              fetchArticles(prefs, currentSortBy);
             } catch (err) {
               console.error("Could not load preferences:", err);
             }
@@ -1354,15 +1447,6 @@
         }
       };
 
-      // --- Explore Further toggle ---
-      const exploreToggle = document.getElementById("exploreToggle");
-      const exploreContent = document.getElementById("exploreContent");
-
-      exploreToggle.addEventListener("click", () => {
-        exploreToggle.classList.toggle("open");
-        exploreContent.classList.toggle("open");
-      });
-
       // --- Auth-aware personalization ---
       let nnToken = localStorage.getItem("nn_token");
 
@@ -1451,6 +1535,7 @@
       });
 
       buildFilterButtons();
+      buildSortButtons();
 
       if (nnToken) {
         fetch("/api/auth/me", {
@@ -1478,10 +1563,10 @@
               const myPrefsBtn = document.getElementById("myPrefsBtn");
               if (myPrefsBtn) myPrefsBtn.dataset.tags = prefs.join("|");
               setActiveFilter(prefs);
-              fetchArticles(prefs);
+              fetchArticles(prefs, currentSortBy);
             } else {
               setActiveFilter([]);
-              fetchArticles([]);
+              fetchArticles([], currentSortBy);
             }
             userBuzzTopics = prefs;
 
@@ -1497,7 +1582,7 @@
             activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
-            fetchArticles([]);
+            fetchArticles([], currentSortBy);
             loadBuzz();
           });
       } else {
@@ -1506,7 +1591,7 @@
         activateAnonLayout();
         startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);
-        fetchArticles([]);
+        fetchArticles([], currentSortBy);
         loadBuzz();
       }
     </script>
