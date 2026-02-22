@@ -48,3 +48,20 @@ class MetricsSummary(BaseModel):
     clicks_by_tag: dict[str, int]
     top_articles: list[TopArticle]
 
+
+class TagMetric(BaseModel):
+    tag: str
+    clicks: int
+
+
+class AdminMetricsSummary(BaseModel):
+    days: int
+    total_users: int
+    new_users: int
+    active_users_24h: int
+    total_sessions: int
+    total_active_seconds: int
+    total_clicks: int
+    top_tags: list[TagMetric]
+    top_articles: list[TopArticle]
+

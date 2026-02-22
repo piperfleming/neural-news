@@ -9,17 +9,19 @@ from sqlalchemy import desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_admin_user, get_current_user
 from app.models.article import Article
 from app.models.user import User
 from app.models.user_metrics import ArticleClick, UserSession
 from app.schemas.metrics import (
+    AdminMetricsSummary,
     ArticleClickIn,
     DailyMetric,
     HeartbeatIn,
     HeartbeatResponse,
     MetricsSummary,
     SessionEndIn,
+    TagMetric,
     TopArticle,
 )
 
@@ -290,6 +292,98 @@ async def my_summary(
         total_clicks=int(total_clicks or 0),
         daily=daily,
         clicks_by_tag=clicks_by_tag,
+        top_articles=top_articles,
+    )
+
+
+@router.get("/admin/summary", response_model=AdminMetricsSummary)
+async def admin_summary(
+    days: int = Query(30, ge=1, le=365),
+    _: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    now = _utcnow()
+    start = now - timedelta(days=days)
+    last_24h = now - timedelta(hours=24)
+
+    total_users = (await db.execute(select(func.count(User.id)))).scalar_one()
+    new_users = (
+        await db.execute(select(func.count(User.id)).where(User.created_at >= start))
+    ).scalar_one()
+    active_users_24h = (
+        await db.execute(
+            select(func.count(func.distinct(UserSession.user_id))).where(
+                UserSession.last_seen_at >= last_24h
+            )
+        )
+    ).scalar_one()
+
+    total_sessions = (
+        await db.execute(
+            select(func.count(UserSession.id)).where(UserSession.started_at >= start)
+        )
+    ).scalar_one()
+    total_active_seconds = (
+        await db.execute(
+            select(func.coalesce(func.sum(UserSession.active_seconds), 0)).where(
+                UserSession.started_at >= start
+            )
+        )
+    ).scalar_one()
+    total_clicks = (
+        await db.execute(
+            select(func.count(ArticleClick.id)).where(ArticleClick.clicked_at >= start)
+        )
+    ).scalar_one()
+
+    top_tag_rows = (
+        await db.execute(
+            text(
+                """
+                SELECT tag, COUNT(*)::int AS clicks
+                FROM (
+                    SELECT unnest(tags) AS tag
+                    FROM article_clicks
+                    WHERE clicked_at >= :start
+                ) t
+                GROUP BY tag
+                ORDER BY clicks DESC
+                LIMIT 10
+                """
+            ),
+            {"start": start},
+        )
+    ).all()
+    top_tags = [TagMetric(tag=row[0], clicks=int(row[1])) for row in top_tag_rows if row[0]]
+
+    top_article_rows = (
+        await db.execute(
+            select(
+                ArticleClick.article_id,
+                Article.title,
+                func.count(ArticleClick.id).label("clicks"),
+            )
+            .join(Article, Article.id == ArticleClick.article_id, isouter=True)
+            .where(ArticleClick.clicked_at >= start)
+            .group_by(ArticleClick.article_id, Article.title)
+            .order_by(desc(func.count(ArticleClick.id)))
+            .limit(10)
+        )
+    ).all()
+    top_articles = [
+        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0))
+        for row in top_article_rows
+    ]
+
+    return AdminMetricsSummary(
+        days=days,
+        total_users=int(total_users or 0),
+        new_users=int(new_users or 0),
+        active_users_24h=int(active_users_24h or 0),
+        total_sessions=int(total_sessions or 0),
+        total_active_seconds=int(total_active_seconds or 0),
+        total_clicks=int(total_clicks or 0),
+        top_tags=top_tags,
         top_articles=top_articles,
     )
 

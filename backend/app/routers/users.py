@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, is_admin_user
 from app.models.user import User
 from app.schemas.user import PreferencesResponse, UserResponse, UserUpdate
 
@@ -17,6 +17,8 @@ async def update_profile(
     db: AsyncSession = Depends(get_db),
 ):
     update_data = payload.model_dump(exclude_unset=True)
+    if "role" in update_data and not is_admin_user(current_user):
+        update_data.pop("role")
     for field, value in update_data.items():
         setattr(current_user, field, value)
 

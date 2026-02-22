@@ -258,6 +258,96 @@
       }
       .profile-actions .btn { flex: 1; margin-top: 0; }
 
+      /* --- Admin metrics panel --- */
+      .admin-metrics-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .admin-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .admin-select {
+        border: 1px solid #cfe4d4;
+        border-radius: 10px;
+        padding: 7px 10px;
+        background: #fff;
+        color: #1a6a3a;
+        font-size: 0.85rem;
+        font-family: inherit;
+      }
+      .admin-refresh-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 8px 11px;
+        background: #1f9d55;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.82rem;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .admin-refresh-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .admin-card {
+        background: #f7fbf7;
+        border: 1px solid #e1f3e6;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .admin-card-label {
+        font-size: 0.74rem;
+        color: #567563;
+      }
+      .admin-card-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f1f14;
+        margin-top: 2px;
+      }
+      .admin-lists {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .admin-list-box {
+        background: #f7fbf7;
+        border: 1px solid #e1f3e6;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .admin-list-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1a6a3a;
+        margin-bottom: 6px;
+      }
+      .admin-list {
+        margin: 0;
+        padding-left: 18px;
+        color: #3f5a4a;
+        font-size: 0.84rem;
+      }
+      .admin-list li {
+        margin-bottom: 4px;
+      }
+      .admin-empty {
+        color: #6b7280;
+        font-size: 0.82rem;
+      }
+
       /* --- Animated Transitions --- */
       @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(20px); }
@@ -399,6 +489,46 @@
           <button class="btn-edit" id="editPrefsBtn" onclick="showEditPreferences()">Edit Preferences</button>
         </div>
 
+        <div class="panel hidden" id="adminMetricsPanel">
+          <div class="admin-metrics-header">
+            <div>
+              <div class="section-title" style="margin-bottom: 2px;">Admin Dashboard</div>
+              <div class="section-subtitle" style="margin: 0;">Track site-wide user behavior and engagement.</div>
+            </div>
+            <div class="admin-controls">
+              <select id="adminDaysSelect" class="admin-select">
+                <option value="7">7d</option>
+                <option value="30" selected>30d</option>
+                <option value="90">90d</option>
+              </select>
+              <button id="adminRefreshBtn" class="admin-refresh-btn" type="button">Refresh</button>
+            </div>
+          </div>
+
+          <div id="adminMetricsStatus" class="admin-empty">Loading admin metrics...</div>
+          <div id="adminMetricsBody" class="hidden">
+            <div class="admin-grid">
+              <div class="admin-card"><div class="admin-card-label">Total users</div><div class="admin-card-value" id="mTotalUsers">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">New users</div><div class="admin-card-value" id="mNewUsers">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Active users (24h)</div><div class="admin-card-value" id="mActiveUsers">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Sessions</div><div class="admin-card-value" id="mSessions">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Article clicks</div><div class="admin-card-value" id="mClicks">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Active time</div><div class="admin-card-value" id="mActiveTime">-</div></div>
+            </div>
+
+            <div class="admin-lists">
+              <div class="admin-list-box">
+                <div class="admin-list-title">Top tags</div>
+                <ol id="mTopTags" class="admin-list"></ol>
+              </div>
+              <div class="admin-list-box">
+                <div class="admin-list-title">Top articles</div>
+                <ol id="mTopArticles" class="admin-list"></ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Edit preferences (hidden by default) -->
         <div class="panel hidden" id="editPrefsPanel">
           <div class="section-title">Update Your Vibes</div>
@@ -462,6 +592,7 @@
       let currentUser = null;
       let selectedRole = null;
       let selectedVibeIndices = new Set();
+      let isAdminUser = false;
 
       // --- Animation helper ---
       function animateSection(sectionEl) {
@@ -679,6 +810,7 @@
           currentUser = await res.json();
 
           renderProfile(currentUser);
+          loadAdminMetrics();
 
           document.getElementById("authSection").classList.add("hidden");
           document.getElementById("onboardingSection").classList.add("hidden");
@@ -707,12 +839,98 @@
         if (user.role) {
           badge.textContent = user.role;
           badge.classList.remove("hidden");
+        } else if (isAdminUser) {
+          badge.textContent = "Admin";
+          badge.classList.remove("hidden");
         } else {
           badge.classList.add("hidden");
         }
 
         // Interests display
         renderInterestsDisplay(user.preferred_tags || [], user.role, user.custom_interests);
+      }
+
+      function formatDuration(seconds) {
+        if (!Number.isFinite(seconds) || seconds <= 0) return "0m";
+        const totalMinutes = Math.floor(seconds / 60);
+        if (totalMinutes < 60) return `${totalMinutes}m`;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return `${hours}h ${minutes}m`;
+      }
+
+      function renderAdminMetrics(data) {
+        document.getElementById("mTotalUsers").textContent = (data.total_users || 0).toLocaleString();
+        document.getElementById("mNewUsers").textContent = (data.new_users || 0).toLocaleString();
+        document.getElementById("mActiveUsers").textContent = (data.active_users_24h || 0).toLocaleString();
+        document.getElementById("mSessions").textContent = (data.total_sessions || 0).toLocaleString();
+        document.getElementById("mClicks").textContent = (data.total_clicks || 0).toLocaleString();
+        document.getElementById("mActiveTime").textContent = formatDuration(data.total_active_seconds || 0);
+
+        const topTags = document.getElementById("mTopTags");
+        topTags.innerHTML = "";
+        if ((data.top_tags || []).length === 0) {
+          topTags.innerHTML = "<li>No tag data yet.</li>";
+        } else {
+          data.top_tags.forEach((row) => {
+            const li = document.createElement("li");
+            li.textContent = `${row.tag} (${row.clicks})`;
+            topTags.appendChild(li);
+          });
+        }
+
+        const topArticles = document.getElementById("mTopArticles");
+        topArticles.innerHTML = "";
+        if ((data.top_articles || []).length === 0) {
+          topArticles.innerHTML = "<li>No article clicks yet.</li>";
+        } else {
+          data.top_articles.forEach((row) => {
+            const li = document.createElement("li");
+            const title = row.title || "Untitled article";
+            li.textContent = `${title} (${row.clicks})`;
+            topArticles.appendChild(li);
+          });
+        }
+      }
+
+      async function loadAdminMetrics() {
+        const panel = document.getElementById("adminMetricsPanel");
+        const body = document.getElementById("adminMetricsBody");
+        const status = document.getElementById("adminMetricsStatus");
+        const days = parseInt(document.getElementById("adminDaysSelect").value, 10) || 30;
+
+        status.textContent = "Loading admin metrics...";
+        status.classList.remove("hidden");
+        body.classList.add("hidden");
+
+        try {
+          const res = await fetch(`${API}/api/metrics/admin/summary?days=${days}`, {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (res.status === 403) {
+            isAdminUser = false;
+            panel.classList.add("hidden");
+            renderProfile(currentUser);
+            return;
+          }
+          if (!res.ok) throw new Error("Failed to load admin metrics");
+
+          const data = await res.json();
+          isAdminUser = true;
+          panel.classList.remove("hidden");
+          renderProfile(currentUser);
+          renderAdminMetrics(data);
+          status.classList.add("hidden");
+          body.classList.remove("hidden");
+        } catch {
+          if (isAdminUser) {
+            status.textContent = "Could not load admin metrics.";
+            status.classList.remove("hidden");
+            body.classList.add("hidden");
+          } else {
+            panel.classList.add("hidden");
+          }
+        }
       }
 
       function renderInterestsDisplay(tags, role, customInterests) {
@@ -829,6 +1047,19 @@
       } else {
         animateSection(document.getElementById("authSection"));
       }
+
+      document.getElementById("adminRefreshBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("adminRefreshBtn");
+        btn.disabled = true;
+        btn.textContent = "Refreshing...";
+        await loadAdminMetrics();
+        btn.disabled = false;
+        btn.textContent = "Refresh";
+      });
+
+      document.getElementById("adminDaysSelect").addEventListener("change", () => {
+        if (token) loadAdminMetrics();
+      });
     </script>
   </body>
 </html>
