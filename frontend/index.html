@@ -122,19 +122,38 @@
 
       .filters {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         gap: 12px;
-        align-items: center;
         background: #f7fbf7;
-        padding: 16px;
+        padding: 16px 28px;
         border-radius: 16px;
         box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
+      }
+
+      .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
       }
 
       .filter-buttons {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+      }
+
+      .sort-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .controls-inline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
       }
 
       .profile-button {
@@ -171,6 +190,34 @@
         color: #4b6b57;
       }
 
+      .control-button {
+        background: rgba(18, 40, 76, 0.06);
+        color: #1a3158;
+        border: 1px solid rgba(18, 40, 76, 0.2);
+        padding: 7px 13px;
+        border-radius: 999px;
+        font-weight: 500;
+        font-size: 0.88rem;
+        font-style: italic;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+
+      .control-button:hover {
+        background: rgba(18, 40, 76, 0.1);
+        border-color: rgba(18, 40, 76, 0.32);
+      }
+
+      .control-button.active {
+        background: rgba(18, 40, 76, 0.17);
+        color: #10274a;
+        border-color: rgba(18, 40, 76, 0.42);
+      }
+
+      .my-prefs-btn {
+        white-space: nowrap;
+      }
+
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -185,6 +232,23 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
+        position: relative;
+      }
+
+      .trending-alert {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #dc2626, #f97316);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        box-shadow: 0 6px 14px rgba(185, 28, 28, 0.28);
       }
 
       .card-header {
@@ -260,6 +324,12 @@
         color: #ffffff;
       }
 
+      .tag.trending {
+        background: #ffedd5;
+        color: #9a3412;
+        font-weight: 700;
+      }
+
       .tag.active {
         background: #1f9d55;
         color: #ffffff;
@@ -293,66 +363,112 @@
         color: #567563;
       }
 
-      /* --- URL Ingest bar --- */
-      .url-ingest {
-        background: #f7fbf7;
-        padding: 16px;
-        border-radius: 16px;
-        box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
+      .save-btn,
+      .like-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: none;
+        background: #e1f3e6;
+        color: #1a6a3a;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
       }
 
-      .url-ingest form {
+      .save-btn:hover,
+      .like-btn:hover {
+        background: #cfe4d4;
+        color: #1a6a3a;
+      }
+
+      .save-btn.saved {
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .save-btn.saved:hover {
+        background: #1a6a3a;
+        color: #fff;
+      }
+
+      .like-btn.liked {
+        background: #ef4444;
+        color: #fff;
+      }
+
+      .like-btn.liked:hover {
+        background: #dc2626;
+        color: #fff;
+      }
+
+      .like-btn {
+        width: auto;
+        min-width: 56px;
+        padding: 0 10px;
+        gap: 6px;
+      }
+
+      .save-btn svg,
+      .like-btn svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      .save-btn .icon-outline { display: block; }
+      .save-btn .icon-filled { display: none; }
+      .save-btn.saved .icon-outline { display: none; }
+      .save-btn.saved .icon-filled { display: block; }
+      .like-btn .icon-outline { display: block; }
+      .like-btn .icon-filled { display: none; }
+      .like-btn.liked .icon-outline { display: none; }
+      .like-btn.liked .icon-filled { display: block; }
+      .like-count {
+        font-size: 0.78rem;
+        font-weight: 700;
+        min-width: 10px;
+        text-align: center;
+        line-height: 1;
+      }
+
+      .header-actions {
         display: flex;
+        align-items: center;
         gap: 10px;
       }
 
-      .url-ingest input[type="url"] {
-        flex: 1;
-        padding: 10px 14px;
-        border-radius: 999px;
-        border: 1px solid #cfe4d4;
-        font-size: 0.95rem;
-        outline: none;
-        font-family: inherit;
+      .saved-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        background: #e1f3e6;
+        color: #1a6a3a;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
       }
 
-      .url-ingest input[type="url"]:focus {
-        border-color: #1f9d55;
-        box-shadow: 0 0 0 3px rgba(31, 157, 85, 0.15);
-      }
-
-      .url-ingest button {
+      .saved-link:hover {
         background: #1f9d55;
         color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 999px;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 0.9rem;
-        white-space: nowrap;
-        font-family: inherit;
       }
 
-      .url-ingest button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
+      .saved-link svg {
+        width: 20px;
+        height: 20px;
       }
 
-      .ingest-status {
-        margin-top: 10px;
-        font-size: 0.9rem;
-        color: #3f5a4a;
-      }
-
-      .ingest-status.error {
-        color: #c0392b;
-      }
-
-      .ingest-status.success {
-        color: #1f9d55;
-        font-weight: 600;
-      }
+      .saved-link .icon-outline { display: block; }
+      .saved-link .icon-filled { display: none; }
+      .saved-link:hover .icon-outline { display: none; }
+      .saved-link:hover .icon-filled { display: block; }
 
       /* --- Social Buzz --- */
       .buzz-section {
@@ -382,12 +498,13 @@
         background: rgba(255,255,255,0.15);
         color: #fff;
         border: 1px solid rgba(255,255,255,0.25);
-        padding: 5px 12px;
+        padding: 6px 14px;
         border-radius: 999px;
         font-weight: 600;
         cursor: pointer;
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         backdrop-filter: blur(4px);
+        font-family: inherit;
       }
 
       .buzz-refresh:disabled {
@@ -488,13 +605,91 @@
       .morning-buzz {
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
         border-radius: 18px;
-        padding: 28px 32px;
+        padding: 28px 28px;
         margin-bottom: 28px;
         box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
       }
 
       .morning-buzz.animate-in {
         animation: fadeInUp 0.5s ease-out forwards;
+      }
+
+      .buzz-teaser {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .buzz-teaser-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+      }
+
+      .buzz-teaser-title {
+        font-size: 1.2rem;
+        margin: 0;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+
+      .buzz-teaser-arrow {
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.9;
+      }
+
+      .buzz-teaser-arrow:hover {
+        opacity: 1;
+      }
+
+      .buzz-teaser-arrow:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .buzz-teaser-arrow .arrow-icon {
+        font-size: 1rem;
+        line-height: 1;
+        display: block;
+        transition: transform 0.2s ease;
+      }
+
+      .buzz-teaser-arrow.expanded .arrow-icon {
+        transform: rotate(90deg);
+      }
+
+      .briefing-teaser-loading {
+        margin: 0;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.9rem;
+        animation: shimmer 1.5s ease-in-out infinite;
+      }
+
+      .morning-buzz-expanded[hidden],
+      .buzz-section-expanded[hidden] {
+        display: none !important;
+      }
+
+      .morning-buzz-expanded {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .buzz-section-expanded {
+        display: flex;
+        flex-direction: column;
       }
 
       .morning-buzz-header {
@@ -510,6 +705,15 @@
         color: #fff;
         font-weight: 700;
         letter-spacing: 0.3px;
+      }
+
+      .morning-buzz-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-top: 15px;
+        margin-bottom: 18px;
       }
 
       .morning-buzz-body {
@@ -595,7 +799,7 @@
         width: 100%;
         background: #f7fbf7;
         border: none;
-        padding: 16px 20px;
+        padding: 16px 38px 16px 28px;
         border-radius: 14px;
         cursor: pointer;
         font-size: 1rem;
@@ -668,71 +872,75 @@
             <img class="brand-logo" src="/static/neural-news-logo.png?v=2" alt="N²eural News" />
             <p class="brand-tagline"><strong>Exponential news. Constant time understanding.</strong></p>
           </div>
-          <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
-            Log In / Sign Up
-          </a>
+          <div class="header-actions" id="headerActions">
+            <a id="accountLink" href="/account" class="profile-button" style="text-decoration:none;">
+              Log In
+            </a>
+          </div>
         </div>
         <div class="brand-background">
           <img src="/static/home_banner.jpg" alt="Neural News background" />
           <h1 id="greeting" class="banner-greeting"><span id="greetingText"></span><span id="greetingCursor" class="typing-cursor" aria-hidden="true">|</span></h1>
         </div>
-        <div class="url-ingest">
-          <form id="ingestForm">
-            <input
-              type="url"
-              id="articleUrl"
-              placeholder="Paste an article URL to add it to the feed..."
-              required
-            />
-            <button type="submit" id="ingestBtn">Add Article</button>
-          </form>
-          <div id="ingestStatus" class="ingest-status" hidden></div>
-        </div>
         <div class="filters">
-          <div id="filterButtons" class="filter-buttons"></div>
+          <div class="filters-row">
+            <div id="filterButtons" class="filter-buttons"></div>
+          </div>
+          <div class="filters-row">
+            <div class="controls-inline">
+              <button id="myPrefsBtn" class="control-button my-prefs-btn" type="button" hidden>My Preferences</button>
+              <div id="sortButtons" class="sort-buttons"></div>
+            </div>
+          </div>
           <span class="tag-hint">Tap a tag to filter the feed.</span>
         </div>
       </header>
 
       <!-- Morning Buzz hero (logged-in users only) -->
       <section id="morningBuzz" class="morning-buzz" hidden>
-        <div class="morning-buzz-header">
-          <h2>&#9728; Your Morning Buzz</h2>
-          <button class="briefing-refresh" id="briefingRefresh">Refresh Briefing</button>
+        <div class="buzz-teaser" id="morningBuzzTeaser">
+          <div class="buzz-teaser-row">
+            <h2 class="buzz-teaser-title">&#9728; Your Morning Buzz</h2>
+            <button type="button" class="buzz-teaser-arrow" id="viewBriefingBtn" aria-label="Expand briefing" disabled><span class="arrow-icon">&#9654;</span></button>
+          </div>
+          <p class="briefing-teaser-loading" id="briefingTeaserLoading">Brewing your morning briefing...</p>
         </div>
-        <div id="briefingBody" class="morning-buzz-body">
-          <p class="briefing-loading">Brewing your morning briefing...</p>
+        <div id="morningBuzzExpanded" class="morning-buzz-expanded" hidden>
+          <div class="morning-buzz-actions">
+            <button class="briefing-refresh" id="briefingRefresh">Refresh Briefing</button>
+          </div>
+          <div id="briefingBody" class="morning-buzz-body">
+            <p class="briefing-loading">Brewing your morning briefing...</p>
+          </div>
+          <div id="briefingBuzz"></div>
         </div>
-        <div id="briefingBuzz"></div>
       </section>
 
-      <!-- Explore Further accordion (logged-in users only) -->
-      <div id="exploreWrapper" hidden>
-        <button class="explore-toggle" id="exploreToggle">
-          <span>Explore Further</span>
-          <span class="arrow">&#9654;</span>
-        </button>
-        <div class="explore-content" id="exploreContent">
-          <div class="explore-inner">
-            <section>
-              <div id="feed" class="grid"></div>
-              <div id="emptyState" class="empty" hidden>
-                No articles found for those tags.
-              </div>
-            </section>
-          </div>
+      <!-- Logged-in feed (always visible below Morning Buzz) -->
+      <section id="loggedInFeed" hidden>
+        <div id="feed" class="grid"></div>
+        <div id="emptyState" class="empty" hidden>
+          No articles found for those tags.
         </div>
-      </div>
+      </section>
 
       <!-- Default layout for anonymous users -->
       <div id="anonLayout">
         <section class="buzz-section">
-          <div class="buzz-header">
-            <h2>What People Are Saying</h2>
-            <button class="buzz-refresh" id="buzzRefreshAnon" onclick="loadBuzz()">Refresh</button>
+          <div class="buzz-teaser" id="buzzSectionTeaser">
+            <div class="buzz-teaser-row">
+              <h2 class="buzz-teaser-title">What People Are Saying</h2>
+              <button type="button" class="buzz-teaser-arrow" id="viewTrendingBtn" aria-label="Expand trending" disabled><span class="arrow-icon">&#9654;</span></button>
+            </div>
+            <p class="briefing-teaser-loading" id="buzzTeaserLoading">Loading social buzz...</p>
           </div>
-          <div id="buzzContentAnon">
-            <div class="buzz-loading">Loading social buzz...</div>
+          <div id="buzzSectionExpanded" class="buzz-section-expanded" hidden>
+            <div class="buzz-header morning-buzz-actions">
+              <button class="buzz-refresh" id="buzzRefreshAnon" onclick="loadBuzz()">Refresh</button>
+            </div>
+            <div id="buzzContentAnon">
+              <div class="buzz-loading">Loading social buzz...</div>
+            </div>
           </div>
         </section>
 
@@ -747,11 +955,12 @@
 
     <script>
       const filterButtons = document.getElementById("filterButtons");
+      const sortButtons = document.getElementById("sortButtons");
       const accountLink = document.getElementById("accountLink");
 
       // Layout elements
       const morningBuzzSection = document.getElementById("morningBuzz");
-      const exploreWrapper = document.getElementById("exploreWrapper");
+      const loggedInFeed = document.getElementById("loggedInFeed");
       const anonLayout = document.getElementById("anonLayout");
 
       // Track whether we're in logged-in mode
@@ -760,10 +969,32 @@
       // Active feed & empty state references (set based on layout)
       let feed, emptyState, buzzContent, buzzRefresh;
 
+      function removeSavedLink() {
+        const savedLink = document.getElementById("savedLink");
+        if (savedLink) savedLink.remove();
+      }
+
+      function ensureSavedLink() {
+        if (document.getElementById("savedLink")) return;
+        const actions = document.getElementById("headerActions");
+        const accountLink = document.getElementById("accountLink");
+        if (!actions || !accountLink) return;
+        const a = document.createElement("a");
+        a.id = "savedLink";
+        a.href = "/saved";
+        a.className = "saved-link";
+        a.title = "Saved articles";
+        a.setAttribute("aria-label", "Saved articles");
+        a.innerHTML = '<svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+        actions.insertBefore(a, accountLink);
+      }
+
       function activateAnonLayout() {
+        isLoggedIn = false;
+        removeSavedLink();
         anonLayout.hidden = false;
         morningBuzzSection.hidden = true;
-        exploreWrapper.hidden = true;
+        loggedInFeed.hidden = true;
         feed = document.getElementById("feedAnon");
         emptyState = document.getElementById("emptyStateAnon");
         buzzContent = document.getElementById("buzzContentAnon");
@@ -775,9 +1006,13 @@
         anonLayout.hidden = true;
         morningBuzzSection.hidden = false;
         requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
-        exploreWrapper.hidden = false;
+        loggedInFeed.hidden = false;
         feed = document.getElementById("feed");
         emptyState = document.getElementById("emptyState");
+        const expanded = document.getElementById("morningBuzzExpanded");
+        const briefingArrow = document.getElementById("viewBriefingBtn");
+        if (expanded) expanded.hidden = true;
+        if (briefingArrow) briefingArrow.classList.remove("expanded");
       }
 
       const filterOptions = [
@@ -792,16 +1027,121 @@
 
       let userPreferredTags = [];
 
-      const buildTagParams = (filterTags) => {
+      const sortOptions = [
+        { label: "Trending", value: "attention" },
+        { label: "Most Recent", value: "recent" },
+      ];
+
+      let currentSortBy = "attention";
+
+      const buildArticleParams = (tags, sortBy) => {
         const params = new URLSearchParams();
-        if (filterTags.length) params.set("tags", filterTags.join(","));
-        if (userPreferredTags.length)
-          params.set("sort_by_tags", userPreferredTags.join(","));
-        const qs = params.toString();
-        return qs ? `?${qs}` : "";
+        if (tags.length) params.set("tags", tags.join(","));
+        params.set("sort_by", sortBy);
+        const query = params.toString();
+        return query ? `?${query}` : "";
       };
 
-      const renderArticles = (articles, activeFilterTags = []) => {
+      let savedArticleIds = new Set();
+      let likedArticleIds = new Set();
+
+      const fetchSavedIds = async () => {
+        const token = localStorage.getItem("nn_token");
+        if (!token) return;
+        try {
+          const res = await fetch("/api/users/me/saved/ids", {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          savedArticleIds = new Set(data.article_ids || []);
+        } catch (err) {
+          console.error("Could not load saved articles:", err);
+        }
+      };
+
+      const fetchLikedIds = async () => {
+        const token = localStorage.getItem("nn_token");
+        if (!token) return;
+        try {
+          const res = await fetch("/api/metrics/me/article-likes/ids", {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          likedArticleIds = new Set(data.article_ids || []);
+        } catch (err) {
+          console.error("Could not load liked articles:", err);
+        }
+      };
+
+      const toggleSave = async (articleId, btn) => {
+        const token = localStorage.getItem("nn_token");
+        if (!token || !isLoggedIn) return;
+        const isSaved = savedArticleIds.has(articleId);
+        btn.disabled = true;
+        try {
+          if (isSaved) {
+            await fetch(`/api/users/me/saved/${articleId}`, {
+              method: "DELETE",
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            savedArticleIds.delete(articleId);
+          } else {
+            await fetch(`/api/users/me/saved/${articleId}`, {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            savedArticleIds.add(articleId);
+          }
+          btn.classList.toggle("saved", !isSaved);
+        } catch (err) {
+          console.error("Save/unsave failed:", err);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      const toggleLike = async (articleId, articleUrl, tags, btn) => {
+        const token = localStorage.getItem("nn_token");
+        if (!token || !isLoggedIn) return;
+        const isLiked = likedArticleIds.has(articleId);
+        btn.disabled = true;
+        try {
+          if (isLiked) {
+            await fetch(`/api/metrics/article-like/${articleId}`, {
+              method: "DELETE",
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            likedArticleIds.delete(articleId);
+            const countEl = btn.querySelector(".like-count");
+            if (countEl) countEl.textContent = `${Math.max(0, parseInt(countEl.textContent || "0", 10) - 1)}`;
+          } else {
+            await fetch("/api/metrics/article-like", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                article_id: articleId,
+                article_url: articleUrl,
+                tags,
+              }),
+            });
+            likedArticleIds.add(articleId);
+            const countEl = btn.querySelector(".like-count");
+            if (countEl) countEl.textContent = `${parseInt(countEl.textContent || "0", 10) + 1}`;
+          }
+          btn.classList.toggle("liked", !isLiked);
+        } catch (err) {
+          console.error("Like/unlike failed:", err);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      const renderArticles = (articles, activeFilterTags = [], showSaveButton = false) => {
         feed.innerHTML = "";
         if (!articles.length) {
           emptyState.hidden = false;
@@ -810,10 +1150,29 @@
         emptyState.hidden = true;
 
         articles.forEach((article, index) => {
+          const isSaved = savedArticleIds.has(article.id);
+          const isLiked = likedArticleIds.has(article.id);
+          const saveBtnHtml = showSaveButton
+            ? `<button type="button" class="save-btn ${isSaved ? "saved" : ""}" data-article-id="${article.id}" aria-label="${isSaved ? "Unsave" : "Save"} article">
+                <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </button>`
+            : "";
+          const likeBtnHtml = showSaveButton
+            ? `<button type="button" class="like-btn ${isLiked ? "liked" : ""}" data-article-id="${article.id}" aria-label="${isLiked ? "Unlike" : "Like"} article">
+                <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v10"/><path d="M11 10V6a3 3 0 0 1 3-3l1 7h4a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7"/><path d="M3 10h4v10H3z"/></svg>
+                <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10h4v10H3z"/><path d="M11 10V6a3 3 0 0 1 3-3l1 7h4a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7V10z"/></svg>
+                <span class="like-count">${article.like_count || 0}</span>
+              </button>`
+            : "";
           const card = document.createElement("article");
           card.className = "card";
           card.style.animationDelay = `${index * 0.05}s`;
+          card.dataset.articleId = article.id;
+          card.dataset.articleUrl = article.url;
+          card.dataset.articleTags = (article.tags || []).join("|");
           card.innerHTML = `
+            ${article.is_trending ? '<div class="trending-alert">TRENDING</div>' : ""}
             <div class="card-header">
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
               <div>
@@ -828,8 +1187,8 @@
               <span>${article.author}</span>
             </div>
             <div class="tags">
-              ${article.tags
-                .map((tag) => {
+              ${[
+                ...(article.tags || []).map((tag) => {
                   const lower = tag.toLowerCase();
                   const isFeatured =
                     lower === "reader favorite" || lower === "editors choice";
@@ -838,33 +1197,83 @@
                     activeFilterTags.some((t) => t.toLowerCase() === lower);
                   const label = isFeatured ? `\u2B50 ${tag}` : tag;
                   return `<span class="tag${isFeatured ? " featured" : ""}${isActive ? " active" : ""}" data-tag="${tag}">${label}</span>`;
-                })
-                .join("")}
+                }),
+              ].join("")}
             </div>
-            <div class="cta">
+            <div class="cta" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
               <a href="${article.url}" target="_blank" rel="noreferrer">Read article</a>
+              ${likeBtnHtml}
+              ${saveBtnHtml}
             </div>
           `;
           feed.appendChild(card);
         });
 
-        feed.querySelectorAll(".tag").forEach((tagEl) => {
+        feed.querySelectorAll(".tag[data-tag]").forEach((tagEl) => {
           tagEl.addEventListener("click", () => {
             setActiveFilter([tagEl.dataset.tag]);
-            fetchArticles([tagEl.dataset.tag]);
+            fetchArticles([tagEl.dataset.tag], currentSortBy);
+          });
+        });
+
+        feed.querySelectorAll(".save-btn").forEach((btn) => {
+          btn.addEventListener("click", () => toggleSave(parseInt(btn.dataset.articleId, 10), btn));
+        });
+        feed.querySelectorAll(".like-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const card = btn.closest(".card");
+            if (!card) return;
+            const articleId = parseInt(btn.dataset.articleId, 10);
+            const tags = (card.dataset.articleTags || "")
+              .split("|")
+              .map((t) => t.trim())
+              .filter(Boolean);
+            toggleLike(articleId, card.dataset.articleUrl || "", tags, btn);
           });
         });
       };
 
-      const fetchArticles = async (tags = []) => {
-        const response = await fetch(`/api/articles${buildTagParams(tags)}`);
+      const setActiveSort = (sortBy) => {
+        document.querySelectorAll(".sort-button").forEach((button) => {
+          button.classList.toggle("active", button.dataset.sortBy === sortBy);
+        });
+      };
+
+      const buildSortButtons = () => {
+        if (!sortButtons) return;
+        sortButtons.innerHTML = "";
+        sortOptions.forEach((option) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "control-button sort-button";
+          button.textContent = option.label;
+          button.dataset.sortBy = option.value;
+          button.addEventListener("click", () => {
+            currentSortBy = option.value;
+            setActiveSort(currentSortBy);
+            const activeTags = Array.from(
+              document.querySelectorAll(".tag-filter-button.active[data-tags]")
+            )
+              .flatMap((btn) => (btn.dataset.tags || "").split("|"))
+              .filter(Boolean);
+            fetchArticles(activeTags, currentSortBy);
+          });
+          sortButtons.appendChild(button);
+        });
+        setActiveSort(currentSortBy);
+      };
+
+      const fetchArticles = async (tags = [], sortBy = currentSortBy) => {
+        currentSortBy = sortBy;
+        setActiveSort(currentSortBy);
+        const response = await fetch(`/api/articles${buildArticleParams(tags, currentSortBy)}`);
         const data = await response.json();
-        renderArticles(data.articles, tags);
+        renderArticles(data.articles, tags, isLoggedIn);
       };
 
       const setActiveFilter = (tags) => {
         const normalized = tags.map((tag) => tag.toLowerCase());
-        document.querySelectorAll(".filter-button").forEach((button) => {
+        document.querySelectorAll(".tag-filter-button").forEach((button) => {
           const buttonTags = button.dataset.tags
             ? button.dataset.tags.split("|")
             : [];
@@ -881,69 +1290,36 @@
         filterOptions.forEach((option) => {
           const button = document.createElement("button");
           button.type = "button";
-          button.className = "filter-button";
+          button.className = "filter-button tag-filter-button";
           button.textContent = option.label;
           button.dataset.tags = option.tags.join("|");
           button.addEventListener("click", () => {
             setActiveFilter(option.tags);
-            fetchArticles(option.tags);
+            fetchArticles(option.tags, currentSortBy);
           });
           filterButtons.appendChild(button);
         });
-      };
-
-      // --- URL Ingest ---
-      const ingestForm = document.getElementById("ingestForm");
-      const articleUrl = document.getElementById("articleUrl");
-      const ingestBtn = document.getElementById("ingestBtn");
-      const ingestStatus = document.getElementById("ingestStatus");
-
-      ingestForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const url = articleUrl.value.trim();
-        if (!url) return;
-
-        ingestBtn.disabled = true;
-        ingestBtn.textContent = "Processing\u2026";
-        ingestStatus.hidden = false;
-        ingestStatus.className = "ingest-status";
-        ingestStatus.textContent =
-          "Fetching article and running AI analysis \u2014 this may take a few seconds\u2026";
-
-        try {
-          const response = await fetch("/api/articles/ingest", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url }),
+        const myPrefsBtn = document.getElementById("myPrefsBtn");
+        if (myPrefsBtn) {
+          myPrefsBtn.addEventListener("click", async () => {
+            const token = localStorage.getItem("nn_token");
+            if (!token) return;
+            try {
+              const res = await fetch("/api/users/me/preferences", {
+                headers: { "Authorization": `Bearer ${token}` },
+              });
+              if (!res.ok) throw new Error("Failed to load preferences");
+              const data = await res.json();
+              const prefs = data.preferred_tags || [];
+              myPrefsBtn.dataset.tags = prefs.join("|");
+              setActiveFilter(prefs);
+              fetchArticles(prefs, currentSortBy);
+            } catch (err) {
+              console.error("Could not load preferences:", err);
+            }
           });
-
-          if (response.status === 409) {
-            throw new Error("This article has already been added.");
-          }
-          if (response.status === 429) {
-            throw new Error(
-              "Rate limit reached. Please wait a minute and try again."
-            );
-          }
-          if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || "Failed to process article.");
-          }
-
-          ingestStatus.className = "ingest-status success";
-          ingestStatus.textContent = "Article added successfully!";
-          articleUrl.value = "";
-
-          setActiveFilter([]);
-          fetchArticles([]);
-        } catch (error) {
-          ingestStatus.className = "ingest-status error";
-          ingestStatus.textContent = error.message;
-        } finally {
-          ingestBtn.disabled = false;
-          ingestBtn.textContent = "Add Article";
         }
-      });
+      };
 
       // --- Typewriter greeting & subtitle ---
       function runTypewriter(text, speedMs, onDone) {
@@ -978,6 +1354,10 @@
         const topics = data.topics || [];
         if (!topics.length) {
           buzzContent.innerHTML = '<div class="buzz-loading">No social buzz found right now.</div>';
+          const buzzLoadEl = document.getElementById("buzzTeaserLoading");
+          if (buzzLoadEl) { buzzLoadEl.textContent = "Click the arrow to view"; buzzLoadEl.style.animation = "none"; }
+          const btn = document.getElementById("viewTrendingBtn");
+          if (btn) btn.disabled = false;
           return;
         }
 
@@ -1007,12 +1387,22 @@
 
         buzzContent.innerHTML = "";
         buzzContent.appendChild(list);
+
+        const buzzLoadingEl = document.getElementById("buzzTeaserLoading");
+        const viewTrendingBtn = document.getElementById("viewTrendingBtn");
+        if (buzzLoadingEl) {
+          buzzLoadingEl.textContent = "Click the arrow to view";
+          buzzLoadingEl.style.animation = "none";
+        }
+        if (viewTrendingBtn) viewTrendingBtn.disabled = false;
       };
 
       let userBuzzTopics = [];
 
       const loadBuzz = async (topics) => {
         const buzzTopics = topics || userBuzzTopics;
+        const viewTrendingBtn = document.getElementById("viewTrendingBtn");
+        if (viewTrendingBtn) viewTrendingBtn.disabled = true;
         buzzRefresh.disabled = true;
         buzzRefresh.textContent = "Loading...";
         buzzContent.innerHTML = '<div class="buzz-loading">Searching social media and summarizing with AI...</div>';
@@ -1028,6 +1418,8 @@
           renderBuzz(data);
         } catch (err) {
           buzzContent.innerHTML = '<div class="buzz-loading">Could not load social buzz.</div>';
+          const buzzLoadingEl = document.getElementById("buzzTeaserLoading");
+          if (buzzLoadingEl) { buzzLoadingEl.textContent = "Could not load social buzz."; buzzLoadingEl.style.animation = "none"; }
         } finally {
           buzzRefresh.disabled = false;
           buzzRefresh.textContent = "Refresh";
@@ -1040,16 +1432,27 @@
       const briefingRefreshBtn = document.getElementById("briefingRefresh");
 
       const renderBriefing = (data) => {
-        const paragraphs = data.briefing_text
+        const paragraphs = (data.briefing_text || "")
           .split("\n")
           .filter((p) => p.trim())
           .map((p) => `<p>${p}</p>`)
           .join("");
-        briefingBody.innerHTML = paragraphs;
+        briefingBody.innerHTML = paragraphs || "<p>No briefing content.</p>";
+
+        const teaserLoading = document.getElementById("briefingTeaserLoading");
+        const viewBtn = document.getElementById("viewBriefingBtn");
+        if (teaserLoading) {
+          teaserLoading.textContent = "Click the arrow to view";
+          teaserLoading.style.animation = "none";
+        }
+        if (viewBtn) viewBtn.disabled = false;
 
         // Render buzz topics with inline source links (embedded per topic)
         const topics = data.buzz_topics || [];
-        if (!topics.length) { briefingBuzz.innerHTML = ""; return; }
+        if (!topics.length) {
+          briefingBuzz.innerHTML = "";
+          return;
+        }
 
         const buzzHtml = topics.map((topic) => {
           const sourceLinks = (topic.source_links || []).map((l) =>
@@ -1077,6 +1480,8 @@
       };
 
       const loadBriefing = async (token) => {
+        const viewBtn = document.getElementById("viewBriefingBtn");
+        if (viewBtn) viewBtn.disabled = true;
         briefingBody.innerHTML = '<p class="briefing-loading">Brewing your morning briefing...</p>';
         try {
           const res = await fetch("/api/briefing/today", {
@@ -1087,8 +1492,46 @@
           renderBriefing(data);
         } catch (err) {
           briefingBody.innerHTML = '<p class="briefing-loading">Could not load your briefing. Try refreshing.</p>';
+          const loadingEl = document.getElementById("briefingTeaserLoading");
+          if (loadingEl) { loadingEl.textContent = "Could not load your briefing."; loadingEl.style.animation = "none"; }
         }
       };
+
+      const viewBriefingBtn = document.getElementById("viewBriefingBtn");
+      const morningBuzzExpanded = document.getElementById("morningBuzzExpanded");
+      if (viewBriefingBtn && morningBuzzExpanded) {
+        viewBriefingBtn.addEventListener("click", () => {
+          if (viewBriefingBtn.disabled) return;
+          const isExpanded = !morningBuzzExpanded.hidden;
+          if (isExpanded) {
+            morningBuzzExpanded.hidden = true;
+            viewBriefingBtn.classList.remove("expanded");
+            viewBriefingBtn.setAttribute("aria-label", "Expand briefing");
+          } else {
+            morningBuzzExpanded.hidden = false;
+            viewBriefingBtn.classList.add("expanded");
+            viewBriefingBtn.setAttribute("aria-label", "Collapse briefing");
+          }
+        });
+      }
+
+      const viewTrendingBtnEl = document.getElementById("viewTrendingBtn");
+      const buzzSectionExpanded = document.getElementById("buzzSectionExpanded");
+      if (viewTrendingBtnEl && buzzSectionExpanded) {
+        viewTrendingBtnEl.addEventListener("click", () => {
+          if (viewTrendingBtnEl.disabled) return;
+          const isExpanded = !buzzSectionExpanded.hidden;
+          if (isExpanded) {
+            buzzSectionExpanded.hidden = true;
+            viewTrendingBtnEl.classList.remove("expanded");
+            viewTrendingBtnEl.setAttribute("aria-label", "Expand trending");
+          } else {
+            buzzSectionExpanded.hidden = false;
+            viewTrendingBtnEl.classList.add("expanded");
+            viewTrendingBtnEl.setAttribute("aria-label", "Collapse trending");
+          }
+        });
+      }
 
       const refreshBriefing = async (token) => {
         briefingRefreshBtn.disabled = true;
@@ -1110,28 +1553,112 @@
         }
       };
 
-      // --- Explore Further toggle ---
-      const exploreToggle = document.getElementById("exploreToggle");
-      const exploreContent = document.getElementById("exploreContent");
+      // --- Auth-aware personalization ---
+      let nnToken = localStorage.getItem("nn_token");
 
-      exploreToggle.addEventListener("click", () => {
-        exploreToggle.classList.toggle("open");
-        exploreContent.classList.toggle("open");
+      // --- User metrics (best-effort, authenticated only) ---
+      let nnSessionId = sessionStorage.getItem("nn_session_id");
+      if (!nnSessionId) {
+        nnSessionId =
+          (window.crypto && window.crypto.randomUUID && window.crypto.randomUUID()) ||
+          `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        sessionStorage.setItem("nn_session_id", nnSessionId);
+      }
+
+      let metricsHeartbeatTimer = null;
+
+      const postMetrics = async (path, body, token) => {
+        if (!token) return;
+        try {
+          await fetch(path, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(body),
+            keepalive: true,
+          });
+        } catch (_) {
+          // Swallow analytics errors — never block the product experience.
+        }
+      };
+
+      const startMetrics = (token) => {
+        if (!token || metricsHeartbeatTimer) return;
+
+        const heartbeat = () =>
+          postMetrics(
+            "/api/metrics/heartbeat",
+            {
+              session_id: nnSessionId,
+              page_path: window.location.pathname,
+              user_agent: navigator.userAgent,
+            },
+            token
+          );
+
+        heartbeat();
+        metricsHeartbeatTimer = setInterval(() => {
+          if (document.visibilityState !== "visible") return;
+          heartbeat();
+        }, 30_000);
+
+        const endSession = () =>
+          postMetrics("/api/metrics/session-end", { session_id: nnSessionId }, token);
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") endSession();
+        });
+        window.addEventListener("beforeunload", () => endSession());
+      };
+
+      // Track article clicks (event delegation; works across re-renders)
+      document.addEventListener("click", (e) => {
+        const link = e.target.closest && e.target.closest(".cta a");
+        if (!link) return;
+        if (!nnToken) return;
+        const card = link.closest && link.closest(".card");
+        if (!card) return;
+
+        const articleId = parseInt(card.dataset.articleId || "", 10);
+        const tags = (card.dataset.articleTags || "")
+          .split("|")
+          .map((t) => t.trim())
+          .filter(Boolean);
+
+        postMetrics(
+          "/api/metrics/article-click",
+          {
+            session_id: nnSessionId,
+            article_id: Number.isFinite(articleId) ? articleId : null,
+            article_url: card.dataset.articleUrl || link.href,
+            tags,
+            page_path: window.location.pathname,
+          },
+          nnToken
+        );
       });
 
-      // --- Auth-aware personalization ---
-      const nnToken = localStorage.getItem("nn_token");
-
       buildFilterButtons();
+      buildSortButtons();
 
       if (nnToken) {
         fetch("/api/auth/me", {
           headers: { "Authorization": `Bearer ${nnToken}` },
         })
           .then((res) => (res.ok ? res.json() : Promise.reject()))
-          .then((user) => {
+          .then(async (user) => {
             // Activate logged-in layout
             activateLoggedInLayout();
+            const myPrefsBtn = document.getElementById("myPrefsBtn");
+            if (myPrefsBtn) myPrefsBtn.hidden = false;
+
+            ensureSavedLink();
+
+            await fetchSavedIds();
+            await fetchLikedIds();
+            startMetrics(nnToken);
 
             const firstName = user.name.split(" ")[0];
             const link = document.getElementById("accountLink");
@@ -1142,11 +1669,13 @@
             userPreferredTags = prefs;
             userBuzzTopics = prefs;
             if (prefs.length > 0) {
+              const myPrefsBtn = document.getElementById("myPrefsBtn");
+              if (myPrefsBtn) myPrefsBtn.dataset.tags = prefs.join("|");
               setActiveFilter(prefs);
-              fetchArticles(prefs);
+              fetchArticles(prefs, currentSortBy);
             } else {
               setActiveFilter([]);
-              fetchArticles([]);
+              fetchArticles([], currentSortBy);
             }
 
             // Load morning briefing (includes buzz topics)
@@ -1155,17 +1684,22 @@
           })
           .catch(() => {
             localStorage.removeItem("nn_token");
+            const myPrefsBtn = document.getElementById("myPrefsBtn");
+            if (myPrefsBtn) myPrefsBtn.hidden = true;
+            nnToken = null;
             activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
-            fetchArticles([]);
+            fetchArticles([], currentSortBy);
             loadBuzz();
           });
       } else {
+        const myPrefsBtn = document.getElementById("myPrefsBtn");
+        if (myPrefsBtn) myPrefsBtn.hidden = true;
         activateAnonLayout();
         startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);
-        fetchArticles([]);
+        fetchArticles([], currentSortBy);
         loadBuzz();
       }
     </script>

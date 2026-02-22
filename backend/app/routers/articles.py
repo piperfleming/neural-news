@@ -1,14 +1,15 @@
 """CRUD endpoints for news articles."""
 import asyncio
-from datetime import date
+from datetime import date, datetime, timedelta
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.article import Article
+from app.models.user_metrics import ArticleClick, ArticleLike
 from app.schemas.article import (
     ArticleCreate,
     ArticleIngestRequest,
@@ -104,31 +105,111 @@ async def list_articles(
         None,
         description="Comma-separated user preferred tags used for relevance sorting",
     ),
+    sort_by: str = Query(
+        "attention",
+        description='Sort order: "attention"/"trending" (trending first) or "recent"',
+    ),
 ):
-    """Return all news articles, optionally filtered and sorted by tag relevance.
+    """Return all news articles, optionally filtered and sorted.
 
     Uses OR logic: articles matching ANY of the requested tags are returned.
-    When *sort_by_tags* is provided, articles are ranked by the number of
-    matching preferred tags (descending) then by recency (newest first).
-    Otherwise articles are simply ordered newest-first.
+    *sort_by* controls the base ordering ("attention"/"trending" or "recent").
+    When *sort_by_tags* is also provided, articles are further ranked by the
+    number of matching preferred tags (descending), with ties preserving the
+    base ordering.
     """
-    query = select(Article)
+    clicks_subquery = (
+        select(
+            ArticleClick.article_id.label("article_id"),
+            func.count(ArticleClick.id).label("click_count"),
+        )
+        .group_by(ArticleClick.article_id)
+        .subquery()
+    )
+    likes_subquery = (
+        select(
+            ArticleLike.article_id.label("article_id"),
+            func.count(ArticleLike.id).label("like_count"),
+        )
+        .group_by(ArticleLike.article_id)
+        .subquery()
+    )
+    trending_cutoff = datetime.utcnow() - timedelta(days=1)
+    recent_clicks_subquery = (
+        select(
+            ArticleClick.article_id.label("article_id"),
+            func.count(ArticleClick.id).label("recent_click_count"),
+        )
+        .where(ArticleClick.clicked_at >= trending_cutoff)
+        .group_by(ArticleClick.article_id)
+        .subquery()
+    )
+    recent_likes_subquery = (
+        select(
+            ArticleLike.article_id.label("article_id"),
+            func.count(ArticleLike.id).label("recent_like_count"),
+        )
+        .where(ArticleLike.liked_at >= trending_cutoff)
+        .group_by(ArticleLike.article_id)
+        .subquery()
+    )
+
+    query = (
+        select(
+            Article,
+            func.coalesce(clicks_subquery.c.click_count, 0).label("click_count"),
+            func.coalesce(recent_clicks_subquery.c.recent_click_count, 0).label("recent_click_count"),
+            func.coalesce(likes_subquery.c.like_count, 0).label("like_count"),
+            func.coalesce(recent_likes_subquery.c.recent_like_count, 0).label("recent_like_count"),
+        )
+        .outerjoin(clicks_subquery, Article.id == clicks_subquery.c.article_id)
+        .outerjoin(recent_clicks_subquery, Article.id == recent_clicks_subquery.c.article_id)
+        .outerjoin(likes_subquery, Article.id == likes_subquery.c.article_id)
+        .outerjoin(recent_likes_subquery, Article.id == recent_likes_subquery.c.article_id)
+    )
 
     if tags:
         tag_list = [t.strip() for t in tags.split(",") if t.strip()]
         query = query.where(Article.tags.overlap(tag_list))
 
-    query = query.order_by(Article.created_at.desc())
+    sort_key = sort_by.lower().strip()
+    if sort_key == "recent":
+        query = query.order_by(Article.created_at.desc())
+    else:
+        query = query.order_by(
+            desc(func.coalesce(recent_likes_subquery.c.recent_like_count, 0)),
+            desc(func.coalesce(recent_clicks_subquery.c.recent_click_count, 0)),
+            desc(func.coalesce(likes_subquery.c.like_count, 0)),
+            desc(func.coalesce(clicks_subquery.c.click_count, 0)),
+            Article.created_at.desc(),
+        )
 
     result = await db.execute(query)
-    rows = result.scalars().all()
-    articles = [ArticleResponse.model_validate(row).model_dump() for row in rows]
+    rows = result.all()
+
+    ranked_by_recent_clicks = sorted(
+        (
+            (
+                row[0].id,
+                (int(row[4] or 0) * 2) + int(row[2] or 0),
+            )
+            for row in rows
+        ),
+        key=lambda item: item[1],
+        reverse=True,
+    )
+    trending_ids = {article_id for article_id, clicks in ranked_by_recent_clicks[:5] if clicks > 0}
+
+    articles = []
+    for article, _, _, like_count, _ in rows:
+        payload = ArticleResponse.model_validate(article).model_dump()
+        payload["is_trending"] = article.id in trending_ids
+        payload["like_count"] = int(like_count or 0)
+        articles.append(payload)
 
     if sort_by_tags:
         pref_set = {t.strip() for t in sort_by_tags.split(",") if t.strip()}
         if pref_set:
-            # Stable sort: articles already ordered by date DESC, so ties in
-            # relevance preserve the newest-first ordering.
             articles.sort(
                 key=lambda a: -len(pref_set.intersection(a.get("tags", [])))
             )
