@@ -921,7 +921,7 @@
 
           token = data.access_token;
           localStorage.setItem("nn_token", token);
-          loadProfile();
+          window.location.href = "/";
         } catch (err) {
           showAlert("authAlert", err.message, "error");
         }
