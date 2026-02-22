@@ -76,5 +76,11 @@ async def account_page():
     return FileResponse(PROJECT_ROOT / "auth.html")
 
 
+@app.get("/saved")
+async def saved_page():
+    """Serve the saved articles page."""
+    return FileResponse(PROJECT_ROOT / "saved.html")
+
+
 # Serve only the static/ directory (logo, assets) — not the whole project root
 app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")
