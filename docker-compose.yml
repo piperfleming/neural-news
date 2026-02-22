@@ -1,24 +1,6 @@
 services:
 
-  # PostgreSQL
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-neuralnews}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neuralnews}
-      POSTGRES_DB: ${POSTGRES_DB:-neuralnews}
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-neuralnews}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # FastAPI backend
+  # FastAPI backend — uses DATABASE_URL from .env (Neon cloud DB)
   backend:
     build:
       context: ./backend
@@ -30,17 +12,33 @@ services:
       # Mount frontend files into the container
       - ./frontend:/frontend
     environment:
-      # Override DATABASE_URL to point at the Docker Postgres container
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-neuralnews}:${POSTGRES_PASSWORD:-neuralnews}@db:5432/${POSTGRES_DB:-neuralnews}
-      # Tell the backend where frontend files live inside the container
       - FRONTEND_DIR=/frontend
     env_file:
       - .env
-    depends_on:
-      db:
-        condition: service_healthy
     # In development, enable --reload for live code changes
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-volumes:
-  pgdata:
+  # Uncomment below to use a local Postgres instead of the cloud DB.
+  # Also add DATABASE_URL override to backend environment:
+  #   DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-neuralnews}:${POSTGRES_PASSWORD:-neuralnews}@db:5432/${POSTGRES_DB:-neuralnews}
+  # And add depends_on: db: condition: service_healthy to backend.
+  #
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-neuralnews}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neuralnews}
+  #     POSTGRES_DB: ${POSTGRES_DB:-neuralnews}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #     - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-neuralnews}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #
+  # volumes:
+  #   pgdata:

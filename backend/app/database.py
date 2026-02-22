@@ -12,6 +12,7 @@ from app.models import (  # noqa: F401 - register tables with Base.metadata
     Article,
     ArticleClick,
     ArticleLike,
+    BriefingFeedback,
     DailyBriefing,
     User,
     UserSession,
@@ -75,3 +76,7 @@ async def init_db() -> None:
         # Add columns that were added to the model after the table was first created
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(100)"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_interests TEXT"))
+        await conn.execute(text("ALTER TABLE daily_briefings ADD COLUMN IF NOT EXISTS topic_outline TEXT"))
+        await conn.execute(text("ALTER TABLE daily_briefings ADD COLUMN IF NOT EXISTS detail_level INTEGER NOT NULL DEFAULT 4"))
+        await conn.execute(text("ALTER TABLE daily_briefings ADD COLUMN IF NOT EXISTS source_context TEXT"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_detail_level INTEGER"))

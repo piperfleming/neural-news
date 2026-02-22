@@ -68,3 +68,15 @@ class ArticleLike(Base):
         UniqueConstraint("user_id", "article_id", name="uq_article_likes_user_article"),
     )
 
+
+class BriefingFeedback(Base):
+    __tablename__ = "briefing_feedback"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    briefing_id = Column(Integer, ForeignKey("daily_briefings.id", ondelete="CASCADE"), nullable=False, index=True)
+    action = Column(String(20), nullable=False)
+    detail_level_before = Column(Integer, nullable=False)
+    detail_level_after = Column(Integer, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now(), index=True)
+

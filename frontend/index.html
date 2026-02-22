@@ -730,6 +730,46 @@
         margin-bottom: 0;
       }
 
+      .morning-buzz-body ul {
+        margin: 0 0 14px;
+        padding-left: 20px;
+        list-style: disc;
+      }
+
+      .morning-buzz-body ul:last-child {
+        margin-bottom: 0;
+      }
+
+      .morning-buzz-body li {
+        margin-bottom: 6px;
+        line-height: 1.5;
+      }
+
+      .morning-buzz-body li:last-child {
+        margin-bottom: 0;
+      }
+
+      .morning-buzz-body strong {
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .morning-buzz-body .briefing-heading {
+        color: #fff;
+        font-weight: 700;
+        margin: 18px 0 6px;
+        line-height: 1.3;
+      }
+
+      .morning-buzz-body .briefing-heading:first-child {
+        margin-top: 0;
+      }
+
+      .morning-buzz-body h3.briefing-heading { font-size: 1.05rem; }
+      .morning-buzz-body h4.briefing-heading { font-size: 0.97rem; }
+      .morning-buzz-body h5.briefing-heading { font-size: 0.93rem; }
+      .morning-buzz-body h6.briefing-heading { font-size: 0.9rem; }
+
       .briefing-refresh {
         background: rgba(255,255,255,0.15);
         color: #fff;
@@ -746,6 +786,71 @@
       .briefing-refresh:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+      }
+
+      .briefing-detail-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255,255,255,0.12);
+      }
+
+      .briefing-detail-controls[hidden] {
+        display: none !important;
+      }
+
+      .detail-label {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+      }
+
+      .detail-btn {
+        background: rgba(255,255,255,0.12);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.78rem;
+        backdrop-filter: blur(4px);
+        font-family: inherit;
+        transition: background 0.15s, border-color 0.15s;
+      }
+
+      .detail-btn:hover:not(:disabled) {
+        background: rgba(255,255,255,0.22);
+        border-color: rgba(255,255,255,0.35);
+      }
+
+      .detail-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      .detail-level-indicator {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin-left: auto;
+      }
+
+      .detail-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        transition: background 0.2s;
+      }
+
+      .detail-dot.active {
+        background: #6ee7a0;
       }
 
       @keyframes shimmer {
@@ -913,6 +1018,11 @@
             <p class="briefing-loading">Brewing your morning briefing...</p>
           </div>
           <div id="briefingBuzz"></div>
+          <div class="briefing-detail-controls" id="briefingDetailControls" hidden>
+            <button type="button" class="detail-btn" id="detailBtnConcise">- Detail</button>
+            <div class="detail-level-indicator" id="detailLevelIndicator"></div>
+            <button type="button" class="detail-btn" id="detailBtnDetail">+ Detail</button>
+          </div>
         </div>
       </section>
 
@@ -1430,14 +1540,50 @@
       const briefingBody = document.getElementById("briefingBody");
       const briefingBuzz = document.getElementById("briefingBuzz");
       const briefingRefreshBtn = document.getElementById("briefingRefresh");
+      let currentDetailLevel = 4;
+      const MAX_DETAIL = 7;
+      const MIN_DETAIL = 1;
+
+      const updateDetailIndicator = (level) => {
+        currentDetailLevel = level;
+        const indicator = document.getElementById("detailLevelIndicator");
+        if (!indicator) return;
+        indicator.innerHTML = Array.from({ length: MAX_DETAIL }, (_, i) =>
+          `<span class="detail-dot${i < level ? " active" : ""}"></span>`
+        ).join("");
+        const conciseBtn = document.getElementById("detailBtnConcise");
+        const detailBtn = document.getElementById("detailBtnDetail");
+        if (conciseBtn) conciseBtn.disabled = level <= MIN_DETAIL;
+        if (detailBtn) detailBtn.disabled = level >= MAX_DETAIL;
+      };
+
+      const formatMarkdown = (text) => {
+        return text
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>");
+      };
 
       const renderBriefing = (data) => {
-        const paragraphs = (data.briefing_text || "")
-          .split("\n")
-          .filter((p) => p.trim())
-          .map((p) => `<p>${p}</p>`)
-          .join("");
-        briefingBody.innerHTML = paragraphs || "<p>No briefing content.</p>";
+        const lines = (data.briefing_text || "").split("\n").filter((l) => l.trim());
+        let html = "";
+        let inList = false;
+        for (const line of lines) {
+          const headingMatch = line.match(/^(#{1,4})\s+(.*)/);
+          const bulletMatch = !headingMatch && line.match(/^\s*[-•]\s+(.*)/);
+          if (headingMatch) {
+            if (inList) { html += "</ul>"; inList = false; }
+            const tag = `h${headingMatch[1].length + 2}`;
+            html += `<${tag} class="briefing-heading">${formatMarkdown(headingMatch[2])}</${tag}>`;
+          } else if (bulletMatch) {
+            if (!inList) { html += "<ul>"; inList = true; }
+            html += `<li>${formatMarkdown(bulletMatch[1])}</li>`;
+          } else {
+            if (inList) { html += "</ul>"; inList = false; }
+            html += `<p>${formatMarkdown(line)}</p>`;
+          }
+        }
+        if (inList) html += "</ul>";
+        briefingBody.innerHTML = html || "<p>No briefing content.</p>";
 
         const teaserLoading = document.getElementById("briefingTeaserLoading");
         const viewBtn = document.getElementById("viewBriefingBtn");
@@ -1446,6 +1592,11 @@
           teaserLoading.style.animation = "none";
         }
         if (viewBtn) viewBtn.disabled = false;
+
+        // Show detail controls and update indicator
+        const detailControls = document.getElementById("briefingDetailControls");
+        if (detailControls) detailControls.hidden = false;
+        updateDetailIndicator(data.detail_level || 4);
 
         // Render buzz topics with inline source links (embedded per topic)
         const topics = data.buzz_topics || [];
@@ -1552,6 +1703,44 @@
           briefingRefreshBtn.textContent = "Refresh Briefing";
         }
       };
+
+      let detailAdjusting = false;
+      const adjustDetail = async (token, action) => {
+        if (detailAdjusting) return;
+        detailAdjusting = true;
+        const conciseBtn = document.getElementById("detailBtnConcise");
+        const detailBtn = document.getElementById("detailBtnDetail");
+        if (conciseBtn) conciseBtn.disabled = true;
+        if (detailBtn) detailBtn.disabled = true;
+        briefingBody.innerHTML = '<p class="briefing-loading">Adjusting detail level...</p>';
+        try {
+          const res = await fetch("/api/briefing/adjust-detail", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ action }),
+          });
+          if (!res.ok) throw new Error("Failed to adjust detail");
+          const data = await res.json();
+          renderBriefing(data);
+        } catch (err) {
+          briefingBody.innerHTML = '<p class="briefing-loading">Could not adjust detail level.</p>';
+          updateDetailIndicator(currentDetailLevel);
+        } finally {
+          detailAdjusting = false;
+        }
+      };
+
+      document.getElementById("detailBtnConcise")?.addEventListener("click", () => {
+        const token = localStorage.getItem("nn_token");
+        if (token) adjustDetail(token, "more_concise");
+      });
+      document.getElementById("detailBtnDetail")?.addEventListener("click", () => {
+        const token = localStorage.getItem("nn_token");
+        if (token) adjustDetail(token, "more_detail");
+      });
 
       // --- Auth-aware personalization ---
       let nnToken = localStorage.getItem("nn_token");
