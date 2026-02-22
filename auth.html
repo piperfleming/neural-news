@@ -205,6 +205,23 @@
         margin-top: 6px;
         backdrop-filter: blur(4px);
       }
+      .profile-feed-row {
+        margin: -4px 0 14px;
+      }
+      .profile-top-feed-link {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid #cfe4d4;
+        background: #f7fbf7;
+        color: #1a6a3a;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .profile-top-feed-link:hover {
+        background: #e1f3e6;
+      }
 
       /* Interest display cards */
       .interest-display-grid {
@@ -549,6 +566,10 @@
           </div>
         </div>
 
+        <div class="profile-feed-row">
+          <a class="profile-top-feed-link" href="/">Back to Feed</a>
+        </div>
+
         <!-- About Me & Interests -->
         <div class="panel" id="interestsPanel">
           <div class="section-title">About Me & My Interests</div>
@@ -674,7 +695,6 @@
 
         <div class="profile-actions">
           <button class="btn btn-secondary" onclick="logout()">Log Out</button>
-          <a class="btn" href="/" style="text-align: center; text-decoration: none;">Back to Feed</a>
         </div>
       </div>
     </div>
@@ -952,11 +972,11 @@
 
         // Role badge
         const badge = document.getElementById("profileRoleBadge");
-        if (user.role) {
-          badge.textContent = user.role;
-          badge.classList.remove("hidden");
-        } else if (isAdminUser) {
+        if (isAdminUser) {
           badge.textContent = "Admin";
+          badge.classList.remove("hidden");
+        } else if (user.role) {
+          badge.textContent = user.role;
           badge.classList.remove("hidden");
         } else {
           badge.classList.add("hidden");
