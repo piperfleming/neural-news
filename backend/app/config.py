@@ -54,5 +54,8 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "change-me-in-production"
     jwt_expiration_minutes: int = 1440  # 24 hours
 
+    # Admin access
+    admin_emails: str = ""
+
 
 settings = Settings()

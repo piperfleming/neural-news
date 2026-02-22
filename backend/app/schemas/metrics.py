@@ -1,5 +1,7 @@
 """Pydantic schemas for user metrics endpoints."""
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -47,4 +49,63 @@ class MetricsSummary(BaseModel):
     daily: list[DailyMetric]
     clicks_by_tag: dict[str, int]
     top_articles: list[TopArticle]
+
+
+class TagMetric(BaseModel):
+    tag: str
+    clicks: int
+
+
+class AdminMetricsSummary(BaseModel):
+    days: int
+    total_users: int
+    new_users: int
+    active_users_24h: int
+    total_sessions: int
+    total_active_seconds: int
+    total_clicks: int
+    top_tags: list[TagMetric]
+    top_articles: list[TopArticle]
+
+
+class AdminUserListItem(BaseModel):
+    user_id: int
+    name: str
+    email: str
+    role: str | None
+    created_at: datetime
+    last_seen_at: datetime | None
+    total_sessions: int
+    total_active_seconds: int
+    total_clicks: int
+
+
+class AdminUsersResponse(BaseModel):
+    days: int
+    users: list[AdminUserListItem]
+
+
+class SessionMetric(BaseModel):
+    session_id: str
+    started_at: datetime
+    last_seen_at: datetime
+    ended_at: datetime | None
+    active_seconds: int
+
+
+class AdminUserDetail(BaseModel):
+    days: int
+    user_id: int
+    name: str
+    email: str
+    role: str | None
+    created_at: datetime
+    last_seen_at: datetime | None
+    total_sessions: int
+    total_active_seconds: int
+    total_clicks: int
+    daily: list[DailyMetric]
+    clicks_by_tag: dict[str, int]
+    top_articles: list[TopArticle]
+    recent_sessions: list[SessionMetric]
 

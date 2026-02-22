@@ -34,6 +34,7 @@ Edit `.env` and fill in the two required values:
 |---|---|
 | `DATABASE_URL` | Ask a teammate for the shared Neon connection string (see format below) |
 | `OPENAI_API_KEY` | https://platform.openai.com/api-keys |
+| `ADMIN_EMAILS` (optional) | Comma-separated emails that can access `/api/metrics/admin/summary` and the admin dashboard in `/account` |
 
 The `DATABASE_URL` should look like:
 

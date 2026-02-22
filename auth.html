@@ -205,6 +205,23 @@
         margin-top: 6px;
         backdrop-filter: blur(4px);
       }
+      .profile-feed-row {
+        margin: -4px 0 14px;
+      }
+      .profile-top-feed-link {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid #cfe4d4;
+        background: #f7fbf7;
+        color: #1a6a3a;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .profile-top-feed-link:hover {
+        background: #e1f3e6;
+      }
 
       /* Interest display cards */
       .interest-display-grid {
@@ -257,6 +274,174 @@
         margin-top: 20px;
       }
       .profile-actions .btn { flex: 1; margin-top: 0; }
+
+      /* --- Admin metrics panel --- */
+      .admin-metrics-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .admin-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .admin-select {
+        border: 1px solid #cfe4d4;
+        border-radius: 10px;
+        padding: 7px 10px;
+        background: #fff;
+        color: #1a6a3a;
+        font-size: 0.85rem;
+        font-family: inherit;
+      }
+      .admin-refresh-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 8px 11px;
+        background: #1f9d55;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.82rem;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .admin-refresh-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .admin-card {
+        background: #f7fbf7;
+        border: 1px solid #e1f3e6;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .admin-card-label {
+        font-size: 0.74rem;
+        color: #567563;
+      }
+      .admin-card-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f1f14;
+        margin-top: 2px;
+      }
+      .admin-lists {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .admin-list-box {
+        background: #f7fbf7;
+        border: 1px solid #e1f3e6;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .admin-list-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1a6a3a;
+        margin-bottom: 6px;
+      }
+      .admin-list {
+        margin: 0;
+        padding-left: 18px;
+        color: #3f5a4a;
+        font-size: 0.84rem;
+      }
+      .admin-list li {
+        margin-bottom: 4px;
+      }
+      .admin-empty {
+        color: #6b7280;
+        font-size: 0.82rem;
+      }
+      .admin-drilldown {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .admin-user-list-box,
+      .admin-user-detail-box {
+        background: #f7fbf7;
+        border: 1px solid #e1f3e6;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .admin-user-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 260px;
+        overflow: auto;
+      }
+      .admin-user-row {
+        border: 1px solid #dbece0;
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+      .admin-user-row.active {
+        border-color: #1f9d55;
+        box-shadow: 0 0 0 2px rgba(31, 157, 85, 0.14);
+      }
+      .admin-user-row-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .admin-user-name {
+        font-weight: 700;
+        font-size: 0.86rem;
+        color: #0f1f14;
+      }
+      .admin-user-email {
+        font-size: 0.78rem;
+        color: #567563;
+      }
+      .admin-user-meta {
+        margin-top: 4px;
+        font-size: 0.75rem;
+        color: #4b6b57;
+      }
+      .admin-detail-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .admin-detail-mini {
+        background: #fff;
+        border: 1px solid #dbece0;
+        border-radius: 8px;
+        padding: 7px 8px;
+      }
+      .admin-detail-mini-label {
+        font-size: 0.7rem;
+        color: #567563;
+      }
+      .admin-detail-mini-value {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #0f1f14;
+      }
+      .admin-detail-columns {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
 
       /* --- Animated Transitions --- */
       @keyframes fadeInUp {
@@ -381,6 +566,10 @@
           </div>
         </div>
 
+        <div class="profile-feed-row">
+          <a class="profile-top-feed-link" href="/">Back to Feed</a>
+        </div>
+
         <!-- About Me & Interests -->
         <div class="panel" id="interestsPanel">
           <div class="section-title">About Me & My Interests</div>
@@ -397,6 +586,82 @@
           </div>
 
           <button class="btn-edit" id="editPrefsBtn" onclick="showEditPreferences()">Edit Preferences</button>
+        </div>
+
+        <div class="panel hidden" id="adminMetricsPanel">
+          <div class="admin-metrics-header">
+            <div>
+              <div class="section-title" style="margin-bottom: 2px;">Admin Dashboard</div>
+              <div class="section-subtitle" style="margin: 0;">Track site-wide user behavior and engagement.</div>
+            </div>
+            <div class="admin-controls">
+              <select id="adminDaysSelect" class="admin-select">
+                <option value="7">7d</option>
+                <option value="30" selected>30d</option>
+                <option value="90">90d</option>
+              </select>
+              <button id="adminRefreshBtn" class="admin-refresh-btn" type="button">Refresh</button>
+            </div>
+          </div>
+
+          <div id="adminMetricsStatus" class="admin-empty">Loading admin metrics...</div>
+          <div id="adminMetricsBody" class="hidden">
+            <div class="admin-grid">
+              <div class="admin-card"><div class="admin-card-label">Total users</div><div class="admin-card-value" id="mTotalUsers">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">New users</div><div class="admin-card-value" id="mNewUsers">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Active users (24h)</div><div class="admin-card-value" id="mActiveUsers">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Sessions</div><div class="admin-card-value" id="mSessions">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Article clicks</div><div class="admin-card-value" id="mClicks">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Active time</div><div class="admin-card-value" id="mActiveTime">-</div></div>
+            </div>
+
+            <div class="admin-lists">
+              <div class="admin-list-box">
+                <div class="admin-list-title">Top tags</div>
+                <ol id="mTopTags" class="admin-list"></ol>
+              </div>
+              <div class="admin-list-box">
+                <div class="admin-list-title">Top articles</div>
+                <ol id="mTopArticles" class="admin-list"></ol>
+              </div>
+            </div>
+
+            <div class="admin-drilldown">
+              <div class="admin-user-list-box">
+                <div class="admin-list-title">Users (click to drill down)</div>
+                <div id="adminUsersStatus" class="admin-empty">Loading users...</div>
+                <div id="adminUsersList" class="admin-user-list hidden"></div>
+              </div>
+              <div class="admin-user-detail-box">
+                <div class="admin-list-title">Selected user details</div>
+                <div id="adminUserDetailStatus" class="admin-empty">Select a user to inspect.</div>
+                <div id="adminUserDetailBody" class="hidden">
+                  <div class="admin-user-row-top">
+                    <div>
+                      <div id="detailUserName" class="admin-user-name"></div>
+                      <div id="detailUserEmail" class="admin-user-email"></div>
+                    </div>
+                    <div id="detailUserLastSeen" class="admin-user-email"></div>
+                  </div>
+                  <div class="admin-detail-metrics">
+                    <div class="admin-detail-mini"><div class="admin-detail-mini-label">Sessions</div><div id="detailSessions" class="admin-detail-mini-value">-</div></div>
+                    <div class="admin-detail-mini"><div class="admin-detail-mini-label">Clicks</div><div id="detailClicks" class="admin-detail-mini-value">-</div></div>
+                    <div class="admin-detail-mini"><div class="admin-detail-mini-label">Active time</div><div id="detailActiveTime" class="admin-detail-mini-value">-</div></div>
+                  </div>
+                  <div class="admin-detail-columns">
+                    <div class="admin-list-box" style="padding: 8px 10px;">
+                      <div class="admin-list-title">Top tags</div>
+                      <ol id="detailTopTags" class="admin-list"></ol>
+                    </div>
+                    <div class="admin-list-box" style="padding: 8px 10px;">
+                      <div class="admin-list-title">Top articles</div>
+                      <ol id="detailTopArticles" class="admin-list"></ol>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Edit preferences (hidden by default) -->
@@ -430,7 +695,6 @@
 
         <div class="profile-actions">
           <button class="btn btn-secondary" onclick="logout()">Log Out</button>
-          <a class="btn" href="/" style="text-align: center; text-decoration: none;">Back to Feed</a>
         </div>
       </div>
     </div>
@@ -462,6 +726,9 @@
       let currentUser = null;
       let selectedRole = null;
       let selectedVibeIndices = new Set();
+      let isAdminUser = false;
+      let adminUsers = [];
+      let selectedAdminUserId = null;
 
       // --- Animation helper ---
       function animateSection(sectionEl) {
@@ -679,6 +946,7 @@
           currentUser = await res.json();
 
           renderProfile(currentUser);
+          loadAdminMetrics();
 
           document.getElementById("authSection").classList.add("hidden");
           document.getElementById("onboardingSection").classList.add("hidden");
@@ -704,7 +972,10 @@
 
         // Role badge
         const badge = document.getElementById("profileRoleBadge");
-        if (user.role) {
+        if (isAdminUser) {
+          badge.textContent = "Admin";
+          badge.classList.remove("hidden");
+        } else if (user.role) {
           badge.textContent = user.role;
           badge.classList.remove("hidden");
         } else {
@@ -713,6 +984,232 @@
 
         // Interests display
         renderInterestsDisplay(user.preferred_tags || [], user.role, user.custom_interests);
+      }
+
+      function formatDuration(seconds) {
+        if (!Number.isFinite(seconds) || seconds <= 0) return "0m";
+        const totalMinutes = Math.floor(seconds / 60);
+        if (totalMinutes < 60) return `${totalMinutes}m`;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return `${hours}h ${minutes}m`;
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "Never";
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return "Never";
+        return d.toLocaleString();
+      }
+
+      function renderAdminMetrics(data) {
+        document.getElementById("mTotalUsers").textContent = (data.total_users || 0).toLocaleString();
+        document.getElementById("mNewUsers").textContent = (data.new_users || 0).toLocaleString();
+        document.getElementById("mActiveUsers").textContent = (data.active_users_24h || 0).toLocaleString();
+        document.getElementById("mSessions").textContent = (data.total_sessions || 0).toLocaleString();
+        document.getElementById("mClicks").textContent = (data.total_clicks || 0).toLocaleString();
+        document.getElementById("mActiveTime").textContent = formatDuration(data.total_active_seconds || 0);
+
+        const topTags = document.getElementById("mTopTags");
+        topTags.innerHTML = "";
+        if ((data.top_tags || []).length === 0) {
+          topTags.innerHTML = "<li>No tag data yet.</li>";
+        } else {
+          data.top_tags.forEach((row) => {
+            const li = document.createElement("li");
+            li.textContent = `${row.tag} (${row.clicks})`;
+            topTags.appendChild(li);
+          });
+        }
+
+        const topArticles = document.getElementById("mTopArticles");
+        topArticles.innerHTML = "";
+        if ((data.top_articles || []).length === 0) {
+          topArticles.innerHTML = "<li>No article clicks yet.</li>";
+        } else {
+          data.top_articles.forEach((row) => {
+            const li = document.createElement("li");
+            const title = row.title || "Untitled article";
+            li.textContent = `${title} (${row.clicks})`;
+            topArticles.appendChild(li);
+          });
+        }
+      }
+
+      function renderAdminUsers(users) {
+        const status = document.getElementById("adminUsersStatus");
+        const list = document.getElementById("adminUsersList");
+        list.innerHTML = "";
+        adminUsers = users || [];
+
+        if (!adminUsers.length) {
+          status.textContent = "No users found in this window.";
+          status.classList.remove("hidden");
+          list.classList.add("hidden");
+          selectedAdminUserId = null;
+          document.getElementById("adminUserDetailStatus").textContent = "No user selected.";
+          document.getElementById("adminUserDetailStatus").classList.remove("hidden");
+          document.getElementById("adminUserDetailBody").classList.add("hidden");
+          return;
+        }
+
+        status.classList.add("hidden");
+        list.classList.remove("hidden");
+
+        adminUsers.forEach((user) => {
+          const row = document.createElement("button");
+          row.type = "button";
+          row.className = "admin-user-row";
+          if (user.user_id === selectedAdminUserId) row.classList.add("active");
+          row.innerHTML = `
+            <div class="admin-user-row-top">
+              <div class="admin-user-name">${user.name}</div>
+              <div class="admin-user-email">${user.total_clicks} clicks</div>
+            </div>
+            <div class="admin-user-email">${user.email}</div>
+            <div class="admin-user-meta">${user.total_sessions} sessions • ${formatDuration(user.total_active_seconds)}</div>
+          `;
+          row.addEventListener("click", () => {
+            selectedAdminUserId = user.user_id;
+            renderAdminUsers(adminUsers);
+            loadAdminUserDetail(user.user_id);
+          });
+          list.appendChild(row);
+        });
+      }
+
+      function renderAdminUserDetail(data) {
+        document.getElementById("detailUserName").textContent = data.name;
+        document.getElementById("detailUserEmail").textContent = data.email;
+        document.getElementById("detailUserLastSeen").textContent = `Last seen: ${formatDateTime(data.last_seen_at)}`;
+        document.getElementById("detailSessions").textContent = (data.total_sessions || 0).toLocaleString();
+        document.getElementById("detailClicks").textContent = (data.total_clicks || 0).toLocaleString();
+        document.getElementById("detailActiveTime").textContent = formatDuration(data.total_active_seconds || 0);
+
+        const topTags = document.getElementById("detailTopTags");
+        topTags.innerHTML = "";
+        const sortedTags = Object.entries(data.clicks_by_tag || {}).slice(0, 10);
+        if (!sortedTags.length) {
+          topTags.innerHTML = "<li>No tag clicks yet.</li>";
+        } else {
+          sortedTags.forEach(([tag, clicks]) => {
+            const li = document.createElement("li");
+            li.textContent = `${tag} (${clicks})`;
+            topTags.appendChild(li);
+          });
+        }
+
+        const topArticles = document.getElementById("detailTopArticles");
+        topArticles.innerHTML = "";
+        if (!(data.top_articles || []).length) {
+          topArticles.innerHTML = "<li>No article clicks yet.</li>";
+        } else {
+          data.top_articles.forEach((row) => {
+            const li = document.createElement("li");
+            li.textContent = `${row.title || "Untitled article"} (${row.clicks})`;
+            topArticles.appendChild(li);
+          });
+        }
+      }
+
+      async function loadAdminUsers(days) {
+        const status = document.getElementById("adminUsersStatus");
+        const list = document.getElementById("adminUsersList");
+        status.textContent = "Loading users...";
+        status.classList.remove("hidden");
+        list.classList.add("hidden");
+
+        try {
+          const res = await fetch(`${API}/api/metrics/admin/users?days=${days}&limit=100`, {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to load users");
+          const data = await res.json();
+          renderAdminUsers(data.users || []);
+
+          if (!selectedAdminUserId && (data.users || []).length) {
+            selectedAdminUserId = data.users[0].user_id;
+            renderAdminUsers(data.users || []);
+            await loadAdminUserDetail(selectedAdminUserId);
+          } else if (selectedAdminUserId) {
+            const stillPresent = (data.users || []).some((u) => u.user_id === selectedAdminUserId);
+            if (!stillPresent && (data.users || []).length) {
+              selectedAdminUserId = data.users[0].user_id;
+              renderAdminUsers(data.users || []);
+            }
+            if (selectedAdminUserId) await loadAdminUserDetail(selectedAdminUserId);
+          }
+        } catch {
+          status.textContent = "Could not load users.";
+          status.classList.remove("hidden");
+          list.classList.add("hidden");
+        }
+      }
+
+      async function loadAdminUserDetail(userId) {
+        const status = document.getElementById("adminUserDetailStatus");
+        const body = document.getElementById("adminUserDetailBody");
+        const days = parseInt(document.getElementById("adminDaysSelect").value, 10) || 30;
+
+        status.textContent = "Loading user details...";
+        status.classList.remove("hidden");
+        body.classList.add("hidden");
+
+        try {
+          const res = await fetch(`${API}/api/metrics/admin/users/${userId}?days=${days}`, {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to load user details");
+          const data = await res.json();
+          renderAdminUserDetail(data);
+          status.classList.add("hidden");
+          body.classList.remove("hidden");
+        } catch {
+          status.textContent = "Could not load selected user.";
+          status.classList.remove("hidden");
+          body.classList.add("hidden");
+        }
+      }
+
+      async function loadAdminMetrics() {
+        const panel = document.getElementById("adminMetricsPanel");
+        const body = document.getElementById("adminMetricsBody");
+        const status = document.getElementById("adminMetricsStatus");
+        const days = parseInt(document.getElementById("adminDaysSelect").value, 10) || 30;
+
+        status.textContent = "Loading admin metrics...";
+        status.classList.remove("hidden");
+        body.classList.add("hidden");
+
+        try {
+          const res = await fetch(`${API}/api/metrics/admin/summary?days=${days}`, {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (res.status === 403) {
+            isAdminUser = false;
+            panel.classList.add("hidden");
+            renderProfile(currentUser);
+            return;
+          }
+          if (!res.ok) throw new Error("Failed to load admin metrics");
+
+          const data = await res.json();
+          isAdminUser = true;
+          panel.classList.remove("hidden");
+          renderProfile(currentUser);
+          renderAdminMetrics(data);
+          await loadAdminUsers(days);
+          status.classList.add("hidden");
+          body.classList.remove("hidden");
+        } catch {
+          if (isAdminUser) {
+            status.textContent = "Could not load admin metrics.";
+            status.classList.remove("hidden");
+            body.classList.add("hidden");
+          } else {
+            panel.classList.add("hidden");
+          }
+        }
       }
 
       function renderInterestsDisplay(tags, role, customInterests) {
@@ -829,6 +1326,20 @@
       } else {
         animateSection(document.getElementById("authSection"));
       }
+
+      document.getElementById("adminRefreshBtn").addEventListener("click", async () => {
+        const btn = document.getElementById("adminRefreshBtn");
+        btn.disabled = true;
+        btn.textContent = "Refreshing...";
+        await loadAdminMetrics();
+        btn.disabled = false;
+        btn.textContent = "Refresh";
+      });
+
+      document.getElementById("adminDaysSelect").addEventListener("change", () => {
+        selectedAdminUserId = null;
+        if (token) loadAdminMetrics();
+      });
     </script>
   </body>
 </html>
