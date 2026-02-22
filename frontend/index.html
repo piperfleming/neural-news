@@ -1025,6 +1025,8 @@
         { label: "Security/Misuse", tags: ["Security", "Misuse"] },
       ];
 
+      let userPreferredTags = [];
+
       const sortOptions = [
         { label: "Trending", value: "attention" },
         { label: "Most Recent", value: "recent" },
@@ -1664,6 +1666,8 @@
             link.title = "Your account";
             startGreetingTypewriter(`Hello, ${firstName}! What AI news are you looking for?`);
             const prefs = user.preferred_tags || [];
+            userPreferredTags = prefs;
+            userBuzzTopics = prefs;
             if (prefs.length > 0) {
               const myPrefsBtn = document.getElementById("myPrefsBtn");
               if (myPrefsBtn) myPrefsBtn.dataset.tags = prefs.join("|");
@@ -1673,7 +1677,6 @@
               setActiveFilter([]);
               fetchArticles([], currentSortBy);
             }
-            userBuzzTopics = prefs;
 
             // Load morning briefing (includes buzz topics)
             loadBriefing(nnToken);

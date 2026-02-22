@@ -1,6 +1,7 @@
 """FastAPI application entrypoint."""
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -17,8 +18,12 @@ from app.routers import articles, auth, briefing, buzz, metrics, users
 
 logger = logging.getLogger(__name__)
 
-# Project root is one level above backend/
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Frontend directory — set by Docker (FRONTEND_DIR=/frontend) or auto-detected
+# for local development (../frontend relative to the backend/ folder).
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = Path(
+    os.environ.get("FRONTEND_DIR", str(_BACKEND_DIR.parent / "frontend"))
+)
 
 
 async def _periodic_feed():
@@ -67,20 +72,20 @@ app.include_router(buzz.router, prefix="/api/buzz", tags=["buzz"])
 @app.get("/")
 async def root():
     """Serve the frontend."""
-    return FileResponse(PROJECT_ROOT / "index.html")
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 @app.get("/account")
 async def account_page():
     """Serve the auth / account page."""
-    return FileResponse(PROJECT_ROOT / "auth.html")
+    return FileResponse(FRONTEND_DIR / "auth.html")
 
 
 @app.get("/saved")
 async def saved_page():
     """Serve the saved articles page."""
-    return FileResponse(PROJECT_ROOT / "saved.html")
+    return FileResponse(FRONTEND_DIR / "saved.html")
 
 
-# Serve only the static/ directory (logo, assets) — not the whole project root
-app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")
+# Serve the static/ directory inside frontend/ (logo, assets)
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR / "static"), name="static")

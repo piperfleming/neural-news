@@ -101,15 +101,22 @@ async def ingest_article(
 async def list_articles(
     db: AsyncSession = Depends(get_db),
     tags: str | None = Query(None, description="Comma-separated tags to filter by"),
+    sort_by_tags: str | None = Query(
+        None,
+        description="Comma-separated user preferred tags used for relevance sorting",
+    ),
     sort_by: str = Query(
         "attention",
         description='Sort order: "attention"/"trending" (trending first) or "recent"',
     ),
 ):
-    """Return all news articles, optionally filtered by tags.
+    """Return all news articles, optionally filtered and sorted.
 
     Uses OR logic: articles matching ANY of the requested tags are returned.
-    Response format: {"count": N, "articles": [...]}
+    *sort_by* controls the base ordering ("attention"/"trending" or "recent").
+    When *sort_by_tags* is also provided, articles are further ranked by the
+    number of matching preferred tags (descending), with ties preserving the
+    base ordering.
     """
     clicks_subquery = (
         select(
@@ -163,14 +170,12 @@ async def list_articles(
 
     if tags:
         tag_list = [t.strip() for t in tags.split(",") if t.strip()]
-        # overlap = OR logic: return articles that have ANY of the requested tags
         query = query.where(Article.tags.overlap(tag_list))
 
     sort_key = sort_by.lower().strip()
     if sort_key == "recent":
         query = query.order_by(Article.created_at.desc())
     else:
-        # Keep "attention" aligned with the TRENDING badge logic.
         query = query.order_by(
             desc(func.coalesce(recent_likes_subquery.c.recent_like_count, 0)),
             desc(func.coalesce(recent_clicks_subquery.c.recent_click_count, 0)),
@@ -201,6 +206,13 @@ async def list_articles(
         payload["is_trending"] = article.id in trending_ids
         payload["like_count"] = int(like_count or 0)
         articles.append(payload)
+
+    if sort_by_tags:
+        pref_set = {t.strip() for t in sort_by_tags.split(",") if t.strip()}
+        if pref_set:
+            articles.sort(
+                key=lambda a: -len(pref_set.intersection(a.get("tags", [])))
+            )
 
     return {"count": len(articles), "articles": articles}
 
