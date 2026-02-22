@@ -1,0 +1,16 @@
+.git/
+.env
+.env.example
+*.py[cod]
+__pycache__/
+backend/.venv/
+backend/venv/
+backend/.env
+backend/.eggs/
+backend/*.egg-info/
+backend/dist/
+backend/build/
+database/
+.agents/
+.claude/
+.cursor/
