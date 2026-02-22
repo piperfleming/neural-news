@@ -1,6 +1,15 @@
-"""Models for user engagement metrics (sessions + article clicks)."""
+"""Models for user engagement metrics (sessions, clicks, likes)."""
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from app.models.base import Base
@@ -42,4 +51,20 @@ class ArticleClick(Base):
     tags = Column(ARRAY(String), default=list, nullable=False)
 
     clicked_at = Column(DateTime, nullable=False, server_default=func.now(), index=True)
+
+
+class ArticleLike(Base):
+    __tablename__ = "article_likes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    article_id = Column(Integer, ForeignKey("articles.id", ondelete="SET NULL"), nullable=True, index=True)
+    article_url = Column(Text, nullable=True)
+    tags = Column(ARRAY(String), default=list, nullable=False)
+    liked_at = Column(DateTime, nullable=False, server_default=func.now(), index=True)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "article_id", name="uq_article_likes_user_article"),
+    )
 
