@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.article import Article
-from app.models.user_metrics import ArticleClick
+from app.models.user_metrics import ArticleClick, ArticleLike
 from app.schemas.article import (
     ArticleCreate,
     ArticleIngestRequest,
@@ -119,6 +119,14 @@ async def list_articles(
         .group_by(ArticleClick.article_id)
         .subquery()
     )
+    likes_subquery = (
+        select(
+            ArticleLike.article_id.label("article_id"),
+            func.count(ArticleLike.id).label("like_count"),
+        )
+        .group_by(ArticleLike.article_id)
+        .subquery()
+    )
     trending_cutoff = datetime.utcnow() - timedelta(days=1)
     recent_clicks_subquery = (
         select(
@@ -129,15 +137,28 @@ async def list_articles(
         .group_by(ArticleClick.article_id)
         .subquery()
     )
+    recent_likes_subquery = (
+        select(
+            ArticleLike.article_id.label("article_id"),
+            func.count(ArticleLike.id).label("recent_like_count"),
+        )
+        .where(ArticleLike.liked_at >= trending_cutoff)
+        .group_by(ArticleLike.article_id)
+        .subquery()
+    )
 
     query = (
         select(
             Article,
             func.coalesce(clicks_subquery.c.click_count, 0).label("click_count"),
             func.coalesce(recent_clicks_subquery.c.recent_click_count, 0).label("recent_click_count"),
+            func.coalesce(likes_subquery.c.like_count, 0).label("like_count"),
+            func.coalesce(recent_likes_subquery.c.recent_like_count, 0).label("recent_like_count"),
         )
         .outerjoin(clicks_subquery, Article.id == clicks_subquery.c.article_id)
         .outerjoin(recent_clicks_subquery, Article.id == recent_clicks_subquery.c.article_id)
+        .outerjoin(likes_subquery, Article.id == likes_subquery.c.article_id)
+        .outerjoin(recent_likes_subquery, Article.id == recent_likes_subquery.c.article_id)
     )
 
     if tags:
@@ -151,7 +172,9 @@ async def list_articles(
     else:
         # Keep "attention" aligned with the TRENDING badge logic.
         query = query.order_by(
+            desc(func.coalesce(recent_likes_subquery.c.recent_like_count, 0)),
             desc(func.coalesce(recent_clicks_subquery.c.recent_click_count, 0)),
+            desc(func.coalesce(likes_subquery.c.like_count, 0)),
             desc(func.coalesce(clicks_subquery.c.click_count, 0)),
             Article.created_at.desc(),
         )
@@ -160,16 +183,23 @@ async def list_articles(
     rows = result.all()
 
     ranked_by_recent_clicks = sorted(
-        ((row[0].id, int(row[2] or 0)) for row in rows),
+        (
+            (
+                row[0].id,
+                (int(row[4] or 0) * 2) + int(row[2] or 0),
+            )
+            for row in rows
+        ),
         key=lambda item: item[1],
         reverse=True,
     )
     trending_ids = {article_id for article_id, clicks in ranked_by_recent_clicks[:5] if clicks > 0}
 
     articles = []
-    for article, _, _ in rows:
+    for article, _, _, like_count, _ in rows:
         payload = ArticleResponse.model_validate(article).model_dump()
         payload["is_trending"] = article.id in trending_ids
+        payload["like_count"] = int(like_count or 0)
         articles.append(payload)
 
     return {"count": len(articles), "articles": articles}

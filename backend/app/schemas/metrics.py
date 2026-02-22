@@ -28,17 +28,25 @@ class ArticleClickIn(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
+class ArticleLikeIn(BaseModel):
+    article_id: int | None = None
+    article_url: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+
 class DailyMetric(BaseModel):
     date: str
     sessions: int = 0
     active_seconds: int = 0
     clicks: int = 0
+    likes: int = 0
 
 
 class TopArticle(BaseModel):
     article_id: int | None
     title: str | None
     clicks: int
+    likes: int = 0
 
 
 class MetricsSummary(BaseModel):
@@ -46,6 +54,7 @@ class MetricsSummary(BaseModel):
     total_sessions: int
     total_active_seconds: int
     total_clicks: int
+    total_likes: int
     daily: list[DailyMetric]
     clicks_by_tag: dict[str, int]
     top_articles: list[TopArticle]
@@ -64,6 +73,7 @@ class AdminMetricsSummary(BaseModel):
     total_sessions: int
     total_active_seconds: int
     total_clicks: int
+    total_likes: int
     top_tags: list[TagMetric]
     top_articles: list[TopArticle]
 
@@ -78,6 +88,7 @@ class AdminUserListItem(BaseModel):
     total_sessions: int
     total_active_seconds: int
     total_clicks: int
+    total_likes: int
 
 
 class AdminUsersResponse(BaseModel):
@@ -104,6 +115,7 @@ class AdminUserDetail(BaseModel):
     total_sessions: int
     total_active_seconds: int
     total_clicks: int
+    total_likes: int
     daily: list[DailyMetric]
     clicks_by_tag: dict[str, int]
     top_articles: list[TopArticle]

@@ -612,6 +612,7 @@
               <div class="admin-card"><div class="admin-card-label">Active users (24h)</div><div class="admin-card-value" id="mActiveUsers">-</div></div>
               <div class="admin-card"><div class="admin-card-label">Sessions</div><div class="admin-card-value" id="mSessions">-</div></div>
               <div class="admin-card"><div class="admin-card-label">Article clicks</div><div class="admin-card-value" id="mClicks">-</div></div>
+              <div class="admin-card"><div class="admin-card-label">Article likes</div><div class="admin-card-value" id="mLikes">-</div></div>
               <div class="admin-card"><div class="admin-card-label">Active time</div><div class="admin-card-value" id="mActiveTime">-</div></div>
             </div>
 
@@ -646,6 +647,7 @@
                   <div class="admin-detail-metrics">
                     <div class="admin-detail-mini"><div class="admin-detail-mini-label">Sessions</div><div id="detailSessions" class="admin-detail-mini-value">-</div></div>
                     <div class="admin-detail-mini"><div class="admin-detail-mini-label">Clicks</div><div id="detailClicks" class="admin-detail-mini-value">-</div></div>
+                    <div class="admin-detail-mini"><div class="admin-detail-mini-label">Likes</div><div id="detailLikes" class="admin-detail-mini-value">-</div></div>
                     <div class="admin-detail-mini"><div class="admin-detail-mini-label">Active time</div><div id="detailActiveTime" class="admin-detail-mini-value">-</div></div>
                   </div>
                   <div class="admin-detail-columns">
@@ -1008,6 +1010,7 @@
         document.getElementById("mActiveUsers").textContent = (data.active_users_24h || 0).toLocaleString();
         document.getElementById("mSessions").textContent = (data.total_sessions || 0).toLocaleString();
         document.getElementById("mClicks").textContent = (data.total_clicks || 0).toLocaleString();
+        document.getElementById("mLikes").textContent = (data.total_likes || 0).toLocaleString();
         document.getElementById("mActiveTime").textContent = formatDuration(data.total_active_seconds || 0);
 
         const topTags = document.getElementById("mTopTags");
@@ -1030,7 +1033,7 @@
           data.top_articles.forEach((row) => {
             const li = document.createElement("li");
             const title = row.title || "Untitled article";
-            li.textContent = `${title} (${row.clicks})`;
+            li.textContent = `${title} (${row.likes || 0} likes, ${row.clicks || 0} clicks)`;
             topArticles.appendChild(li);
           });
         }
@@ -1064,7 +1067,7 @@
           row.innerHTML = `
             <div class="admin-user-row-top">
               <div class="admin-user-name">${user.name}</div>
-              <div class="admin-user-email">${user.total_clicks} clicks</div>
+              <div class="admin-user-email">${user.total_likes || 0} likes • ${user.total_clicks} clicks</div>
             </div>
             <div class="admin-user-email">${user.email}</div>
             <div class="admin-user-meta">${user.total_sessions} sessions • ${formatDuration(user.total_active_seconds)}</div>
@@ -1084,6 +1087,7 @@
         document.getElementById("detailUserLastSeen").textContent = `Last seen: ${formatDateTime(data.last_seen_at)}`;
         document.getElementById("detailSessions").textContent = (data.total_sessions || 0).toLocaleString();
         document.getElementById("detailClicks").textContent = (data.total_clicks || 0).toLocaleString();
+        document.getElementById("detailLikes").textContent = (data.total_likes || 0).toLocaleString();
         document.getElementById("detailActiveTime").textContent = formatDuration(data.total_active_seconds || 0);
 
         const topTags = document.getElementById("detailTopTags");
@@ -1106,7 +1110,7 @@
         } else {
           data.top_articles.forEach((row) => {
             const li = document.createElement("li");
-            li.textContent = `${row.title || "Untitled article"} (${row.clicks})`;
+            li.textContent = `${row.title || "Untitled article"} (${row.likes || 0} likes, ${row.clicks || 0} clicks)`;
             topArticles.appendChild(li);
           });
         }

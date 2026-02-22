@@ -12,13 +12,14 @@ from app.database import get_db
 from app.dependencies import get_admin_user, get_current_user
 from app.models.article import Article
 from app.models.user import User
-from app.models.user_metrics import ArticleClick, UserSession
+from app.models.user_metrics import ArticleClick, ArticleLike, UserSession
 from app.schemas.metrics import (
     AdminUserDetail,
     AdminUserListItem,
     AdminUsersResponse,
     AdminMetricsSummary,
     ArticleClickIn,
+    ArticleLikeIn,
     DailyMetric,
     HeartbeatIn,
     HeartbeatResponse,
@@ -165,6 +166,74 @@ async def article_click(
     return {"ok": True}
 
 
+@router.get("/me/article-likes/ids")
+async def my_article_like_ids(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(ArticleLike.article_id).where(
+                ArticleLike.user_id == current_user.id,
+                ArticleLike.article_id.is_not(None),
+            )
+        )
+    ).all()
+    return {"article_ids": [row[0] for row in rows]}
+
+
+@router.post("/article-like", status_code=201)
+async def article_like(
+    payload: ArticleLikeIn,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if payload.article_id is None and not payload.article_url:
+        raise HTTPException(status_code=422, detail="article_id or article_url is required")
+
+    existing = (
+        await db.execute(
+            select(ArticleLike).where(
+                ArticleLike.user_id == current_user.id,
+                ArticleLike.article_id == payload.article_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        return {"ok": True, "liked": True}
+
+    like = ArticleLike(
+        user_id=current_user.id,
+        article_id=payload.article_id,
+        article_url=payload.article_url,
+        tags=payload.tags,
+        liked_at=_utcnow(),
+    )
+    db.add(like)
+    await db.flush()
+    return {"ok": True, "liked": True}
+
+
+@router.delete("/article-like/{article_id}", status_code=204)
+async def article_unlike(
+    article_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    existing = (
+        await db.execute(
+            select(ArticleLike).where(
+                ArticleLike.user_id == current_user.id,
+                ArticleLike.article_id == article_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        await db.delete(existing)
+        await db.flush()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get("/me/summary", response_model=MetricsSummary)
 async def my_summary(
     days: int = Query(30, ge=1, le=365),
@@ -201,6 +270,14 @@ async def my_summary(
             )
         )
     ).scalar_one()
+    total_likes = (
+        await db.execute(
+            select(func.count(ArticleLike.id)).where(
+                ArticleLike.user_id == current_user.id,
+                ArticleLike.liked_at >= start,
+            )
+        )
+    ).scalar_one()
 
     # Daily series (merge sessions + clicks into a single list)
     day_sessions = func.date(UserSession.started_at)
@@ -229,6 +306,18 @@ async def my_summary(
             .order_by(day_clicks)
         )
     ).all()
+    day_likes = func.date(ArticleLike.liked_at)
+    likes_daily_rows = (
+        await db.execute(
+            select(
+                day_likes.label("day"),
+                func.count(ArticleLike.id).label("likes"),
+            )
+            .where(ArticleLike.user_id == current_user.id, ArticleLike.liked_at >= start)
+            .group_by(day_likes)
+            .order_by(day_likes)
+        )
+    ).all()
 
     daily_map: dict[str, DailyMetric] = {}
     for day, sessions, active_seconds in sessions_daily_rows:
@@ -238,6 +327,7 @@ async def my_summary(
             sessions=int(sessions or 0),
             active_seconds=int(active_seconds or 0),
             clicks=0,
+            likes=0,
         )
     for day, clicks in clicks_daily_rows:
         key = str(day)
@@ -245,6 +335,12 @@ async def my_summary(
             daily_map[key] = DailyMetric(date=key, sessions=0, active_seconds=0, clicks=int(clicks or 0))
         else:
             daily_map[key].clicks = int(clicks or 0)
+    for day, likes in likes_daily_rows:
+        key = str(day)
+        if key not in daily_map:
+            daily_map[key] = DailyMetric(date=key, sessions=0, active_seconds=0, clicks=0, likes=int(likes or 0))
+        else:
+            daily_map[key].likes = int(likes or 0)
 
     daily = [daily_map[k] for k in sorted(daily_map.keys())]
 
@@ -269,23 +365,35 @@ async def my_summary(
     ).all()
     clicks_by_tag = {row[0]: int(row[1]) for row in clicks_by_tag_rows if row[0]}
 
-    # Top clicked articles
+    likes_agg = (
+        select(
+            ArticleLike.article_id.label("article_id"),
+            func.count(ArticleLike.id).label("likes"),
+        )
+        .where(ArticleLike.user_id == current_user.id, ArticleLike.liked_at >= start)
+        .group_by(ArticleLike.article_id)
+        .subquery()
+    )
+
+    # Top engaged articles
     top_article_rows = (
         await db.execute(
             select(
                 ArticleClick.article_id,
                 Article.title,
                 func.count(ArticleClick.id).label("clicks"),
+                func.coalesce(likes_agg.c.likes, 0).label("likes"),
             )
             .join(Article, Article.id == ArticleClick.article_id, isouter=True)
+            .join(likes_agg, likes_agg.c.article_id == ArticleClick.article_id, isouter=True)
             .where(ArticleClick.user_id == current_user.id, ArticleClick.clicked_at >= start)
-            .group_by(ArticleClick.article_id, Article.title)
-            .order_by(desc(func.count(ArticleClick.id)))
+            .group_by(ArticleClick.article_id, Article.title, likes_agg.c.likes)
+            .order_by(desc(func.coalesce(likes_agg.c.likes, 0)), desc(func.count(ArticleClick.id)))
             .limit(10)
         )
     ).all()
     top_articles = [
-        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0))
+        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0), likes=int(row[3] or 0))
         for row in top_article_rows
     ]
 
@@ -294,6 +402,7 @@ async def my_summary(
         total_sessions=int(total_sessions or 0),
         total_active_seconds=int(total_active_seconds or 0),
         total_clicks=int(total_clicks or 0),
+        total_likes=int(total_likes or 0),
         daily=daily,
         clicks_by_tag=clicks_by_tag,
         top_articles=top_articles,
@@ -339,6 +448,11 @@ async def admin_summary(
             select(func.count(ArticleClick.id)).where(ArticleClick.clicked_at >= start)
         )
     ).scalar_one()
+    total_likes = (
+        await db.execute(
+            select(func.count(ArticleLike.id)).where(ArticleLike.liked_at >= start)
+        )
+    ).scalar_one()
 
     top_tag_rows = (
         await db.execute(
@@ -360,22 +474,34 @@ async def admin_summary(
     ).all()
     top_tags = [TagMetric(tag=row[0], clicks=int(row[1])) for row in top_tag_rows if row[0]]
 
+    likes_agg = (
+        select(
+            ArticleLike.article_id.label("article_id"),
+            func.count(ArticleLike.id).label("likes"),
+        )
+        .where(ArticleLike.liked_at >= start)
+        .group_by(ArticleLike.article_id)
+        .subquery()
+    )
+
     top_article_rows = (
         await db.execute(
             select(
                 ArticleClick.article_id,
                 Article.title,
                 func.count(ArticleClick.id).label("clicks"),
+                func.coalesce(likes_agg.c.likes, 0).label("likes"),
             )
             .join(Article, Article.id == ArticleClick.article_id, isouter=True)
+            .join(likes_agg, likes_agg.c.article_id == ArticleClick.article_id, isouter=True)
             .where(ArticleClick.clicked_at >= start)
-            .group_by(ArticleClick.article_id, Article.title)
-            .order_by(desc(func.count(ArticleClick.id)))
+            .group_by(ArticleClick.article_id, Article.title, likes_agg.c.likes)
+            .order_by(desc(func.coalesce(likes_agg.c.likes, 0)), desc(func.count(ArticleClick.id)))
             .limit(10)
         )
     ).all()
     top_articles = [
-        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0))
+        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0), likes=int(row[3] or 0))
         for row in top_article_rows
     ]
 
@@ -387,6 +513,7 @@ async def admin_summary(
         total_sessions=int(total_sessions or 0),
         total_active_seconds=int(total_active_seconds or 0),
         total_clicks=int(total_clicks or 0),
+        total_likes=int(total_likes or 0),
         top_tags=top_tags,
         top_articles=top_articles,
     )
@@ -422,6 +549,15 @@ async def admin_users(
         .group_by(ArticleClick.user_id)
         .subquery()
     )
+    likes_agg = (
+        select(
+            ArticleLike.user_id.label("user_id"),
+            func.count(ArticleLike.id).label("total_likes"),
+        )
+        .where(ArticleLike.liked_at >= start)
+        .group_by(ArticleLike.user_id)
+        .subquery()
+    )
 
     rows = (
         await db.execute(
@@ -435,11 +571,14 @@ async def admin_users(
                 func.coalesce(sessions_agg.c.total_sessions, 0).label("total_sessions"),
                 func.coalesce(sessions_agg.c.total_active_seconds, 0).label("total_active_seconds"),
                 func.coalesce(clicks_agg.c.total_clicks, 0).label("total_clicks"),
+                func.coalesce(likes_agg.c.total_likes, 0).label("total_likes"),
             )
             .join(sessions_agg, sessions_agg.c.user_id == User.id, isouter=True)
             .join(clicks_agg, clicks_agg.c.user_id == User.id, isouter=True)
+            .join(likes_agg, likes_agg.c.user_id == User.id, isouter=True)
             .order_by(
                 desc(func.coalesce(sessions_agg.c.total_active_seconds, 0)),
+                desc(func.coalesce(likes_agg.c.total_likes, 0)),
                 desc(func.coalesce(clicks_agg.c.total_clicks, 0)),
                 User.created_at.desc(),
             )
@@ -458,6 +597,7 @@ async def admin_users(
             total_sessions=int(row[6] or 0),
             total_active_seconds=int(row[7] or 0),
             total_clicks=int(row[8] or 0),
+            total_likes=int(row[9] or 0),
         )
         for row in rows
     ]
@@ -506,6 +646,14 @@ async def admin_user_detail(
             )
         )
     ).scalar_one()
+    total_likes = (
+        await db.execute(
+            select(func.count(ArticleLike.id)).where(
+                ArticleLike.user_id == user_id,
+                ArticleLike.liked_at >= start,
+            )
+        )
+    ).scalar_one()
 
     last_seen_at = (
         await db.execute(
@@ -539,6 +687,18 @@ async def admin_user_detail(
             .order_by(day_clicks)
         )
     ).all()
+    day_likes = func.date(ArticleLike.liked_at)
+    likes_daily_rows = (
+        await db.execute(
+            select(
+                day_likes.label("day"),
+                func.count(ArticleLike.id).label("likes"),
+            )
+            .where(ArticleLike.user_id == user_id, ArticleLike.liked_at >= start)
+            .group_by(day_likes)
+            .order_by(day_likes)
+        )
+    ).all()
 
     daily_map: dict[str, DailyMetric] = {}
     for day, sessions, active_seconds in sessions_daily_rows:
@@ -548,6 +708,7 @@ async def admin_user_detail(
             sessions=int(sessions or 0),
             active_seconds=int(active_seconds or 0),
             clicks=0,
+            likes=0,
         )
     for day, clicks in clicks_daily_rows:
         key = str(day)
@@ -555,6 +716,12 @@ async def admin_user_detail(
             daily_map[key] = DailyMetric(date=key, sessions=0, active_seconds=0, clicks=int(clicks or 0))
         else:
             daily_map[key].clicks = int(clicks or 0)
+    for day, likes in likes_daily_rows:
+        key = str(day)
+        if key not in daily_map:
+            daily_map[key] = DailyMetric(date=key, sessions=0, active_seconds=0, clicks=0, likes=int(likes or 0))
+        else:
+            daily_map[key].likes = int(likes or 0)
     daily = [daily_map[k] for k in sorted(daily_map.keys())]
 
     clicks_by_tag_rows = (
@@ -577,22 +744,34 @@ async def admin_user_detail(
     ).all()
     clicks_by_tag = {row[0]: int(row[1]) for row in clicks_by_tag_rows if row[0]}
 
+    likes_agg = (
+        select(
+            ArticleLike.article_id.label("article_id"),
+            func.count(ArticleLike.id).label("likes"),
+        )
+        .where(ArticleLike.user_id == user_id, ArticleLike.liked_at >= start)
+        .group_by(ArticleLike.article_id)
+        .subquery()
+    )
+
     top_article_rows = (
         await db.execute(
             select(
                 ArticleClick.article_id,
                 Article.title,
                 func.count(ArticleClick.id).label("clicks"),
+                func.coalesce(likes_agg.c.likes, 0).label("likes"),
             )
             .join(Article, Article.id == ArticleClick.article_id, isouter=True)
+            .join(likes_agg, likes_agg.c.article_id == ArticleClick.article_id, isouter=True)
             .where(ArticleClick.user_id == user_id, ArticleClick.clicked_at >= start)
-            .group_by(ArticleClick.article_id, Article.title)
-            .order_by(desc(func.count(ArticleClick.id)))
+            .group_by(ArticleClick.article_id, Article.title, likes_agg.c.likes)
+            .order_by(desc(func.coalesce(likes_agg.c.likes, 0)), desc(func.count(ArticleClick.id)))
             .limit(10)
         )
     ).all()
     top_articles = [
-        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0))
+        TopArticle(article_id=row[0], title=row[1], clicks=int(row[2] or 0), likes=int(row[3] or 0))
         for row in top_article_rows
     ]
 
@@ -626,6 +805,7 @@ async def admin_user_detail(
         total_sessions=int(total_sessions or 0),
         total_active_seconds=int(total_active_seconds or 0),
         total_clicks=int(total_clicks or 0),
+        total_likes=int(total_likes or 0),
         daily=daily,
         clicks_by_tag=clicks_by_tag,
         top_articles=top_articles,

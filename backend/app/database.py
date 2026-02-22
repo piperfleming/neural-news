@@ -11,6 +11,7 @@ from app.models.base import Base
 from app.models import (  # noqa: F401 - register tables with Base.metadata
     Article,
     ArticleClick,
+    ArticleLike,
     DailyBriefing,
     User,
     UserSession,

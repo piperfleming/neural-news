@@ -363,7 +363,8 @@
         color: #567563;
       }
 
-      .save-btn {
+      .save-btn,
+      .like-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -378,7 +379,8 @@
         transition: background 0.15s, color 0.15s;
       }
 
-      .save-btn:hover {
+      .save-btn:hover,
+      .like-btn:hover {
         background: #cfe4d4;
         color: #1a6a3a;
       }
@@ -393,7 +395,25 @@
         color: #fff;
       }
 
-      .save-btn svg {
+      .like-btn.liked {
+        background: #ef4444;
+        color: #fff;
+      }
+
+      .like-btn.liked:hover {
+        background: #dc2626;
+        color: #fff;
+      }
+
+      .like-btn {
+        width: auto;
+        min-width: 56px;
+        padding: 0 10px;
+        gap: 6px;
+      }
+
+      .save-btn svg,
+      .like-btn svg {
         width: 18px;
         height: 18px;
         flex-shrink: 0;
@@ -403,6 +423,17 @@
       .save-btn .icon-filled { display: none; }
       .save-btn.saved .icon-outline { display: none; }
       .save-btn.saved .icon-filled { display: block; }
+      .like-btn .icon-outline { display: block; }
+      .like-btn .icon-filled { display: none; }
+      .like-btn.liked .icon-outline { display: none; }
+      .like-btn.liked .icon-filled { display: block; }
+      .like-count {
+        font-size: 0.78rem;
+        font-weight: 700;
+        min-width: 10px;
+        text-align: center;
+        line-height: 1;
+      }
 
       .header-actions {
         display: flex;
@@ -1010,6 +1041,7 @@
       };
 
       let savedArticleIds = new Set();
+      let likedArticleIds = new Set();
 
       const fetchSavedIds = async () => {
         const token = localStorage.getItem("nn_token");
@@ -1023,6 +1055,21 @@
           savedArticleIds = new Set(data.article_ids || []);
         } catch (err) {
           console.error("Could not load saved articles:", err);
+        }
+      };
+
+      const fetchLikedIds = async () => {
+        const token = localStorage.getItem("nn_token");
+        if (!token) return;
+        try {
+          const res = await fetch("/api/metrics/me/article-likes/ids", {
+            headers: { "Authorization": `Bearer ${token}` },
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          likedArticleIds = new Set(data.article_ids || []);
+        } catch (err) {
+          console.error("Could not load liked articles:", err);
         }
       };
 
@@ -1053,6 +1100,45 @@
         }
       };
 
+      const toggleLike = async (articleId, articleUrl, tags, btn) => {
+        const token = localStorage.getItem("nn_token");
+        if (!token || !isLoggedIn) return;
+        const isLiked = likedArticleIds.has(articleId);
+        btn.disabled = true;
+        try {
+          if (isLiked) {
+            await fetch(`/api/metrics/article-like/${articleId}`, {
+              method: "DELETE",
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            likedArticleIds.delete(articleId);
+            const countEl = btn.querySelector(".like-count");
+            if (countEl) countEl.textContent = `${Math.max(0, parseInt(countEl.textContent || "0", 10) - 1)}`;
+          } else {
+            await fetch("/api/metrics/article-like", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                article_id: articleId,
+                article_url: articleUrl,
+                tags,
+              }),
+            });
+            likedArticleIds.add(articleId);
+            const countEl = btn.querySelector(".like-count");
+            if (countEl) countEl.textContent = `${parseInt(countEl.textContent || "0", 10) + 1}`;
+          }
+          btn.classList.toggle("liked", !isLiked);
+        } catch (err) {
+          console.error("Like/unlike failed:", err);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
       const renderArticles = (articles, activeFilterTags = [], showSaveButton = false) => {
         feed.innerHTML = "";
         if (!articles.length) {
@@ -1063,10 +1149,18 @@
 
         articles.forEach((article, index) => {
           const isSaved = savedArticleIds.has(article.id);
+          const isLiked = likedArticleIds.has(article.id);
           const saveBtnHtml = showSaveButton
             ? `<button type="button" class="save-btn ${isSaved ? "saved" : ""}" data-article-id="${article.id}" aria-label="${isSaved ? "Unsave" : "Save"} article">
                 <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                 <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </button>`
+            : "";
+          const likeBtnHtml = showSaveButton
+            ? `<button type="button" class="like-btn ${isLiked ? "liked" : ""}" data-article-id="${article.id}" aria-label="${isLiked ? "Unlike" : "Like"} article">
+                <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v10"/><path d="M11 10V6a3 3 0 0 1 3-3l1 7h4a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7"/><path d="M3 10h4v10H3z"/></svg>
+                <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10h4v10H3z"/><path d="M11 10V6a3 3 0 0 1 3-3l1 7h4a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7V10z"/></svg>
+                <span class="like-count">${article.like_count || 0}</span>
               </button>`
             : "";
           const card = document.createElement("article");
@@ -1092,9 +1186,6 @@
             </div>
             <div class="tags">
               ${[
-                article.is_trending
-                  ? '<span class="tag trending">Trending</span>'
-                  : "",
                 ...(article.tags || []).map((tag) => {
                   const lower = tag.toLowerCase();
                   const isFeatured =
@@ -1109,6 +1200,7 @@
             </div>
             <div class="cta" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
               <a href="${article.url}" target="_blank" rel="noreferrer">Read article</a>
+              ${likeBtnHtml}
               ${saveBtnHtml}
             </div>
           `;
@@ -1124,6 +1216,18 @@
 
         feed.querySelectorAll(".save-btn").forEach((btn) => {
           btn.addEventListener("click", () => toggleSave(parseInt(btn.dataset.articleId, 10), btn));
+        });
+        feed.querySelectorAll(".like-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const card = btn.closest(".card");
+            if (!card) return;
+            const articleId = parseInt(btn.dataset.articleId, 10);
+            const tags = (card.dataset.articleTags || "")
+              .split("|")
+              .map((t) => t.trim())
+              .filter(Boolean);
+            toggleLike(articleId, card.dataset.articleUrl || "", tags, btn);
+          });
         });
       };
 
@@ -1551,6 +1655,7 @@
             ensureSavedLink();
 
             await fetchSavedIds();
+            await fetchLikedIds();
             startMetrics(nnToken);
 
             const firstName = user.name.split(" ")[0];
