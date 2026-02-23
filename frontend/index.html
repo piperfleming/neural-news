@@ -524,6 +524,26 @@
       .saved-link:hover .icon-outline { display: none; }
       .saved-link:hover .icon-filled { display: block; }
 
+      .admin-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        height: 40px;
+        background: #e1f3e6;
+        color: #1a6a3a;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.82rem;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .admin-link:hover {
+        background: #1f9d55;
+        color: #fff;
+      }
+
       /* --- Social Buzz --- */
       .buzz-section {
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
@@ -1180,9 +1200,29 @@
         actions.insertBefore(a, accountLink);
       }
 
+      function removeAdminLink() {
+        const adminLink = document.getElementById("adminLink");
+        if (adminLink) adminLink.remove();
+      }
+
+      function ensureAdminLink() {
+        if (document.getElementById("adminLink")) return;
+        const actions = document.getElementById("headerActions");
+        const accountLink = document.getElementById("accountLink");
+        if (!actions || !accountLink) return;
+        const a = document.createElement("a");
+        a.id = "adminLink";
+        a.href = "/admin";
+        a.className = "admin-link";
+        a.title = "Admin dashboard";
+        a.textContent = "Admin";
+        actions.insertBefore(a, accountLink);
+      }
+
       function activateAnonLayout() {
         isLoggedIn = false;
         removeSavedLink();
+        removeAdminLink();
         anonLayout.hidden = false;
         morningBuzzSection.hidden = true;
         loggedInFeed.hidden = true;
@@ -2051,6 +2091,7 @@
             activateLoggedInLayout();
 
             ensureSavedLink();
+            ensureAdminLink();
 
             await fetchSavedIds();
             await fetchLikedIds();
