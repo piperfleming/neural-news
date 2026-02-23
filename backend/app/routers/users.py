@@ -1,8 +1,4 @@
 """User profile and preferences endpoints."""
-import asyncio
-from datetime import date
-from urllib.parse import urlparse
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,10 +9,7 @@ from app.models.article import Article
 from app.models.saved_article import SavedArticle
 from app.models.user import User
 from app.models.user_article import UserArticle
-from app.schemas.article import ArticleIngestRequest, ArticleResponse
 from app.schemas.user import PreferencesResponse, UserResponse, UserUpdate
-from app.services.article_extractor import extract_article
-from app.services.llm_service import analyze_article
 
 router = APIRouter()
 
@@ -125,60 +118,6 @@ async def get_saved_articles(
     rows = result.scalars().all()
     articles = [_user_article_to_dict(row) for row in rows]
     return {"count": len(articles), "articles": articles}
-
-
-@router.post("/me/saved/ingest", status_code=201)
-async def ingest_to_saved(
-    payload: ArticleIngestRequest,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Add an article from URL to the user's saved list. Private, does not appear on main feed."""
-    url = payload.url.strip()
-
-    existing = await db.execute(
-        select(UserArticle).where(
-            UserArticle.user_id == current_user.id,
-            UserArticle.url == url,
-        )
-    )
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="You have already saved this article.")
-
-    try:
-        extracted = await asyncio.to_thread(extract_article, url)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-
-    try:
-        analysis = await analyze_article(extracted.title, extracted.text)
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"AI analysis failed: {exc}")
-
-    domain = urlparse(url).netloc.replace("www.", "")
-    org = extracted.source or domain
-    org_initials = "".join(word[0].upper() for word in org.split()[:3])
-
-    ua = UserArticle(
-        user_id=current_user.id,
-        feed_article_id=None,
-        source="url",
-        title=extracted.title,
-        content=extracted.text,
-        url=url,
-        org=org,
-        org_initials=org_initials,
-        logo_url=f"https://www.google.com/s2/favicons?domain={domain}&sz=128",
-        summary=analysis.summary,
-        date=extracted.date or date.today().isoformat(),
-        author=extracted.author or "Unknown",
-        tags=analysis.tags,
-    )
-    db.add(ua)
-    await db.flush()
-    await db.refresh(ua)
-
-    return _user_article_to_dict(ua)
 
 
 @router.post("/me/saved/{article_id}", status_code=201)
