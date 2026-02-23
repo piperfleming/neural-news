@@ -87,5 +87,11 @@ async def saved_page():
     return FileResponse(FRONTEND_DIR / "saved.html")
 
 
+@app.get("/admin")
+async def admin_page():
+    """Serve the admin dashboard page."""
+    return FileResponse(FRONTEND_DIR / "admin.html")
+
+
 # Serve the static/ directory inside frontend/ (logo, assets)
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR / "static"), name="static")
