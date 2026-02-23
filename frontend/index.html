@@ -1219,6 +1219,7 @@
       let userPreferredTags = [];
       let myPreferencesOn = false;
       let currentFilterTags = [];
+      let userCustomInterests = null;
 
       const sortOptions = [
         { label: "Trending", value: "attention" },
@@ -1231,6 +1232,7 @@
         const params = new URLSearchParams();
         if (tags.length) params.set("tags", tags.join(","));
         params.set("sort_by", sortBy);
+        if (userCustomInterests) params.set("custom_interests", userCustomInterests);
         const query = params.toString();
         return query ? `?${query}` : "";
       };
@@ -2063,6 +2065,7 @@
             userPreferredTags = prefs;
             userBuzzTopics = prefs;
             insertMyPrefsControl();
+            userCustomInterests = user.custom_interests || null;
             if (prefs.length > 0) {
               myPreferencesOn = true;
               setActiveFilter(prefs);
@@ -2083,6 +2086,7 @@
             localStorage.removeItem("nn_token");
             removeMyPrefsControl();
             nnToken = null;
+            userCustomInterests = null;
             activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);
