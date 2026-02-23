@@ -1,5 +1,6 @@
 """CRUD endpoints for news articles."""
 import asyncio
+import re
 from datetime import date, datetime, timedelta
 from urllib.parse import urlparse
 
@@ -28,6 +29,10 @@ _STOP_WORDS = {
     "of", "with", "by", "from", "is", "are", "was", "be", "it", "its",
     "i", "me", "my", "we", "you", "he", "she", "they", "that", "this",
     "how", "what", "when", "where", "who", "which", "more", "about",
+    "have", "want", "into", "will", "been", "them", "some", "would",
+    "could", "should", "their", "these", "there", "than", "then", "also",
+    "just", "only", "very", "well", "not", "all", "any", "can", "our",
+    "your", "why", "has", "had", "did", "like", "get", "make", "see", "use",
 }
 
 
@@ -36,6 +41,7 @@ def _interest_score(article: dict, keywords: list[str]) -> int:
         article.get("title") or "",
         article.get("summary") or "",
         " ".join(article.get("tags") or []),
+        " ".join(article.get("keywords") or []),
     ]).lower()
     return sum(1 for kw in keywords if kw in haystack)
 
@@ -129,7 +135,7 @@ async def list_articles(
     ),
     custom_interests: str | None = Query(
         None,
-        description="Free-form user interest text for secondary relevance re-ranking",
+        description="Free-form user interest text used for secondary relevance ranking",
     ),
 ):
     """Return all news articles, optionally filtered and sorted.

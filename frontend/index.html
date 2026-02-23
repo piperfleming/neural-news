@@ -185,6 +185,12 @@
         border-color: #1f9d55;
       }
 
+      .filter-buttons.all-selected .tag-filter-button {
+        background: #1f9d55;
+        color: #ffffff;
+        border-color: #1f9d55;
+      }
+
       .tag-hint {
         font-size: 0.85rem;
         color: #4b6b57;
@@ -214,8 +220,56 @@
         border-color: rgba(18, 40, 76, 0.42);
       }
 
-      .my-prefs-btn {
+      .my-prefs-combined {
+        display: inline-flex;
+        align-items: stretch;
+        border-radius: 999px;
+        background: #e1f3e6;
+        border: 1px solid rgba(26, 106, 58, 0.25);
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .my-prefs-combined .my-prefs-panel {
+        padding: 8px 16px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #1a6a3a;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
         white-space: nowrap;
+      }
+
+      .my-prefs-combined .my-prefs-panel:first-child {
+        border-radius: 999px 0 0 999px;
+      }
+
+      .my-prefs-combined .my-prefs-panel:last-child {
+        border-radius: 0 999px 999px 0;
+        border-left: 1px solid rgba(26, 106, 58, 0.4);
+      }
+
+      .my-prefs-combined .my-prefs-panel:last-child.active {
+        border-left-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .my-prefs-combined .my-prefs-panel:first-child.active + .my-prefs-panel {
+        border-left-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .my-prefs-combined .my-prefs-panel:hover:not(.active) {
+        background: rgba(26, 106, 58, 0.1);
+      }
+
+      .my-prefs-combined .my-prefs-panel.active {
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .my-prefs-combined .my-prefs-panel.active:hover {
+        background: #1a8a4a;
       }
 
       .grid {
@@ -485,8 +539,25 @@
       .saved-link:hover .icon-outline { display: none; }
       .saved-link:hover .icon-filled { display: block; }
 
-      /* --- Persona badge & theme retheme button --- */
+      .admin-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        height: 40px;
+        background: #e1f3e6;
+        color: #1a6a3a;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.82rem;
+        transition: background 0.15s, color 0.15s;
+      }
 
+      .admin-link:hover {
+        background: #1f9d55;
+        color: #fff;
+      }
 
       /* --- Social Buzz --- */
       .buzz-section {
@@ -788,6 +859,34 @@
       .morning-buzz-body h5.briefing-heading { font-size: 0.93rem; }
       .morning-buzz-body h6.briefing-heading { font-size: 0.9rem; }
 
+      .briefing-card {
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+      }
+
+      .briefing-card:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .briefing-read-more {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        transition: color 0.15s, border-color 0.15s;
+      }
+
+      .briefing-read-more:hover {
+        color: #fff;
+        border-color: rgba(255,255,255,0.8);
+      }
+
       .briefing-refresh {
         background: rgba(255,255,255,0.15);
         color: #fff;
@@ -1023,7 +1122,6 @@
           </div>
           <div class="filters-row">
             <div class="controls-inline">
-              <button id="myPrefsBtn" class="control-button my-prefs-btn" type="button" hidden>My Preferences</button>
               <div id="sortButtons" class="sort-buttons"></div>
             </div>
           </div>
@@ -1129,9 +1227,29 @@
         actions.insertBefore(a, accountLink);
       }
 
+      function removeAdminLink() {
+        const adminLink = document.getElementById("adminLink");
+        if (adminLink) adminLink.remove();
+      }
+
+      function ensureAdminLink() {
+        if (document.getElementById("adminLink")) return;
+        const actions = document.getElementById("headerActions");
+        const accountLink = document.getElementById("accountLink");
+        if (!actions || !accountLink) return;
+        const a = document.createElement("a");
+        a.id = "adminLink";
+        a.href = "/admin";
+        a.className = "admin-link";
+        a.title = "Admin dashboard";
+        a.textContent = "Admin";
+        actions.insertBefore(a, accountLink);
+      }
+
       function activateAnonLayout() {
         isLoggedIn = false;
         removeSavedLink();
+        removeAdminLink();
         anonLayout.hidden = false;
         morningBuzzSection.hidden = true;
         loggedInFeed.hidden = true;
@@ -1166,6 +1284,9 @@
       ];
 
       let userPreferredTags = [];
+      let myPreferencesOn = false;
+      let currentFilterTags = [];
+      let userCustomInterests = null;
 
       const sortOptions = [
         { label: "Trending", value: "attention" },
@@ -1404,8 +1525,10 @@
 
         feed.querySelectorAll(".tag[data-tag]").forEach((tagEl) => {
           tagEl.addEventListener("click", () => {
+            myPreferencesOn = false;
             setActiveFilter([tagEl.dataset.tag]);
             fetchArticles([tagEl.dataset.tag], currentSortBy);
+            updateMyPrefsControlUI();
           });
         });
 
@@ -1444,12 +1567,7 @@
           button.addEventListener("click", () => {
             currentSortBy = option.value;
             setActiveSort(currentSortBy);
-            const activeTags = Array.from(
-              document.querySelectorAll(".tag-filter-button.active[data-tags]")
-            )
-              .flatMap((btn) => (btn.dataset.tags || "").split("|"))
-              .filter(Boolean);
-            fetchArticles(activeTags, currentSortBy);
+            fetchArticles(currentFilterTags, currentSortBy);
           });
           sortButtons.appendChild(button);
         });
@@ -1490,19 +1608,117 @@
       };
 
       const setActiveFilter = (tags) => {
+        currentFilterTags = tags.slice();
         const normalized = tags.map((tag) => tag.toLowerCase());
+        const isAll = normalized.length === 0;
+        if (filterButtons) {
+          filterButtons.classList.toggle("all-selected", isAll);
+        }
         document.querySelectorAll(".tag-filter-button").forEach((button) => {
           const buttonTags = button.dataset.tags
             ? button.dataset.tags.split("|")
             : [];
           const isActive =
             buttonTags.length === 0
-              ? normalized.length === 0
+              ? isAll
               : buttonTags.every((tag) => normalized.includes(tag.toLowerCase()));
           button.classList.toggle("active", isActive);
         });
+        updateMyPrefsControlUI();
       };
 
+      function updateMyPrefsControlUI() {
+        const wrapper = document.getElementById("myPrefsBtn");
+        if (!wrapper) return;
+        const allPanel = wrapper.querySelector('[data-panel="all"]');
+        const prefsPanel = wrapper.querySelector('[data-panel="prefs"]');
+        const allSelected = currentFilterTags.length === 0;
+        const prefsSelected =
+          myPreferencesOn &&
+          currentFilterTags.length === userPreferredTags.length &&
+          currentFilterTags.every((t) => userPreferredTags.includes(t));
+        if (allPanel) allPanel.classList.toggle("active", allSelected);
+        if (prefsPanel) prefsPanel.classList.toggle("active", prefsSelected);
+        wrapper.setAttribute("aria-pressed", myPreferencesOn ? "true" : "false");
+      }
+
+      function createMyPrefsCombinedControl() {
+        const wrapper = document.createElement("div");
+        wrapper.id = "myPrefsBtn";
+        wrapper.className = "my-prefs-combined";
+        wrapper.setAttribute("role", "group");
+        wrapper.setAttribute("aria-label", "Filter: All or My Preferences");
+
+        const prefsPanel = document.createElement("button");
+        prefsPanel.type = "button";
+        prefsPanel.className = "my-prefs-panel";
+        prefsPanel.dataset.panel = "prefs";
+        prefsPanel.textContent = "My Preferences";
+
+        const allPanel = document.createElement("button");
+        allPanel.type = "button";
+        allPanel.className = "my-prefs-panel active";
+        allPanel.dataset.panel = "all";
+        allPanel.textContent = "All";
+
+        const applyAll = () => {
+          myPreferencesOn = false;
+          setActiveFilter([]);
+          fetchArticles([], currentSortBy);
+          updateMyPrefsControlUI();
+        };
+        const applyMyPrefs = (prefs) => {
+          userPreferredTags = prefs;
+          myPreferencesOn = true;
+          setActiveFilter(prefs);
+          fetchArticles(prefs, currentSortBy);
+          updateMyPrefsControlUI();
+        };
+
+        prefsPanel.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const token = localStorage.getItem("nn_token");
+          if (!token) return;
+          try {
+            const res = await fetch("/api/users/me/preferences", {
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Failed to load preferences");
+            const data = await res.json();
+            const prefs = data.preferred_tags || [];
+            applyMyPrefs(prefs);
+          } catch (err) {
+            console.error("Could not load preferences:", err);
+          }
+        });
+
+        allPanel.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          applyAll();
+        });
+
+        wrapper.appendChild(prefsPanel);
+        wrapper.appendChild(allPanel);
+        return wrapper;
+      }
+
+      function insertMyPrefsControl() {
+        const existing = document.getElementById("myPrefsBtn");
+        if (existing) return;
+        const control = createMyPrefsCombinedControl();
+        filterButtons.insertBefore(control, filterButtons.firstChild);
+        const allTagBtn = document.querySelector(".all-tag-button");
+        if (allTagBtn) allTagBtn.hidden = true;
+      }
+
+      function removeMyPrefsControl() {
+        const control = document.getElementById("myPrefsBtn");
+        if (control) control.remove();
+        const allTagBtn = document.querySelector(".all-tag-button");
+        if (allTagBtn) allTagBtn.hidden = false;
+      }
 
       const buildFilterButtons = () => {
         filterButtons.innerHTML = "";
@@ -1510,34 +1726,17 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "filter-button tag-filter-button";
+          if (option.tags.length === 0) button.classList.add("all-tag-button");
           button.textContent = option.label;
           button.dataset.tags = option.tags.join("|");
           button.addEventListener("click", () => {
+            myPreferencesOn = false;
             setActiveFilter(option.tags);
             fetchArticles(option.tags, currentSortBy);
+            updateMyPrefsControlUI();
           });
           filterButtons.appendChild(button);
         });
-        const myPrefsBtn = document.getElementById("myPrefsBtn");
-        if (myPrefsBtn) {
-          myPrefsBtn.addEventListener("click", async () => {
-            const token = localStorage.getItem("nn_token");
-            if (!token) return;
-            try {
-              const res = await fetch("/api/users/me/preferences", {
-                headers: { "Authorization": `Bearer ${token}` },
-              });
-              if (!res.ok) throw new Error("Failed to load preferences");
-              const data = await res.json();
-              const prefs = data.preferred_tags || [];
-              myPrefsBtn.dataset.tags = prefs.join("|");
-              setActiveFilter(prefs);
-              fetchArticles(prefs, currentSortBy);
-            } catch (err) {
-              console.error("Could not load preferences:", err);
-            }
-          });
-        }
       };
 
       // --- Typewriter greeting & subtitle ---
@@ -1584,10 +1783,12 @@
         list.className = "buzz-list";
 
         topics.forEach((topic, index) => {
-          const sourceLinks = (topic.source_links || []);
-          const extraLinks = sourceLinks
+          const sourceLinks = (topic.source_links || [])
             .map((l) => `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${l.source} &#8599;</a>`)
             .join("");
+          const sourceFallback = !sourceLinks
+            ? (topic.sources || []).map((s) => `<span class="buzz-source">${s}</span>`).join("")
+            : "";
           const tags = (topic.tags || [])
             .map((t) => `<span class="buzz-tag">${t}</span>`)
             .join("");
@@ -1599,7 +1800,7 @@
             <div class="buzz-item-content">
               <p class="buzz-headline">${topic.headline}</p>
               <p class="buzz-summary">${topic.summary}</p>
-              <div class="buzz-item-meta">${extraLinks}${tags}</div>
+              <div class="buzz-item-meta">${sourceLinks || sourceFallback}${tags}</div>
             </div>
           `;
           list.appendChild(li);
@@ -1674,45 +1875,65 @@
       };
 
       const renderBriefing = (data) => {
-        const lines = (data.briefing_text || "").split("\n").filter((l) => l.trim());
         const articles = data.articles || [];
+        const rawLines = (data.briefing_text || "").split("\n");
 
-        // Split into sections by top-level headings
+        // Split briefing_text into sections on ### headings, max 3
         const sections = [];
         let current = null;
-        for (const line of lines) {
-          const headingMatch = line.match(/^(#{1,4})\s+(.*)/);
+        for (const line of rawLines) {
+          const headingMatch = line.match(/^#{1,4}\s+(.*)/);
           if (headingMatch) {
             if (current) sections.push(current);
-            current = { level: headingMatch[1].length, heading: headingMatch[2], lines: [] };
-          } else if (current) {
-            current.lines.push(line);
+            if (sections.length >= 3) break;
+            current = { heading: headingMatch[1].trim(), contentLines: [] };
+          } else if (current && line.trim()) {
+            current.contentLines.push(line.trim());
           }
         }
-        if (current) sections.push(current);
+        if (current && sections.length < 3) sections.push(current);
 
         let html = "";
         sections.forEach((section, i) => {
-          const tag = `h${Math.min(section.level + 2, 6)}`;
-          html += `<${tag} class="briefing-heading">${formatMarkdown(section.heading)}</${tag}>`;
-
-          let inList = false;
-          for (const line of section.lines) {
-            const bulletMatch = line.match(/^\s*[-•]\s+(.*)/);
-            if (bulletMatch) {
-              if (!inList) { html += "<ul>"; inList = true; }
-              html += `<li>${formatMarkdown(bulletMatch[1])}</li>`;
+          // Truncate: up to 3 bullets or 3 prose lines per section
+          const truncated = [];
+          let bulletCount = 0;
+          for (const l of section.contentLines) {
+            const isBullet = /^\s*[-•]/.test(l);
+            if (isBullet) {
+              if (bulletCount >= 3) break;
+              bulletCount++;
             } else {
-              if (inList) { html += "</ul>"; inList = false; }
-              html += `<p>${formatMarkdown(line)}</p>`;
+              if (!bulletCount && truncated.length >= 3) break;
+            }
+            truncated.push(l);
+          }
+
+          // Render truncated content
+          let contentHtml = "";
+          let inList = false;
+          for (const l of truncated) {
+            const bulletMatch = l.match(/^\s*[-•]\s+(.*)/);
+            if (bulletMatch) {
+              if (!inList) { contentHtml += "<ul>"; inList = true; }
+              contentHtml += `<li>${formatMarkdown(bulletMatch[1])}</li>`;
+            } else {
+              if (inList) { contentHtml += "</ul>"; inList = false; }
+              contentHtml += `<p>${formatMarkdown(l)}</p>`;
             }
           }
-          if (inList) html += "</ul>";
+          if (inList) contentHtml += "</ul>";
 
-          const article = articles[i];
-          if (article?.url) {
-            html += `<a class="briefing-read-more" href="${article.url}" target="_blank" rel="noreferrer">Read more ↗</a>`;
-          }
+          const articleUrl = articles[i]?.url || null;
+          const readMoreLink = articleUrl
+            ? `<a class="briefing-read-more" href="${articleUrl}" target="_blank" rel="noreferrer">Read more &#8599;</a>`
+            : "";
+
+          html += `<div class="briefing-card">
+            <h3 class="briefing-heading">${formatMarkdown(section.heading)}</h3>
+            ${contentHtml}
+            ${readMoreLink}
+          </div>`;
         });
 
         briefingBody.innerHTML = html || "<p>No briefing content.</p>";
@@ -2002,10 +2223,9 @@
           .then(async (user) => {
             // Activate logged-in layout
             activateLoggedInLayout();
-            const myPrefsBtn = document.getElementById("myPrefsBtn");
-            if (myPrefsBtn) myPrefsBtn.hidden = false;
 
             ensureSavedLink();
+            ensureAdminLink();
 
             await fetchSavedIds();
             await fetchLikedIds();
@@ -2021,14 +2241,18 @@
             const prefs = user.preferred_tags || [];
             userPreferredTags = prefs;
             userBuzzTopics = prefs;
+            insertMyPrefsControl();
+            userCustomInterests = user.custom_interests || null;
             if (prefs.length > 0) {
-              const myPrefsBtn = document.getElementById("myPrefsBtn");
-              if (myPrefsBtn) myPrefsBtn.dataset.tags = prefs.join("|");
+              myPreferencesOn = true;
               setActiveFilter(prefs);
               fetchArticles(prefs, currentSortBy);
+              updateMyPrefsControlUI();
             } else {
+              myPreferencesOn = false;
               setActiveFilter([]);
               fetchArticles([], currentSortBy);
+              updateMyPrefsControlUI();
             }
             // Fetch live articles from the web in background (prepends to feed when ready)
             fetchLiveArticles(prefs);
@@ -2045,8 +2269,7 @@
           })
           .catch(() => {
             localStorage.removeItem("nn_token");
-            const myPrefsBtn = document.getElementById("myPrefsBtn");
-            if (myPrefsBtn) myPrefsBtn.hidden = true;
+            removeMyPrefsControl();
             nnToken = null;
             userCustomInterests = null;
             activateAnonLayout();
@@ -2056,8 +2279,7 @@
             loadBuzz();
           });
       } else {
-        const myPrefsBtn = document.getElementById("myPrefsBtn");
-        if (myPrefsBtn) myPrefsBtn.hidden = true;
+        removeMyPrefsControl();
         activateAnonLayout();
         startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);

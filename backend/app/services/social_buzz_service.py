@@ -17,23 +17,22 @@ SOCIAL_SITES = ["reddit.com", "twitter.com", "x.com", "linkedin.com"]
 
 BUZZ_SYSTEM_PROMPT = (
     "You are an AI news analyst summarizing what people are saying on social media "
-    "about AI topics. Given a collection of social media post titles and snippets, "
-    "produce a JSON object with this exact structure:\n\n"
+    "about AI topics. Given numbered social media posts, produce a JSON object:\n\n"
     "{\n"
     '  "topics": [\n'
     "    {\n"
     '      "headline": "Short catchy headline (max 10 words)",\n'
     '      "summary": "2-3 sentence summary of what people are discussing",\n'
     '      "sentiment": "excited" | "concerned" | "divided" | "curious" | "skeptical",\n'
-    '      "sources": ["reddit", "twitter", "linkedin"],\n'
+    '      "source_indices": [0, 3],\n'
     '      "tags": ["tag1", "tag2"]\n'
     "    }\n"
     "  ]\n"
     "}\n\n"
     "Rules:\n"
     "- Return 3-5 trending topics\n"
+    "- source_indices MUST be the [N] numbers of the posts each topic draws from\n"
     "- Tags must be from: " + json.dumps(VALID_TAGS) + "\n"
-    "- Sources should reflect where the discussion was found\n"
     "- Keep headlines punchy and summaries informative\n"
     "- Return ONLY valid JSON, no markdown fences or extra text."
 )
@@ -74,13 +73,14 @@ def search_social_discussions(topics: list[str] | None = None) -> list[dict]:
 
 
 async def generate_buzz_summary(social_results: list[dict]) -> dict:
-    """Use OpenAI to summarize social media discussions into trending topics."""
+    """Use OpenAI to summarize social media discussions into trending topics with source links."""
     if not social_results:
         return {"topics": []}
 
+    numbered = social_results[:20]
     snippets = "\n\n".join(
-        f"[{r['source']}] {r['title']}\n{r['body'][:300]}"
-        for r in social_results[:20]
+        f"[{i}] [{r['source']}] {r['title']}\n{r['body'][:300]}"
+        for i, r in enumerate(numbered)
     )
 
     response = await client.chat.completions.create(
@@ -94,10 +94,21 @@ async def generate_buzz_summary(social_results: list[dict]) -> dict:
     )
 
     raw = json.loads(response.choices[0].message.content)
+    topics = raw.get("topics", [])
 
-    # Validate tags
-    for topic in raw.get("topics", []):
+    for topic in topics:
         topic["tags"] = [t for t in topic.get("tags", []) if t in VALID_TAGS]
+        indices = topic.pop("source_indices", [])
+        topic["source_links"] = []
+        for idx in indices:
+            if isinstance(idx, int) and 0 <= idx < len(numbered):
+                r = numbered[idx]
+                if r.get("href"):
+                    topic["source_links"].append({
+                        "title": r["title"],
+                        "href": r["href"],
+                        "source": r["source"],
+                    })
 
-    logger.info("Buzz summary: %d topics generated", len(raw.get("topics", [])))
-    return raw
+    logger.info("Buzz summary: %d topics generated", len(topics))
+    return {"topics": topics}

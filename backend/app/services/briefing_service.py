@@ -2,10 +2,11 @@
 import asyncio
 import json
 import logging
+import re
 from datetime import date, datetime
 
 from openai import AsyncOpenAI
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -19,6 +20,21 @@ from app.services.social_buzz_service import search_social_discussions
 logger = logging.getLogger(__name__)
 
 client = AsyncOpenAI(api_key=settings.openai_api_key)
+
+_STOP_WORDS = {
+    "the", "and", "for", "with", "that", "this", "are", "from", "have", "want",
+    "more", "about", "into", "will", "been", "they", "them", "some", "what",
+    "when", "where", "which", "would", "could", "should", "their", "these",
+    "there", "than", "then", "also", "just", "only", "very", "well", "but",
+    "not", "all", "any", "can", "its", "our", "you", "your", "how", "why",
+    "who", "was", "has", "had", "did", "like", "get", "make", "see", "use",
+}
+
+
+def _extract_keywords(text: str) -> list[str]:
+    """Extract meaningful keywords from free-form interest text."""
+    words = re.findall(r'\b[a-zA-Z]{4,}\b', text.lower())
+    return [w for w in words if w not in _STOP_WORDS]
 
 DETAIL_INSTRUCTIONS = {
     1: "For each topic, write the topic name as a ### heading, then exactly ONE bullet point (one sentence, max 20 words) with the single most important fact. Use **bold** for key names. Total output must be under 80 words.",
@@ -201,6 +217,7 @@ async def _fetch_article_urls(article_ids: list[int], db: AsyncSession) -> list[
     return [{"url": url_map[aid]} for aid in article_ids if aid in url_map]
 
 
+
 def _briefing_response(
     row: DailyBriefing,
     buzz_topics: list[dict],
@@ -232,8 +249,16 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     existing = result.scalar_one_or_none()
     if existing:
         buzz_topics = _parse_buzz_snapshot(existing.buzz_snapshot)
-        article_urls = await _fetch_article_urls(existing.article_ids or [], db)
-        return _briefing_response(existing, buzz_topics, is_cached=True, articles=article_urls)
+        cached_articles: list[dict] = []
+        if existing.article_ids:
+            article_rows = await db.execute(
+                select(Article).where(Article.id.in_(existing.article_ids))
+            )
+            cached_articles = [
+                {"id": a.id, "title": a.title, "url": a.url}
+                for a in article_rows.scalars().all()
+            ]
+        return _briefing_response(existing, buzz_topics, is_cached=True, articles=cached_articles)
 
     # Extract keywords from custom_interests for supplemental queries
     _stop = {"a","an","the","and","or","but","in","on","at","to","for","of","with","by","i","want","know","about","more","me","my","show","focus","interested","please"}
@@ -299,6 +324,7 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     )
 
     article_id_list = [a.id for a in articles]
+    articles_meta = [{"id": a.id, "title": a.title, "url": a.url} for a in articles]
     row = DailyBriefing(
         user_id=user.id,
         briefing_date=today,
@@ -312,8 +338,7 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     db.add(row)
     await db.flush()
 
-    article_url_list = [{"url": a.url} for a in articles]
-    return _briefing_response(row, buzz_topics, is_cached=False, articles=article_url_list)
+    return _briefing_response(row, buzz_topics, is_cached=False, articles=articles_meta)
 
 
 async def adjust_detail_level(user: User, db: AsyncSession, action: str) -> dict:
@@ -379,8 +404,14 @@ async def adjust_detail_level(user: User, db: AsyncSession, action: str) -> dict
     await db.flush()
 
     buzz_topics = _parse_buzz_snapshot(existing.buzz_snapshot)
-    article_urls = await _fetch_article_urls(existing.article_ids or [], db)
-    return _briefing_response(existing, buzz_topics, is_cached=False, articles=article_urls)
+    adj_article_rows = await db.execute(
+        select(Article).where(Article.id.in_(existing.article_ids or []))
+    )
+    adj_articles_meta = [
+        {"id": a.id, "title": a.title, "url": a.url}
+        for a in adj_article_rows.scalars().all()
+    ]
+    return _briefing_response(existing, buzz_topics, is_cached=False, articles=adj_articles_meta)
 
 
 async def delete_todays_briefing(user: User, db: AsyncSession) -> None:
