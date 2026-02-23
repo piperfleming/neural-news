@@ -1164,6 +1164,7 @@
       ];
 
       let userPreferredTags = [];
+      let userCustomInterests = null;
 
       const sortOptions = [
         { label: "Trending", value: "attention" },
@@ -1176,6 +1177,7 @@
         const params = new URLSearchParams();
         if (tags.length) params.set("tags", tags.join(","));
         params.set("sort_by", sortBy);
+        if (userCustomInterests) params.set("custom_interests", userCustomInterests);
         const query = params.toString();
         return query ? `?${query}` : "";
       };
@@ -1930,6 +1932,7 @@
             const prefs = user.preferred_tags || [];
             userPreferredTags = prefs;
             userBuzzTopics = prefs;
+            userCustomInterests = user.custom_interests || null;
             if (prefs.length > 0) {
               const myPrefsBtn = document.getElementById("myPrefsBtn");
               if (myPrefsBtn) myPrefsBtn.dataset.tags = prefs.join("|");
@@ -1949,6 +1952,7 @@
             const myPrefsBtn = document.getElementById("myPrefsBtn");
             if (myPrefsBtn) myPrefsBtn.hidden = true;
             nnToken = null;
+            userCustomInterests = null;
             activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
             setActiveFilter([]);

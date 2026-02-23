@@ -2,10 +2,11 @@
 import asyncio
 import json
 import logging
+import re
 from datetime import date, datetime
 
 from openai import AsyncOpenAI
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -19,6 +20,21 @@ from app.services.social_buzz_service import search_social_discussions
 logger = logging.getLogger(__name__)
 
 client = AsyncOpenAI(api_key=settings.openai_api_key)
+
+_STOP_WORDS = {
+    "the", "and", "for", "with", "that", "this", "are", "from", "have", "want",
+    "more", "about", "into", "will", "been", "they", "them", "some", "what",
+    "when", "where", "which", "would", "could", "should", "their", "these",
+    "there", "than", "then", "also", "just", "only", "very", "well", "but",
+    "not", "all", "any", "can", "its", "our", "you", "your", "how", "why",
+    "who", "was", "has", "had", "did", "like", "get", "make", "see", "use",
+}
+
+
+def _extract_keywords(text: str) -> list[str]:
+    """Extract meaningful keywords from free-form interest text."""
+    words = re.findall(r'\b[a-zA-Z]{4,}\b', text.lower())
+    return [w for w in words if w not in _STOP_WORDS]
 
 DETAIL_INSTRUCTIONS = {
     1: "For each topic, write the topic name as a ### heading, then ONE bullet point underneath (a single sentence) with the headline fact. Use **bold** for key names.",
@@ -90,9 +106,10 @@ async def _extract_topic_outline(
 ) -> list[dict]:
     """Extract a structured topic outline from source material (runs once per briefing)."""
     tag_desc = ", ".join(user.preferred_tags) if user.preferred_tags else "general AI topics"
+    custom_desc = f" Specific interests: {user.custom_interests}." if user.custom_interests else ""
 
     prompt = (
-        f"From the following articles and social buzz about AI (reader interests: {tag_desc}), "
+        f"From the following articles and social buzz about AI (reader interests: {tag_desc}.{custom_desc}), "
         "identify the 3-5 most important and trending topics.\n\n"
         "Return a JSON object:\n"
         '{"topics": [{"headline": "short headline", '
@@ -136,10 +153,11 @@ async def _generate_briefing_at_detail_level(
     first_name = user.name.split()[0] if user.name else "there"
     tag_desc = ", ".join(user.preferred_tags) if user.preferred_tags else "general AI topics"
     role_context = f" They work as a {user.role}." if user.role else ""
+    custom_context = f" Their specific interest: {user.custom_interests}." if user.custom_interests else ""
     level_instruction = DETAIL_INSTRUCTIONS.get(detail_level, DETAIL_INSTRUCTIONS[DEFAULT_DETAIL_LEVEL])
 
     prompt = (
-        f"Morning briefing for {first_name} (interests: {tag_desc}).{role_context}\n\n"
+        f"Morning briefing for {first_name} (interests: {tag_desc}).{role_context}{custom_context}\n\n"
         "Write a briefing covering EXACTLY these topics in this order. "
         "Do NOT add, remove, or reorder topics.\n\n"
         f"TOPICS:\n{json.dumps(topic_outline, indent=2)}\n\n"
@@ -233,7 +251,31 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
         article_query = article_query.where(Article.tags.overlap(prefs))
     article_query = article_query.order_by(Article.created_at.desc()).limit(15)
     rows = await db.execute(article_query)
-    articles = rows.scalars().all()
+    articles = list(rows.scalars().all())
+
+    # If the user has custom_interests, supplement with keyword-matched articles
+    if user.custom_interests:
+        ci_keywords = _extract_keywords(user.custom_interests)[:6]
+        if ci_keywords:
+            existing_ids = {a.id for a in articles}
+            kw_conditions = [
+                or_(
+                    Article.title.ilike(f"%{kw}%"),
+                    Article.summary.ilike(f"%{kw}%"),
+                )
+                for kw in ci_keywords
+            ]
+            kw_rows = await db.execute(
+                select(Article)
+                .where(or_(*kw_conditions))
+                .order_by(Article.created_at.desc())
+                .limit(8)
+            )
+            for a in kw_rows.scalars().all():
+                if a.id not in existing_ids:
+                    articles.append(a)
+                    existing_ids.add(a.id)
+    articles = articles[:20]
 
     # Fetch social buzz and summarize with source citations
     buzz_search_topics = [f"AI {tag}" for tag in prefs] if prefs else None

@@ -1,5 +1,6 @@
 """CRUD endpoints for news articles."""
 import asyncio
+import re
 from datetime import date, datetime, timedelta
 from urllib.parse import urlparse
 
@@ -20,6 +21,24 @@ from app.services.article_extractor import extract_article
 from app.services.llm_service import analyze_article
 
 router = APIRouter()
+
+_STOP_WORDS = {
+    "the", "and", "for", "with", "that", "this", "are", "from", "have", "want",
+    "more", "about", "into", "will", "been", "they", "them", "some", "what",
+    "when", "where", "which", "would", "could", "should", "their", "these",
+    "there", "than", "then", "also", "just", "only", "very", "well", "but",
+    "not", "all", "any", "can", "its", "our", "you", "your", "how", "why",
+    "who", "was", "has", "had", "did", "like", "get", "make", "see", "use",
+}
+
+
+def _interest_score(article: dict, keywords: list[str]) -> int:
+    text = (
+        (article.get("title") or "") + " " +
+        (article.get("summary") or "") + " " +
+        " ".join(article.get("keywords") or [])
+    ).lower()
+    return sum(1 for kw in keywords if kw in text)
 
 
 # ---------------------------------------------------------------------------
@@ -108,6 +127,10 @@ async def list_articles(
     sort_by: str = Query(
         "attention",
         description='Sort order: "attention"/"trending" (trending first) or "recent"',
+    ),
+    custom_interests: str | None = Query(
+        None,
+        description="Free-form user interest text used for secondary relevance ranking",
     ),
 ):
     """Return all news articles, optionally filtered and sorted.
@@ -213,6 +236,14 @@ async def list_articles(
             articles.sort(
                 key=lambda a: -len(pref_set.intersection(a.get("tags", [])))
             )
+
+    if custom_interests:
+        ci_keywords = [
+            w for w in re.findall(r'\b[a-zA-Z]{4,}\b', custom_interests.lower())
+            if w not in _STOP_WORDS
+        ]
+        if ci_keywords:
+            articles.sort(key=lambda a: -_interest_score(a, ci_keywords))
 
     return {"count": len(articles), "articles": articles}
 
