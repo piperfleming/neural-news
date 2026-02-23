@@ -243,66 +243,6 @@
         background: #1a6a3a;
       }
 
-      .url-ingest {
-        background: #f7fbf7;
-        padding: 16px;
-        border-radius: 16px;
-        box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
-        margin-bottom: 24px;
-      }
-
-      .url-ingest form {
-        display: flex;
-        gap: 10px;
-      }
-
-      .url-ingest input[type="url"] {
-        flex: 1;
-        padding: 10px 14px;
-        border-radius: 999px;
-        border: 1px solid #cfe4d4;
-        font-size: 0.95rem;
-        outline: none;
-        font-family: inherit;
-      }
-
-      .url-ingest input[type="url"]:focus {
-        border-color: #1f9d55;
-        box-shadow: 0 0 0 3px rgba(31, 157, 85, 0.15);
-      }
-
-      .url-ingest button {
-        background: #1f9d55;
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 999px;
-        font-weight: 600;
-        cursor: pointer;
-        font-size: 0.9rem;
-        white-space: nowrap;
-        font-family: inherit;
-      }
-
-      .url-ingest button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .ingest-status {
-        margin-top: 10px;
-        font-size: 0.9rem;
-        color: #3f5a4a;
-      }
-
-      .ingest-status.error {
-        color: #c0392b;
-      }
-
-      .ingest-status.success {
-        color: #1f9d55;
-        font-weight: 600;
-      }
     </style>
   </head>
   <body>
@@ -315,19 +255,6 @@
           </div>
         </div>
         <h1>Saved Articles</h1>
-
-        <div id="urlIngest" class="url-ingest" hidden>
-          <form id="ingestForm">
-            <input
-              type="url"
-              id="articleUrl"
-              placeholder="Paste an article URL to add to your list..."
-              required
-            />
-            <button type="submit" id="ingestBtn">Add Article</button>
-          </form>
-          <div id="ingestStatus" class="ingest-status" hidden></div>
-        </div>
       </header>
 
       <div id="content">
@@ -338,7 +265,7 @@
         </div>
         <div id="feed" class="grid" hidden></div>
         <div id="emptyState" class="empty" hidden>
-          You haven't saved any articles yet. Add articles via the form above or save from the main feed.
+          You haven't saved any articles yet. Save articles from the main feed to see them here.
         </div>
       </div>
     </div>
@@ -387,8 +314,6 @@
               }
             })
             .catch(() => {});
-
-          document.getElementById("urlIngest").hidden = false;
 
           if (!data.articles || !data.articles.length) {
             emptyState.hidden = false;
@@ -468,89 +393,6 @@
           btn.disabled = false;
         }
       }
-
-      const ingestForm = document.getElementById("ingestForm");
-      const articleUrlInput = document.getElementById("articleUrl");
-      const ingestBtn = document.getElementById("ingestBtn");
-      const ingestStatus = document.getElementById("ingestStatus");
-
-      ingestForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const url = articleUrlInput.value.trim();
-        if (!url || !token) return;
-
-        ingestBtn.disabled = true;
-        ingestBtn.textContent = "Processing…";
-        ingestStatus.hidden = false;
-        ingestStatus.className = "ingest-status";
-        ingestStatus.textContent = "Fetching article and running AI analysis — this may take a few seconds…";
-
-        try {
-          const res = await fetch("/api/users/me/saved/ingest", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ url }),
-          });
-
-          if (res.status === 409) {
-            throw new Error("You have already saved this article.");
-          }
-          if (res.status === 429) {
-            throw new Error("Rate limit reached. Please wait a minute and try again.");
-          }
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || "Failed to add article.");
-          }
-
-          const article = await res.json();
-          ingestStatus.className = "ingest-status success";
-          ingestStatus.textContent = "Article added to your saved list!";
-          articleUrlInput.value = "";
-
-          emptyState.hidden = true;
-          feed.hidden = false;
-          const card = document.createElement("article");
-          card.className = "card";
-          card.innerHTML = `
-            <div class="card-header">
-              <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
-              <div>
-                <div class="org">${article.org}</div>
-                <h2 class="title">${article.title}</h2>
-              </div>
-            </div>
-            <p class="summary">${article.summary}</p>
-            <div class="meta">
-              <span>${article.date}</span>
-              <span>•</span>
-              <span>${article.author}</span>
-            </div>
-            <div class="tags">
-              ${(article.tags || []).map((tag) => {
-                const lower = tag.toLowerCase();
-                const isFeatured = lower === "reader favorite" || lower === "editors choice";
-                return `<span class="tag${isFeatured ? " featured" : ""}">${tag}</span>`;
-              }).join("")}
-            </div>
-            <div class="cta">
-              <a href="${article.url}" target="_blank" rel="noreferrer">Read article</a>
-              <button type="button" class="save-btn" data-user-article-id="${article.id}" aria-label="Unsave article">
-                <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-          `;
-          feed.insertBefore(card, feed.firstChild);
-          card.querySelector(".save-btn").addEventListener("click", () =>
-            unsaveArticle(article.id, card.querySelector(".save-btn")));
-        } catch (err) {
-          ingestStatus.className = "ingest-status error";
-          ingestStatus.textContent = err.message;
-        } finally {
-          ingestBtn.disabled = false;
-          ingestBtn.textContent = "Add Article";
-        }
-      });
 
       loadSavedArticles();
     </script>
