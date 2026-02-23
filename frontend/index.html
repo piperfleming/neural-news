@@ -304,6 +304,21 @@
         text-transform: uppercase;
         box-shadow: 0 6px 14px rgba(185, 28, 28, 0.28);
       }
+      .live-alert {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #1f9d55, #16a34a);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        box-shadow: 0 6px 14px rgba(21,128,61,0.28);
+      }
 
       .card-header {
         display: flex;
@@ -961,6 +976,18 @@
         100% { opacity: 0.5; }
       }
 
+      .briefing-read-more {
+        display: inline-block;
+        margin: 4px 0 14px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.65);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        transition: color 0.15s, border-color 0.15s;
+      }
+      .briefing-read-more:hover { color: #fff; border-color: rgba(255,255,255,0.7); }
+
       .briefing-loading {
         color: rgba(255,255,255,0.6);
         font-size: 0.9rem;
@@ -1267,6 +1294,57 @@
       ];
 
       let currentSortBy = "attention";
+      let userCustomInterests = null;
+      let currentDbArticles = [];
+      let currentLiveArticles = [];
+      let currentFilterTags = [];
+
+      const _SCORE_STOP = new Set([
+        "a","an","the","and","or","but","in","on","at","to","for","of","with",
+        "by","is","are","was","be","it","its","i","me","my","we","you","they",
+        "that","this","what","when","where","who","more","about","want","know",
+        "show","focus","interested","please","only","just","some","get","see",
+        "read","find","keep","stay","up","news","latest","stuff","i'm","things",
+      ]);
+
+      function scoreArticle(article, keywords, prefTagsLower) {
+        let score = 0;
+        const haystack = [
+          article.title || "",
+          article.summary || "",
+          ...(article.tags || []),
+        ].join(" ").toLowerCase();
+        for (const kw of keywords) {
+          if (haystack.includes(kw)) score += 2;
+        }
+        for (const tag of prefTagsLower) {
+          if ((article.tags || []).some(t => t.toLowerCase() === tag)) score += 1;
+        }
+        return score;
+      }
+
+      function renderPersonalizedFeed() {
+        const keywords = userCustomInterests
+          ? userCustomInterests.split(/\s+/).filter(w => w.length > 2 && !_SCORE_STOP.has(w.toLowerCase()))
+          : [];
+        const prefTagsLower = currentFilterTags.map(t => t.toLowerCase());
+
+        const all = [...currentDbArticles, ...currentLiveArticles];
+        const scored = all.map(a => ({ a, s: scoreArticle(a, keywords, prefTagsLower) }));
+        scored.sort((x, y) => y.s - x.s);
+
+        let final;
+        if (userCustomInterests && keywords.length > 0) {
+          // Require at least 3 keyword hits (score >= 6) to pass
+          const relevant = scored.filter(({ s }) => s >= 6).map(({ a }) => a);
+          // Only fall back if almost nothing passes, and cap fallback tightly
+          final = relevant.length >= 2 ? relevant : scored.slice(0, 3).map(({ a }) => a);
+        } else {
+          final = scored.map(({ a }) => a);
+        }
+
+        renderArticles(final, currentFilterTags, true);
+      }
 
       const buildArticleParams = (tags, sortBy) => {
         const params = new URLSearchParams();
@@ -1387,13 +1465,14 @@
         articles.forEach((article, index) => {
           const isSaved = savedArticleIds.has(article.id);
           const isLiked = likedArticleIds.has(article.id);
-          const saveBtnHtml = showSaveButton
+          const canInteract = showSaveButton && !article.is_live;
+          const saveBtnHtml = canInteract
             ? `<button type="button" class="save-btn ${isSaved ? "saved" : ""}" data-article-id="${article.id}" aria-label="${isSaved ? "Unsave" : "Save"} article">
                 <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                 <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
               </button>`
             : "";
-          const likeBtnHtml = showSaveButton
+          const likeBtnHtml = canInteract
             ? `<button type="button" class="like-btn ${isLiked ? "liked" : ""}" data-article-id="${article.id}" aria-label="${isLiked ? "Unlike" : "Like"} article">
                 <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v10"/><path d="M11 10V6a3 3 0 0 1 3-3l1 7h4a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7"/><path d="M3 10h4v10H3z"/></svg>
                 <svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10h4v10H3z"/><path d="M11 10V6a3 3 0 0 1 3-3l1 7h4a2 2 0 0 1 2 2l-1 6a2 2 0 0 1-2 2H7V10z"/></svg>
@@ -1407,7 +1486,7 @@
           card.dataset.articleUrl = article.url;
           card.dataset.articleTags = (article.tags || []).join("|");
           card.innerHTML = `
-            ${article.is_trending ? '<div class="trending-alert">TRENDING</div>' : ""}
+            ${article.is_live ? '<div class="live-alert">LIVE</div>' : article.is_trending ? '<div class="trending-alert">TRENDING</div>' : ""}
             <div class="card-header">
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
               <div>
@@ -1498,9 +1577,34 @@
       const fetchArticles = async (tags = [], sortBy = currentSortBy) => {
         currentSortBy = sortBy;
         setActiveSort(currentSortBy);
+        currentFilterTags = tags;
+        currentLiveArticles = []; // reset live articles on filter change
         const response = await fetch(`/api/articles${buildArticleParams(tags, currentSortBy)}`);
         const data = await response.json();
-        renderArticles(data.articles, tags, isLoggedIn);
+        if (isLoggedIn) {
+          currentDbArticles = data.articles || [];
+          renderPersonalizedFeed();
+        } else {
+          renderArticles(data.articles, tags, false);
+        }
+      };
+
+      // Fetch live articles from the web, merge into unified scored feed
+      const fetchLiveArticles = async (tags = []) => {
+        if (!userCustomInterests && tags.length === 0) return;
+        const params = new URLSearchParams();
+        if (userCustomInterests) params.set("interests", userCustomInterests);
+        if (tags.length) params.set("tags", tags.join(","));
+        try {
+          const res = await fetch(`/api/articles/live?${params}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.articles?.length) return;
+          currentLiveArticles = data.articles;
+          renderPersonalizedFeed(); // re-render with live articles merged in
+        } catch (e) {
+          // Silent fail — DB articles already showing
+        }
       };
 
       const setActiveFilter = (tags) => {
@@ -1855,9 +1959,10 @@
         }
 
         const buzzHtml = topics.map((topic) => {
-          const sourceLinks = (topic.source_links || []).map((l) =>
-            `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${l.source} &#8599;</a>`
-          ).join("");
+          const sourceLinks = topic.source_links || [];
+          const extraLinks = sourceLinks
+            .map((l) => `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${l.source} &#8599;</a>`)
+            .join("");
           const tags = (topic.tags || [])
             .map((t) => `<span class="buzz-tag">${t}</span>`)
             .join("");
@@ -1868,7 +1973,7 @@
               <div class="buzz-item-content">
                 <p class="buzz-headline">${topic.headline}</p>
                 <p class="buzz-summary">${topic.summary}</p>
-                <div class="buzz-item-meta">${sourceLinks}${tags}</div>
+                <div class="buzz-item-meta">${extraLinks}${tags}</div>
               </div>
             </li>`;
         }).join("");
@@ -2081,6 +2186,35 @@
       buildFilterButtons();
       buildSortButtons();
 
+      function buildGreeting(firstName, customInterests) {
+        if (!customInterests || !customInterests.trim()) {
+          return `Hello, ${firstName}! What AI news are you looking for?`;
+        }
+        const stop = new Set([
+          "i","i'm","want","to","know","about","more","me","my","we","show",
+          "focus","focused","interested","in","please","the","a","an","and",
+          "or","on","for","of","with","only","just","mostly","some","get",
+          "see","read","find","keep","stay","up","news","latest","stuff",
+        ]);
+        const words = customInterests
+          .replace(/[^a-zA-Z0-9\s]/g, " ")
+          .split(/\s+/)
+          .filter(w => w.length > 2 && !stop.has(w.toLowerCase()));
+        const topics = [...new Set(words.slice(0, 3).map(w => w.toLowerCase()))];
+        if (topics.length === 0) {
+          return `Hello, ${firstName}! What AI news are you looking for?`;
+        }
+        const topicStr = topics.length === 1
+          ? topics[0]
+          : topics.slice(0, -1).join(", ") + " & " + topics[topics.length - 1];
+        const templates = [
+          `Hello, ${firstName}! Your ${topicStr} briefing is ready.`,
+          `Welcome back, ${firstName}! Catching you up on ${topicStr}.`,
+          `Hey ${firstName}! Here's the latest on ${topicStr}.`,
+        ];
+        return templates[firstName.charCodeAt(0) % templates.length];
+      }
+
       if (nnToken) {
         fetch("/api/auth/me", {
           headers: { "Authorization": `Bearer ${nnToken}` },
@@ -2101,7 +2235,9 @@
             const link = document.getElementById("accountLink");
             link.textContent = firstName;
             link.title = "Your account";
-            startGreetingTypewriter(`Hello, ${firstName}! What AI news are you looking for?`);
+            startGreetingTypewriter(buildGreeting(firstName, user.custom_interests));
+            userCustomInterests = user.custom_interests || null;
+
             const prefs = user.preferred_tags || [];
             userPreferredTags = prefs;
             userBuzzTopics = prefs;
@@ -2118,9 +2254,17 @@
               fetchArticles([], currentSortBy);
               updateMyPrefsControlUI();
             }
+            // Fetch live articles from the web in background (prepends to feed when ready)
+            fetchLiveArticles(prefs);
 
-            // Load morning briefing (includes buzz topics)
-            loadBriefing(nnToken);
+            // Load morning briefing — force refresh if preferences were just updated
+            const needsRefresh = localStorage.getItem("nn_needs_refresh");
+            if (needsRefresh) {
+              localStorage.removeItem("nn_needs_refresh");
+              refreshBriefing(nnToken);
+            } else {
+              loadBriefing(nnToken);
+            }
             briefingRefreshBtn.addEventListener("click", () => refreshBriefing(nnToken));
           })
           .catch(() => {

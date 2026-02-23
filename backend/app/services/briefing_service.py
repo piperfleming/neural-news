@@ -37,7 +37,7 @@ def _extract_keywords(text: str) -> list[str]:
     return [w for w in words if w not in _STOP_WORDS]
 
 DETAIL_INSTRUCTIONS = {
-    1: "For each topic, write the topic name as a ### heading, then ONE bullet point underneath (a single sentence) with the headline fact. Use **bold** for key names.",
+    1: "For each topic, write the topic name as a ### heading, then exactly ONE bullet point (one sentence, max 20 words) with the single most important fact. Use **bold** for key names. Total output must be under 80 words.",
     2: "For each topic, write the topic name as a ### heading, then 1-2 bullet points underneath covering the most essential facts. Use **bold** for key names and numbers.",
     3: "For each topic, write the topic name as a ### heading, then 2-4 bullet points underneath with key facts and brief context. Use **bold** for names and numbers.",
     4: "For each topic, write the topic name as a ### heading, then 4-6 bullet points underneath with context, details, and who is saying what on social media. Use **bold** for emphasis.",
@@ -45,6 +45,8 @@ DETAIL_INSTRUCTIONS = {
     6: "For each topic, write the topic name as a ### heading, then 1-2 detailed paragraphs with thorough analysis, numbers, and what specific people are saying on social media. Use **bold** for emphasis on key facts.",
     7: "For each topic, write the topic name as a ### heading, then 2-3 paragraphs as a comprehensive deep-dive with full context, data points, analysis, and community sentiment. Reference specific social media voices and platforms. Use **bold** for key facts and names.",
 }
+
+_MAX_TOPICS_BY_LEVEL = {1: 2, 2: 3, 3: 4}  # 4+ shows all topics
 
 
 async def _summarize_buzz_with_sources(social_results: list[dict]) -> list[dict]:
@@ -106,10 +108,10 @@ async def _extract_topic_outline(
 ) -> list[dict]:
     """Extract a structured topic outline from source material (runs once per briefing)."""
     tag_desc = ", ".join(user.preferred_tags) if user.preferred_tags else "general AI topics"
-    custom_desc = f" Specific interests: {user.custom_interests}." if user.custom_interests else ""
+    custom_ctx = f" Additional focus: {user.custom_interests}." if user.custom_interests else ""
 
     prompt = (
-        f"From the following articles and social buzz about AI (reader interests: {tag_desc}.{custom_desc}), "
+        f"From the following articles and social buzz about AI (reader interests: {tag_desc}.{custom_ctx}), "
         "identify the 3-5 most important and trending topics.\n\n"
         "Return a JSON object:\n"
         '{"topics": [{"headline": "short headline", '
@@ -150,14 +152,16 @@ async def _generate_briefing_at_detail_level(
     user: User,
 ) -> str:
     """Generate briefing prose at a specific detail level, constrained to the topic outline."""
+    max_topics = _MAX_TOPICS_BY_LEVEL.get(detail_level, len(topic_outline))
+    topic_outline = topic_outline[:max_topics]
     first_name = user.name.split()[0] if user.name else "there"
     tag_desc = ", ".join(user.preferred_tags) if user.preferred_tags else "general AI topics"
     role_context = f" They work as a {user.role}." if user.role else ""
-    custom_context = f" Their specific interest: {user.custom_interests}." if user.custom_interests else ""
+    custom_ctx = f" They specifically asked: \"{user.custom_interests}\"." if user.custom_interests else ""
     level_instruction = DETAIL_INSTRUCTIONS.get(detail_level, DETAIL_INSTRUCTIONS[DEFAULT_DETAIL_LEVEL])
 
     prompt = (
-        f"Morning briefing for {first_name} (interests: {tag_desc}).{role_context}{custom_context}\n\n"
+        f"Morning briefing for {first_name} (interests: {tag_desc}).{role_context}{custom_ctx}\n\n"
         "Write a briefing covering EXACTLY these topics in this order. "
         "Do NOT add, remove, or reorder topics.\n\n"
         f"TOPICS:\n{json.dumps(topic_outline, indent=2)}\n\n"
@@ -202,6 +206,18 @@ def _parse_buzz_snapshot(raw: str | None) -> list[dict]:
     return snapshot
 
 
+async def _fetch_article_urls(article_ids: list[int], db: AsyncSession) -> list[dict]:
+    """Fetch article URLs for the given IDs, preserving order."""
+    if not article_ids:
+        return []
+    result = await db.execute(
+        select(Article.id, Article.url).where(Article.id.in_(article_ids))
+    )
+    url_map = {row.id: row.url for row in result.all()}
+    return [{"url": url_map[aid]} for aid in article_ids if aid in url_map]
+
+
+
 def _briefing_response(
     row: DailyBriefing,
     buzz_topics: list[dict],
@@ -244,6 +260,15 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
             ]
         return _briefing_response(existing, buzz_topics, is_cached=True, articles=cached_articles)
 
+    # Extract keywords from custom_interests for supplemental queries
+    _stop = {"a","an","the","and","or","but","in","on","at","to","for","of","with","by","i","want","know","about","more","me","my","show","focus","interested","please"}
+    interest_keywords = []
+    if user.custom_interests:
+        interest_keywords = [
+            w.lower() for w in user.custom_interests.split()
+            if len(w) > 2 and w.lower() not in _stop
+        ]
+
     # Fetch recent articles matching user's preferred tags
     prefs = user.preferred_tags or []
     article_query = select(Article)
@@ -253,32 +278,31 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     rows = await db.execute(article_query)
     articles = list(rows.scalars().all())
 
-    # If the user has custom_interests, supplement with keyword-matched articles
-    if user.custom_interests:
-        ci_keywords = _extract_keywords(user.custom_interests)[:6]
-        if ci_keywords:
-            existing_ids = {a.id for a in articles}
-            kw_conditions = [
-                or_(
-                    Article.title.ilike(f"%{kw}%"),
-                    Article.summary.ilike(f"%{kw}%"),
-                )
-                for kw in ci_keywords
-            ]
-            kw_rows = await db.execute(
-                select(Article)
-                .where(or_(*kw_conditions))
-                .order_by(Article.created_at.desc())
-                .limit(8)
-            )
-            for a in kw_rows.scalars().all():
-                if a.id not in existing_ids:
-                    articles.append(a)
-                    existing_ids.add(a.id)
-    articles = articles[:20]
+    # Supplement with keyword-matched articles from custom_interests
+    if interest_keywords:
+        from sqlalchemy import or_
+        existing_ids = {a.id for a in articles}
+        ilike_conditions = [
+            or_(Article.title.ilike(f"%{kw}%"), Article.summary.ilike(f"%{kw}%"))
+            for kw in interest_keywords
+        ]
+        supp_rows = await db.execute(
+            select(Article)
+            .where(or_(*ilike_conditions))
+            .where(Article.id.notin_(existing_ids))
+            .order_by(Article.created_at.desc())
+            .limit(5)
+        )
+        articles.extend(supp_rows.scalars().all())
 
     # Fetch social buzz and summarize with source citations
-    buzz_search_topics = [f"AI {tag}" for tag in prefs] if prefs else None
+    # Put interest keywords FIRST so they're not dropped by the [:4] cap in search_social_discussions
+    buzz_search_topics = []
+    if interest_keywords:
+        buzz_search_topics += [f"AI {kw}" for kw in interest_keywords[:2]]
+    buzz_search_topics += [f"AI {tag}" for tag in prefs]
+    if not buzz_search_topics:
+        buzz_search_topics = None
     social_results = await asyncio.to_thread(search_social_discussions, buzz_search_topics)
     buzz_topics = await _summarize_buzz_with_sources(social_results)
 
@@ -340,7 +364,8 @@ async def adjust_detail_level(user: User, db: AsyncSession, action: str) -> dict
 
     if new_level == current_level:
         buzz_topics = _parse_buzz_snapshot(existing.buzz_snapshot)
-        return _briefing_response(existing, buzz_topics, is_cached=True)
+        article_urls = await _fetch_article_urls(existing.article_ids or [], db)
+        return _briefing_response(existing, buzz_topics, is_cached=True, articles=article_urls)
 
     # Log the feedback event
     feedback = BriefingFeedback(

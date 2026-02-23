@@ -45,6 +45,7 @@ class UserResponse(BaseModel):
     preferred_tags: list[str] = []
     role: str | None = None
     custom_interests: str | None = None
+    theme_config: dict | None = None
     created_at: datetime
     updated_at: datetime
 
