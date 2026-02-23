@@ -185,6 +185,12 @@
         border-color: #1f9d55;
       }
 
+      .filter-buttons.all-selected .tag-filter-button {
+        background: #1f9d55;
+        color: #ffffff;
+        border-color: #1f9d55;
+      }
+
       .tag-hint {
         font-size: 0.85rem;
         color: #4b6b57;
@@ -214,8 +220,56 @@
         border-color: rgba(18, 40, 76, 0.42);
       }
 
-      .my-prefs-btn {
+      .my-prefs-combined {
+        display: inline-flex;
+        align-items: stretch;
+        border-radius: 999px;
+        background: #e1f3e6;
+        border: 1px solid rgba(26, 106, 58, 0.25);
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .my-prefs-combined .my-prefs-panel {
+        padding: 8px 16px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #1a6a3a;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
         white-space: nowrap;
+      }
+
+      .my-prefs-combined .my-prefs-panel:first-child {
+        border-radius: 999px 0 0 999px;
+      }
+
+      .my-prefs-combined .my-prefs-panel:last-child {
+        border-radius: 0 999px 999px 0;
+        border-left: 1px solid rgba(26, 106, 58, 0.4);
+      }
+
+      .my-prefs-combined .my-prefs-panel:last-child.active {
+        border-left-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .my-prefs-combined .my-prefs-panel:first-child.active + .my-prefs-panel {
+        border-left-color: rgba(255, 255, 255, 0.4);
+      }
+
+      .my-prefs-combined .my-prefs-panel:hover:not(.active) {
+        background: rgba(26, 106, 58, 0.1);
+      }
+
+      .my-prefs-combined .my-prefs-panel.active {
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .my-prefs-combined .my-prefs-panel.active:hover {
+        background: #1a8a4a;
       }
 
       .grid {
@@ -1021,7 +1075,6 @@
           </div>
           <div class="filters-row">
             <div class="controls-inline">
-              <button id="myPrefsBtn" class="control-button my-prefs-btn" type="button" hidden>My Preferences</button>
               <div id="sortButtons" class="sort-buttons"></div>
             </div>
           </div>
@@ -1164,6 +1217,8 @@
       ];
 
       let userPreferredTags = [];
+      let myPreferencesOn = false;
+      let currentFilterTags = [];
 
       const sortOptions = [
         { label: "Trending", value: "attention" },
@@ -1349,8 +1404,10 @@
 
         feed.querySelectorAll(".tag[data-tag]").forEach((tagEl) => {
           tagEl.addEventListener("click", () => {
+            myPreferencesOn = false;
             setActiveFilter([tagEl.dataset.tag]);
             fetchArticles([tagEl.dataset.tag], currentSortBy);
+            updateMyPrefsControlUI();
           });
         });
 
@@ -1389,12 +1446,7 @@
           button.addEventListener("click", () => {
             currentSortBy = option.value;
             setActiveSort(currentSortBy);
-            const activeTags = Array.from(
-              document.querySelectorAll(".tag-filter-button.active[data-tags]")
-            )
-              .flatMap((btn) => (btn.dataset.tags || "").split("|"))
-              .filter(Boolean);
-            fetchArticles(activeTags, currentSortBy);
+            fetchArticles(currentFilterTags, currentSortBy);
           });
           sortButtons.appendChild(button);
         });
@@ -1410,18 +1462,117 @@
       };
 
       const setActiveFilter = (tags) => {
+        currentFilterTags = tags.slice();
         const normalized = tags.map((tag) => tag.toLowerCase());
+        const isAll = normalized.length === 0;
+        if (filterButtons) {
+          filterButtons.classList.toggle("all-selected", isAll);
+        }
         document.querySelectorAll(".tag-filter-button").forEach((button) => {
           const buttonTags = button.dataset.tags
             ? button.dataset.tags.split("|")
             : [];
           const isActive =
             buttonTags.length === 0
-              ? normalized.length === 0
+              ? isAll
               : buttonTags.every((tag) => normalized.includes(tag.toLowerCase()));
           button.classList.toggle("active", isActive);
         });
+        updateMyPrefsControlUI();
       };
+
+      function updateMyPrefsControlUI() {
+        const wrapper = document.getElementById("myPrefsBtn");
+        if (!wrapper) return;
+        const allPanel = wrapper.querySelector('[data-panel="all"]');
+        const prefsPanel = wrapper.querySelector('[data-panel="prefs"]');
+        const allSelected = currentFilterTags.length === 0;
+        const prefsSelected =
+          myPreferencesOn &&
+          currentFilterTags.length === userPreferredTags.length &&
+          currentFilterTags.every((t) => userPreferredTags.includes(t));
+        if (allPanel) allPanel.classList.toggle("active", allSelected);
+        if (prefsPanel) prefsPanel.classList.toggle("active", prefsSelected);
+        wrapper.setAttribute("aria-pressed", myPreferencesOn ? "true" : "false");
+      }
+
+      function createMyPrefsCombinedControl() {
+        const wrapper = document.createElement("div");
+        wrapper.id = "myPrefsBtn";
+        wrapper.className = "my-prefs-combined";
+        wrapper.setAttribute("role", "group");
+        wrapper.setAttribute("aria-label", "Filter: All or My Preferences");
+
+        const prefsPanel = document.createElement("button");
+        prefsPanel.type = "button";
+        prefsPanel.className = "my-prefs-panel";
+        prefsPanel.dataset.panel = "prefs";
+        prefsPanel.textContent = "My Preferences";
+
+        const allPanel = document.createElement("button");
+        allPanel.type = "button";
+        allPanel.className = "my-prefs-panel active";
+        allPanel.dataset.panel = "all";
+        allPanel.textContent = "All";
+
+        const applyAll = () => {
+          myPreferencesOn = false;
+          setActiveFilter([]);
+          fetchArticles([], currentSortBy);
+          updateMyPrefsControlUI();
+        };
+        const applyMyPrefs = (prefs) => {
+          userPreferredTags = prefs;
+          myPreferencesOn = true;
+          setActiveFilter(prefs);
+          fetchArticles(prefs, currentSortBy);
+          updateMyPrefsControlUI();
+        };
+
+        prefsPanel.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const token = localStorage.getItem("nn_token");
+          if (!token) return;
+          try {
+            const res = await fetch("/api/users/me/preferences", {
+              headers: { "Authorization": `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Failed to load preferences");
+            const data = await res.json();
+            const prefs = data.preferred_tags || [];
+            applyMyPrefs(prefs);
+          } catch (err) {
+            console.error("Could not load preferences:", err);
+          }
+        });
+
+        allPanel.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          applyAll();
+        });
+
+        wrapper.appendChild(prefsPanel);
+        wrapper.appendChild(allPanel);
+        return wrapper;
+      }
+
+      function insertMyPrefsControl() {
+        const existing = document.getElementById("myPrefsBtn");
+        if (existing) return;
+        const control = createMyPrefsCombinedControl();
+        filterButtons.insertBefore(control, filterButtons.firstChild);
+        const allTagBtn = document.querySelector(".all-tag-button");
+        if (allTagBtn) allTagBtn.hidden = true;
+      }
+
+      function removeMyPrefsControl() {
+        const control = document.getElementById("myPrefsBtn");
+        if (control) control.remove();
+        const allTagBtn = document.querySelector(".all-tag-button");
+        if (allTagBtn) allTagBtn.hidden = false;
+      }
 
       const buildFilterButtons = () => {
         filterButtons.innerHTML = "";
@@ -1429,34 +1580,17 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "filter-button tag-filter-button";
+          if (option.tags.length === 0) button.classList.add("all-tag-button");
           button.textContent = option.label;
           button.dataset.tags = option.tags.join("|");
           button.addEventListener("click", () => {
+            myPreferencesOn = false;
             setActiveFilter(option.tags);
             fetchArticles(option.tags, currentSortBy);
+            updateMyPrefsControlUI();
           });
           filterButtons.appendChild(button);
         });
-        const myPrefsBtn = document.getElementById("myPrefsBtn");
-        if (myPrefsBtn) {
-          myPrefsBtn.addEventListener("click", async () => {
-            const token = localStorage.getItem("nn_token");
-            if (!token) return;
-            try {
-              const res = await fetch("/api/users/me/preferences", {
-                headers: { "Authorization": `Bearer ${token}` },
-              });
-              if (!res.ok) throw new Error("Failed to load preferences");
-              const data = await res.json();
-              const prefs = data.preferred_tags || [];
-              myPrefsBtn.dataset.tags = prefs.join("|");
-              setActiveFilter(prefs);
-              fetchArticles(prefs, currentSortBy);
-            } catch (err) {
-              console.error("Could not load preferences:", err);
-            }
-          });
-        }
       };
 
       // --- Typewriter greeting & subtitle ---
@@ -1913,8 +2047,6 @@
           .then(async (user) => {
             // Activate logged-in layout
             activateLoggedInLayout();
-            const myPrefsBtn = document.getElementById("myPrefsBtn");
-            if (myPrefsBtn) myPrefsBtn.hidden = false;
 
             ensureSavedLink();
 
@@ -1930,14 +2062,17 @@
             const prefs = user.preferred_tags || [];
             userPreferredTags = prefs;
             userBuzzTopics = prefs;
+            insertMyPrefsControl();
             if (prefs.length > 0) {
-              const myPrefsBtn = document.getElementById("myPrefsBtn");
-              if (myPrefsBtn) myPrefsBtn.dataset.tags = prefs.join("|");
+              myPreferencesOn = true;
               setActiveFilter(prefs);
               fetchArticles(prefs, currentSortBy);
+              updateMyPrefsControlUI();
             } else {
+              myPreferencesOn = false;
               setActiveFilter([]);
               fetchArticles([], currentSortBy);
+              updateMyPrefsControlUI();
             }
 
             // Load morning briefing (includes buzz topics)
@@ -1946,8 +2081,7 @@
           })
           .catch(() => {
             localStorage.removeItem("nn_token");
-            const myPrefsBtn = document.getElementById("myPrefsBtn");
-            if (myPrefsBtn) myPrefsBtn.hidden = true;
+            removeMyPrefsControl();
             nnToken = null;
             activateAnonLayout();
             startGreetingTypewriter(defaultGreeting);
@@ -1956,8 +2090,7 @@
             loadBuzz();
           });
       } else {
-        const myPrefsBtn = document.getElementById("myPrefsBtn");
-        if (myPrefsBtn) myPrefsBtn.hidden = true;
+        removeMyPrefsControl();
         activateAnonLayout();
         startGreetingTypewriter(defaultGreeting);
         setActiveFilter([]);
