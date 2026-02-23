@@ -1315,6 +1315,8 @@
 
           currentUser = data;
           renderProfile(data);
+          // Signal index.html to force-refresh briefing and articles on next load
+          localStorage.setItem("nn_needs_refresh", "1");
           showAlert("editAlert", "Preferences saved!", "success");
           setTimeout(() => {
             cancelEditPreferences();

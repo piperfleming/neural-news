@@ -56,6 +56,7 @@ async def update_profile(
     return current_user
 
 
+
 @router.get("/me/preferences", response_model=PreferencesResponse)
 async def get_preferences(current_user: User = Depends(get_current_user)):
     return PreferencesResponse(preferred_tags=current_user.preferred_tags)

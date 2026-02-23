@@ -3,8 +3,10 @@ import asyncio
 from datetime import date, datetime, timedelta
 from urllib.parse import urlparse
 
+from ddgs import DDGS
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -20,6 +22,22 @@ from app.services.article_extractor import extract_article
 from app.services.llm_service import analyze_article
 
 router = APIRouter()
+
+_STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "are", "was", "be", "it", "its",
+    "i", "me", "my", "we", "you", "he", "she", "they", "that", "this",
+    "how", "what", "when", "where", "who", "which", "more", "about",
+}
+
+
+def _interest_score(article: dict, keywords: list[str]) -> int:
+    haystack = " ".join([
+        article.get("title") or "",
+        article.get("summary") or "",
+        " ".join(article.get("tags") or []),
+    ]).lower()
+    return sum(1 for kw in keywords if kw in haystack)
 
 
 # ---------------------------------------------------------------------------
@@ -108,6 +126,10 @@ async def list_articles(
     sort_by: str = Query(
         "attention",
         description='Sort order: "attention"/"trending" (trending first) or "recent"',
+    ),
+    custom_interests: str | None = Query(
+        None,
+        description="Free-form user interest text for secondary relevance re-ranking",
     ),
 ):
     """Return all news articles, optionally filtered and sorted.
@@ -214,7 +236,128 @@ async def list_articles(
                 key=lambda a: -len(pref_set.intersection(a.get("tags", [])))
             )
 
+    if custom_interests:
+        keywords = [
+            w.lower() for w in custom_interests.split()
+            if len(w) > 2 and w.lower() not in _STOP_WORDS
+        ]
+        if keywords:
+            # Supplemental query: fetch articles matching keywords in title/summary
+            # that weren't already returned by the tag filter
+            existing_ids = {a["id"] for a in articles}
+            ilike_conditions = [
+                or_(
+                    Article.title.ilike(f"%{kw}%"),
+                    Article.summary.ilike(f"%{kw}%"),
+                )
+                for kw in keywords
+            ]
+            supp_query = (
+                select(Article)
+                .where(or_(*ilike_conditions))
+                .where(Article.id.notin_(existing_ids))
+                .order_by(Article.created_at.desc())
+                .limit(20)
+            )
+            supp_rows = (await db.execute(supp_query)).scalars().all()
+            supp_articles = []
+            for article in supp_rows:
+                payload = ArticleResponse.model_validate(article).model_dump()
+                payload["is_trending"] = article.id in trending_ids
+                payload["like_count"] = 0
+                supp_articles.append(payload)
+
+            # Merge, filter to only relevant articles, sort by score descending
+            all_articles = articles + supp_articles
+            scored = [(a, _interest_score(a, keywords)) for a in all_articles]
+            relevant = [a for a, score in scored if score > 0]
+            relevant.sort(key=lambda a: -_interest_score(a, keywords))
+            # Fall back to full pool if nothing matches (avoids empty feed)
+            final = relevant if len(relevant) >= 3 else all_articles
+            return {"count": len(final), "articles": final}
+
     return {"count": len(articles), "articles": articles}
+
+
+def _ddgs_news_search(query: str, max_results: int) -> list[dict]:
+    """Run a DuckDuckGo news search synchronously (called via thread)."""
+    try:
+        return list(DDGS().news(query, max_results=max_results))
+    except Exception:
+        return []
+
+
+@router.get("/live")
+async def live_articles(
+    interests: str | None = Query(None, description="Free-form interest text"),
+    tags: str | None = Query(None, description="Comma-separated preferred tags"),
+):
+    """Fetch fresh news articles from the web matching the user's interests."""
+    _stop = {
+        "i", "i'm", "want", "to", "know", "about", "more", "me", "my",
+        "show", "focus", "focused", "interested", "in", "please", "the",
+        "a", "an", "and", "or", "on", "for", "of", "with", "only", "just",
+        "mostly", "some", "get", "see", "read", "find", "keep", "stay",
+        "up", "news", "latest", "stuff",
+    }
+
+    # Build search queries from interests and tags
+    queries: list[str] = []
+    if interests:
+        keywords = [
+            w for w in interests.split()
+            if len(w) > 2 and w.lower() not in _stop
+        ]
+        if keywords:
+            queries.append("AI " + " ".join(keywords[:6]))
+
+    if tags:
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        for tag in tag_list[:2]:
+            queries.append(f"AI {tag} news")
+
+    if not queries:
+        queries = ["artificial intelligence news"]
+
+    # Run searches in parallel (capped at 2 queries, 6 results each)
+    search_tasks = [
+        asyncio.to_thread(_ddgs_news_search, q, 6)
+        for q in queries[:2]
+    ]
+    results_nested = await asyncio.gather(*search_tasks, return_exceptions=True)
+
+    # Flatten, deduplicate by URL
+    seen_urls: set[str] = set()
+    articles = []
+    for batch in results_nested:
+        if isinstance(batch, Exception) or not batch:
+            continue
+        for r in batch:
+            url = r.get("url", "")
+            if not url or url in seen_urls:
+                continue
+            seen_urls.add(url)
+            domain = urlparse(url).netloc.replace("www.", "")
+            org = r.get("source") or domain
+            org_initials = "".join(w[0].upper() for w in org.split()[:3])
+            articles.append({
+                "id": abs(hash(url)) % (10 ** 8),
+                "title": r.get("title", ""),
+                "content": r.get("body", ""),
+                "url": url,
+                "org": org,
+                "org_initials": org_initials,
+                "logo_url": f"https://www.google.com/s2/favicons?domain={domain}&sz=128",
+                "summary": r.get("body", ""),
+                "date": (r.get("date") or "")[:10],
+                "author": org,
+                "tags": [],
+                "is_trending": False,
+                "like_count": 0,
+                "is_live": True,
+            })
+
+    return {"count": len(articles), "articles": articles[:10]}
 
 
 @router.get("/{article_id}", response_model=ArticleResponse)
