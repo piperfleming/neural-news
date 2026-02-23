@@ -1248,6 +1248,8 @@
 
       function activateAnonLayout() {
         isLoggedIn = false;
+        if (currentSortBy === "foryou") currentSortBy = "attention";
+        buildSortButtons();
         removeSavedLink();
         removeAdminLink();
         anonLayout.hidden = false;
@@ -1261,6 +1263,7 @@
 
       function activateLoggedInLayout() {
         isLoggedIn = true;
+        buildSortButtons();
         anonLayout.hidden = true;
         morningBuzzSection.hidden = false;
         requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
@@ -1291,13 +1294,12 @@
       const sortOptions = [
         { label: "Trending", value: "attention" },
         { label: "Most Recent", value: "recent" },
+        { label: "For You", value: "foryou", loggedInOnly: true },
       ];
 
       let currentSortBy = "attention";
-      let userCustomInterests = null;
       let currentDbArticles = [];
       let currentLiveArticles = [];
-      let currentFilterTags = [];
 
       const _SCORE_STOP = new Set([
         "a","an","the","and","or","but","in","on","at","to","for","of","with",
@@ -1331,15 +1333,27 @@
 
         const all = [...currentDbArticles, ...currentLiveArticles];
         const scored = all.map(a => ({ a, s: scoreArticle(a, keywords, prefTagsLower) }));
-        scored.sort((x, y) => y.s - x.s);
 
         let final;
-        if (userCustomInterests && keywords.length > 0) {
-          // Require at least 3 keyword hits (score >= 6) to pass
-          const relevant = scored.filter(({ s }) => s >= 6).map(({ a }) => a);
-          // Only fall back if almost nothing passes, and cap fallback tightly
-          final = relevant.length >= 2 ? relevant : scored.slice(0, 3).map(({ a }) => a);
+        if (currentSortBy === "foryou") {
+          // For You: rank by relevance score — preferences + custom interests
+          scored.sort((x, y) => y.s - x.s);
+          final = scored.slice(0, 12).map(({ a }) => a);
+        } else if (currentSortBy === "recent") {
+          // Most Recent: live articles first (freshest), then by date descending
+          scored.sort((x, y) => {
+            if (x.a.is_live && !y.a.is_live) return -1;
+            if (!x.a.is_live && y.a.is_live) return 1;
+            return new Date(y.a.date || 0) - new Date(x.a.date || 0);
+          });
+          final = scored.slice(0, 15).map(({ a }) => a);
         } else {
+          // Trending: trending-badged articles first, then backend attention order
+          scored.sort((x, y) => {
+            if (x.a.is_trending && !y.a.is_trending) return -1;
+            if (!x.a.is_trending && y.a.is_trending) return 1;
+            return 0;
+          });
           final = scored.map(({ a }) => a);
         }
 
@@ -1349,7 +1363,7 @@
       const buildArticleParams = (tags, sortBy) => {
         const params = new URLSearchParams();
         if (tags.length) params.set("tags", tags.join(","));
-        params.set("sort_by", sortBy);
+        params.set("sort_by", sortBy === "foryou" ? "attention" : sortBy);
         if (userCustomInterests) params.set("custom_interests", userCustomInterests);
         const query = params.toString();
         return query ? `?${query}` : "";
@@ -1559,6 +1573,7 @@
         if (!sortButtons) return;
         sortButtons.innerHTML = "";
         sortOptions.forEach((option) => {
+          if (option.loggedInOnly && !isLoggedIn) return;
           const button = document.createElement("button");
           button.type = "button";
           button.className = "control-button sort-button";
@@ -1768,6 +1783,19 @@
       }
 
       // --- Social Buzz ---
+      const _isProfileUrl = (href) => {
+        try {
+          const parts = new URL(href).pathname.split("/").filter(p => p.length > 0);
+          return parts.length <= 1;
+        } catch { return true; }
+      };
+      const _renderSourceLinks = (links) => (links || [])
+        .filter(l => l.href && !_isProfileUrl(l.href))
+        .map(l => {
+          const label = l.source.charAt(0).toUpperCase() + l.source.slice(1);
+          return `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${label} &#8599;</a>`;
+        }).join("");
+
       const renderBuzz = (data) => {
         const topics = data.topics || [];
         if (!topics.length) {
@@ -1783,10 +1811,8 @@
         list.className = "buzz-list";
 
         topics.forEach((topic, index) => {
-          const sourceLinks = (topic.source_links || [])
-            .map((l) => `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${l.source} &#8599;</a>`)
-            .join("");
-          const sourceFallback = !sourceLinks
+          const sourceLinks = _renderSourceLinks(topic.source_links);
+          const sourceFallback = !sourceLinks.length
             ? (topic.sources || []).map((s) => `<span class="buzz-source">${s}</span>`).join("")
             : "";
           const tags = (topic.tags || [])
@@ -1878,6 +1904,22 @@
         const articles = data.articles || [];
         const rawLines = (data.briefing_text || "").split("\n");
 
+        // Find the article whose title/summary best matches a section heading
+        const usedUrls = new Set();
+        const findArticleForHeading = (heading) => {
+          const words = heading.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+          let best = null, bestScore = 0;
+          for (const a of articles) {
+            if (!a.url || usedUrls.has(a.url)) continue;
+            const hay = ((a.title || "") + " " + (a.summary || "")).toLowerCase();
+            const score = words.filter(w => hay.includes(w)).length;
+            if (score > bestScore) { bestScore = score; best = a; }
+          }
+          const result = bestScore > 0 ? best : null;
+          if (result) usedUrls.add(result.url);
+          return result;
+        };
+
         // Split briefing_text into sections on ### headings, max 3
         const sections = [];
         let current = null;
@@ -1924,7 +1966,7 @@
           }
           if (inList) contentHtml += "</ul>";
 
-          const articleUrl = articles[i]?.url || null;
+          const articleUrl = findArticleForHeading(section.heading)?.url || null;
           const readMoreLink = articleUrl
             ? `<a class="briefing-read-more" href="${articleUrl}" target="_blank" rel="noreferrer">Read more &#8599;</a>`
             : "";
@@ -1959,10 +2001,7 @@
         }
 
         const buzzHtml = topics.map((topic) => {
-          const sourceLinks = topic.source_links || [];
-          const extraLinks = sourceLinks
-            .map((l) => `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${l.source} &#8599;</a>`)
-            .join("");
+          const extraLinks = _renderSourceLinks(topic.source_links);
           const tags = (topic.tags || [])
             .map((t) => `<span class="buzz-tag">${t}</span>`)
             .join("");
