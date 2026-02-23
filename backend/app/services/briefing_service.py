@@ -184,11 +184,17 @@ def _parse_buzz_snapshot(raw: str | None) -> list[dict]:
     return snapshot
 
 
-def _briefing_response(row: DailyBriefing, buzz_topics: list[dict], is_cached: bool) -> dict:
+def _briefing_response(
+    row: DailyBriefing,
+    buzz_topics: list[dict],
+    is_cached: bool,
+    articles: list[dict] | None = None,
+) -> dict:
     return {
         "briefing_text": row.briefing_text,
         "buzz_topics": buzz_topics,
         "article_ids": row.article_ids or [],
+        "articles": articles or [],
         "briefing_date": str(row.briefing_date),
         "detail_level": row.detail_level or DEFAULT_DETAIL_LEVEL,
         "is_cached": is_cached,
@@ -209,7 +215,16 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     existing = result.scalar_one_or_none()
     if existing:
         buzz_topics = _parse_buzz_snapshot(existing.buzz_snapshot)
-        return _briefing_response(existing, buzz_topics, is_cached=True)
+        cached_articles: list[dict] = []
+        if existing.article_ids:
+            article_rows = await db.execute(
+                select(Article).where(Article.id.in_(existing.article_ids))
+            )
+            cached_articles = [
+                {"id": a.id, "title": a.title, "url": a.url}
+                for a in article_rows.scalars().all()
+            ]
+        return _briefing_response(existing, buzz_topics, is_cached=True, articles=cached_articles)
 
     # Fetch recent articles matching user's preferred tags
     prefs = user.preferred_tags or []
@@ -243,6 +258,7 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     )
 
     article_id_list = [a.id for a in articles]
+    articles_meta = [{"id": a.id, "title": a.title, "url": a.url} for a in articles]
     row = DailyBriefing(
         user_id=user.id,
         briefing_date=today,
@@ -256,7 +272,7 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     db.add(row)
     await db.flush()
 
-    return _briefing_response(row, buzz_topics, is_cached=False)
+    return _briefing_response(row, buzz_topics, is_cached=False, articles=articles_meta)
 
 
 async def adjust_detail_level(user: User, db: AsyncSession, action: str) -> dict:
@@ -321,7 +337,14 @@ async def adjust_detail_level(user: User, db: AsyncSession, action: str) -> dict
     await db.flush()
 
     buzz_topics = _parse_buzz_snapshot(existing.buzz_snapshot)
-    return _briefing_response(existing, buzz_topics, is_cached=False)
+    adj_article_rows = await db.execute(
+        select(Article).where(Article.id.in_(existing.article_ids or []))
+    )
+    adj_articles_meta = [
+        {"id": a.id, "title": a.title, "url": a.url}
+        for a in adj_article_rows.scalars().all()
+    ]
+    return _briefing_response(existing, buzz_topics, is_cached=False, articles=adj_articles_meta)
 
 
 async def delete_todays_briefing(user: User, db: AsyncSession) -> None:

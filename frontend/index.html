@@ -770,6 +770,34 @@
       .morning-buzz-body h5.briefing-heading { font-size: 0.93rem; }
       .morning-buzz-body h6.briefing-heading { font-size: 0.9rem; }
 
+      .briefing-card {
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+      }
+
+      .briefing-card:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .briefing-read-more {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        transition: color 0.15s, border-color 0.15s;
+      }
+
+      .briefing-read-more:hover {
+        color: #fff;
+        border-color: rgba(255,255,255,0.8);
+      }
+
       .briefing-refresh {
         background: rgba(255,255,255,0.15);
         color: #fff;
@@ -1475,9 +1503,12 @@
         list.className = "buzz-list";
 
         topics.forEach((topic, index) => {
-          const sources = (topic.sources || [])
-            .map((s) => `<span class="buzz-source">${s}</span>`)
+          const sourceLinks = (topic.source_links || [])
+            .map((l) => `<a class="buzz-source-link" href="${l.href}" target="_blank" rel="noreferrer">${l.source} &#8599;</a>`)
             .join("");
+          const sourceFallback = !sourceLinks
+            ? (topic.sources || []).map((s) => `<span class="buzz-source">${s}</span>`).join("")
+            : "";
           const tags = (topic.tags || [])
             .map((t) => `<span class="buzz-tag">${t}</span>`)
             .join("");
@@ -1489,7 +1520,7 @@
             <div class="buzz-item-content">
               <p class="buzz-headline">${topic.headline}</p>
               <p class="buzz-summary">${topic.summary}</p>
-              <div class="buzz-item-meta">${sources}${tags}</div>
+              <div class="buzz-item-meta">${sourceLinks || sourceFallback}${tags}</div>
             </div>
           `;
           list.appendChild(li);
@@ -1564,25 +1595,67 @@
       };
 
       const renderBriefing = (data) => {
-        const lines = (data.briefing_text || "").split("\n").filter((l) => l.trim());
-        let html = "";
-        let inList = false;
-        for (const line of lines) {
-          const headingMatch = line.match(/^(#{1,4})\s+(.*)/);
-          const bulletMatch = !headingMatch && line.match(/^\s*[-•]\s+(.*)/);
+        const articles = data.articles || [];
+        const rawLines = (data.briefing_text || "").split("\n");
+
+        // Split briefing_text into sections on ### headings, max 3
+        const sections = [];
+        let current = null;
+        for (const line of rawLines) {
+          const headingMatch = line.match(/^#{1,4}\s+(.*)/);
           if (headingMatch) {
-            if (inList) { html += "</ul>"; inList = false; }
-            const tag = `h${headingMatch[1].length + 2}`;
-            html += `<${tag} class="briefing-heading">${formatMarkdown(headingMatch[2])}</${tag}>`;
-          } else if (bulletMatch) {
-            if (!inList) { html += "<ul>"; inList = true; }
-            html += `<li>${formatMarkdown(bulletMatch[1])}</li>`;
-          } else {
-            if (inList) { html += "</ul>"; inList = false; }
-            html += `<p>${formatMarkdown(line)}</p>`;
+            if (current) sections.push(current);
+            if (sections.length >= 3) break;
+            current = { heading: headingMatch[1].trim(), contentLines: [] };
+          } else if (current && line.trim()) {
+            current.contentLines.push(line.trim());
           }
         }
-        if (inList) html += "</ul>";
+        if (current && sections.length < 3) sections.push(current);
+
+        let html = "";
+        sections.forEach((section, i) => {
+          // Truncate: up to 3 bullets or 3 prose lines per section
+          const truncated = [];
+          let bulletCount = 0;
+          for (const l of section.contentLines) {
+            const isBullet = /^\s*[-•]/.test(l);
+            if (isBullet) {
+              if (bulletCount >= 3) break;
+              bulletCount++;
+            } else {
+              if (!bulletCount && truncated.length >= 3) break;
+            }
+            truncated.push(l);
+          }
+
+          // Render truncated content
+          let contentHtml = "";
+          let inList = false;
+          for (const l of truncated) {
+            const bulletMatch = l.match(/^\s*[-•]\s+(.*)/);
+            if (bulletMatch) {
+              if (!inList) { contentHtml += "<ul>"; inList = true; }
+              contentHtml += `<li>${formatMarkdown(bulletMatch[1])}</li>`;
+            } else {
+              if (inList) { contentHtml += "</ul>"; inList = false; }
+              contentHtml += `<p>${formatMarkdown(l)}</p>`;
+            }
+          }
+          if (inList) contentHtml += "</ul>";
+
+          const articleUrl = articles[i]?.url || null;
+          const readMoreLink = articleUrl
+            ? `<a class="briefing-read-more" href="${articleUrl}" target="_blank" rel="noreferrer">Read more &#8599;</a>`
+            : "";
+
+          html += `<div class="briefing-card">
+            <h3 class="briefing-heading">${formatMarkdown(section.heading)}</h3>
+            ${contentHtml}
+            ${readMoreLink}
+          </div>`;
+        });
+
         briefingBody.innerHTML = html || "<p>No briefing content.</p>";
 
         const teaserLoading = document.getElementById("briefingTeaserLoading");
