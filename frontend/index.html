@@ -1877,8 +1877,8 @@
       const briefingBody = document.getElementById("briefingBody");
       const briefingBuzz = document.getElementById("briefingBuzz");
       const briefingRefreshBtn = document.getElementById("briefingRefresh");
-      let currentDetailLevel = 4;
-      const MAX_DETAIL = 7;
+      let currentDetailLevel = 2;
+      const MAX_DETAIL = 3;
       const MIN_DETAIL = 1;
 
       const updateDetailIndicator = (level) => {
@@ -1991,7 +1991,7 @@
         // Show detail controls and update indicator
         const detailControls = document.getElementById("briefingDetailControls");
         if (detailControls) detailControls.hidden = false;
-        updateDetailIndicator(data.detail_level || 4);
+        updateDetailIndicator(data.detail_level || 2);
 
         // Render buzz topics with inline source links (embedded per topic)
         const topics = data.buzz_topics || [];
