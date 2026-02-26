@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 
 from app.models.base import Base
 
-DEFAULT_DETAIL_LEVEL = 4
+DEFAULT_DETAIL_LEVEL = 2
 
 
 class DailyBriefing(Base):

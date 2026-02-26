@@ -37,16 +37,12 @@ def _extract_keywords(text: str) -> list[str]:
     return [w for w in words if w not in _STOP_WORDS]
 
 DETAIL_INSTRUCTIONS = {
-    1: "For each topic, write the topic name as a ### heading, then exactly ONE bullet point (one sentence, max 20 words) with the single most important fact. Use **bold** for key names. Total output must be under 80 words.",
-    2: "For each topic, write the topic name as a ### heading, then 1-2 bullet points underneath covering the most essential facts. Use **bold** for key names and numbers.",
-    3: "For each topic, write the topic name as a ### heading, then 2-4 bullet points underneath with key facts and brief context. Use **bold** for names and numbers.",
-    4: "For each topic, write the topic name as a ### heading, then 4-6 bullet points underneath with context, details, and who is saying what on social media. Use **bold** for emphasis.",
-    5: "For each topic, write the topic name as a ### heading, then a full paragraph (5-7 sentences) with analysis and community reactions. Use **bold** for key names and figures. Reference specific social media posts and figures.",
-    6: "For each topic, write the topic name as a ### heading, then 1-2 detailed paragraphs with thorough analysis, numbers, and what specific people are saying on social media. Use **bold** for emphasis on key facts.",
-    7: "For each topic, write the topic name as a ### heading, then 2-3 paragraphs as a comprehensive deep-dive with full context, data points, analysis, and community sentiment. Reference specific social media voices and platforms. Use **bold** for key facts and names.",
+    1: "For each topic, write the topic name as a ### heading, then exactly 1-2 bullet points (one sentence each, max 20 words per bullet) with the most important fact. Use **bold** for key names. Keep it scannable and brief.",
+    2: "For each topic, write the topic name as a ### heading, then 3-5 bullet points covering key facts, context, and notable reactions. Use **bold** for names and numbers.",
+    3: "For each topic, write the topic name as a ### heading, then a full paragraph (5-7 sentences) with thorough analysis, specific data points, and what people are saying on social media. Use **bold** for key names and figures.",
 }
 
-_MAX_TOPICS_BY_LEVEL = {1: 2, 2: 3, 3: 4}  # 4+ shows all topics
+_MAX_TOPICS_BY_LEVEL = {1: 2, 2: 4}  # level 3 shows all topics
 
 
 async def _summarize_buzz_with_sources(social_results: list[dict]) -> list[dict]:
@@ -165,7 +161,7 @@ async def _generate_briefing_at_detail_level(
         "Write a briefing covering EXACTLY these topics in this order. "
         "Do NOT add, remove, or reorder topics.\n\n"
         f"TOPICS:\n{json.dumps(topic_outline, indent=2)}\n\n"
-        f"DETAIL LEVEL ({detail_level}/7): {level_instruction}\n\n"
+        f"DETAIL LEVEL ({detail_level}/3): {level_instruction}\n\n"
         "Rules:\n"
         "- Lead with the most important news, not a greeting or preamble\n"
         "- Be specific: name the companies, models, numbers, and details\n"
@@ -358,7 +354,7 @@ async def adjust_detail_level(user: User, db: AsyncSession, action: str) -> dict
 
     current_level = existing.detail_level or DEFAULT_DETAIL_LEVEL
     if action == "more_detail":
-        new_level = min(current_level + 1, 7)
+        new_level = min(current_level + 1, 3)
     else:
         new_level = max(current_level - 1, 1)
 
