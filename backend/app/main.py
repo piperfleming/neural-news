@@ -14,7 +14,7 @@ from app.config import settings
 from app.database import init_db
 from app.services.feed_service import refresh_article_feed
 
-from app.routers import articles, auth, briefing, buzz, metrics, users
+from app.routers import articles, auth, briefing, buzz, chat, metrics, users
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +67,7 @@ app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(metrics.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(briefing.router, prefix="/api/briefing", tags=["briefing"])
 app.include_router(buzz.router, prefix="/api/buzz", tags=["buzz"])
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
 
 @app.get("/")
