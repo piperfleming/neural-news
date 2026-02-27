@@ -1,5 +1,5 @@
 """User account model."""
-from sqlalchemy import Column, DateTime, Integer, String, Text, func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from app.models.base import Base
@@ -17,6 +17,7 @@ class User(Base):
     custom_interests = Column(Text, nullable=True)
     preferred_detail_level = Column(Integer, nullable=True)
     theme_config = Column(JSONB, nullable=True)
+    email_daily_briefing = Column(Boolean, nullable=False, default=False)
 
     created_at = Column(DateTime, nullable=False, server_default=func.now())
     updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
