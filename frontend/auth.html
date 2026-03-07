@@ -691,6 +691,14 @@
             <div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Free-form text. Tell the AI exactly what kind of news you care about.</div>
           </div>
 
+          <div style="margin-top: 16px;">
+            <div style="font-weight: 600; color: #1a6a3a; margin-bottom: 8px; font-size: 0.9rem;">Email</div>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px 14px; border-radius: 12px; background: #f7fbf7; border: 1px solid #cfe4d4;">
+              <input type="checkbox" id="emailBriefingToggle" style="width: 16px; height: 16px; cursor: pointer;" />
+              <span style="font-size: 0.9rem; color: #0f1f14;">Email me my daily briefing</span>
+            </label>
+          </div>
+
           <button class="btn" style="margin-top: 16px;" onclick="saveEditedPreferences()">Save Changes</button>
           <button class="btn btn-secondary" style="margin-top: 8px;" onclick="cancelEditPreferences()">Cancel</button>
         </div>
@@ -1282,6 +1290,10 @@
         // Populate custom interests textarea
         const ciInput = document.getElementById("customInterestsInput");
         ciInput.value = (currentUser && currentUser.custom_interests) || "";
+
+        // Populate email briefing toggle
+        const emailToggle = document.getElementById("emailBriefingToggle");
+        emailToggle.checked = !!(currentUser && currentUser.email_daily_briefing);
       }
 
       function cancelEditPreferences() {
@@ -1298,7 +1310,8 @@
         const tags = getSelectedVibes("editVibesGrid");
         const customInterests = document.getElementById("customInterestsInput").value.trim();
 
-        const payload = { preferred_tags: tags, custom_interests: customInterests || null };
+        const emailBriefing = document.getElementById("emailBriefingToggle").checked;
+        const payload = { preferred_tags: tags, custom_interests: customInterests || null, email_daily_briefing: emailBriefing };
         if (role) payload.role = role;
 
         try {
