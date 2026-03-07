@@ -61,5 +61,9 @@ class Settings(BaseSettings):
     # Admin access
     admin_emails: str = ""
 
+    # Email / SendGrid
+    sendgrid_api_key: str = ""
+    from_email: str = "briefing@yourdomain.com"
+
 
 settings = Settings()
