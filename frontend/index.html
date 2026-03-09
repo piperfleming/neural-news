@@ -156,6 +156,48 @@
         align-items: center;
       }
 
+      .search-row {
+        width: 100%;
+      }
+
+      .search-form {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .search-input {
+        flex: 1;
+        min-width: 220px;
+        border: 1px solid rgba(26, 106, 58, 0.25);
+        background: #fff;
+        color: #0f1f14;
+        border-radius: 999px;
+        padding: 9px 14px;
+        font-size: 0.92rem;
+        outline: none;
+      }
+
+      .search-input:focus {
+        border-color: rgba(26, 106, 58, 0.55);
+        box-shadow: 0 0 0 3px rgba(31, 157, 85, 0.13);
+      }
+
+      .search-button {
+        border: none;
+        border-radius: 999px;
+        padding: 9px 16px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .search-button:hover {
+        background: #1a8a4a;
+      }
+
       .profile-button {
         margin-left: auto;
         background: #1f9d55;
@@ -502,6 +544,78 @@
         min-width: 10px;
         text-align: center;
         line-height: 1;
+      }
+
+      .comments-panel {
+        margin-top: 6px;
+        border-top: 1px solid #e8efe9;
+        padding-top: 10px;
+      }
+
+      .comments-title {
+        margin: 0 0 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #325240;
+      }
+
+      .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 10px;
+      }
+
+      .comment-item {
+        background: #f5faf6;
+        border-radius: 10px;
+        padding: 8px 10px;
+      }
+
+      .comment-meta {
+        font-size: 0.72rem;
+        color: #5d7868;
+        margin-bottom: 3px;
+      }
+
+      .comment-text {
+        margin: 0;
+        font-size: 0.86rem;
+        color: #254132;
+        line-height: 1.35;
+        white-space: pre-wrap;
+      }
+
+      .comment-form {
+        display: flex;
+        gap: 8px;
+      }
+
+      .comment-input {
+        flex: 1;
+        border: 1px solid rgba(26, 106, 58, 0.25);
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 0.85rem;
+        outline: none;
+      }
+
+      .comment-submit {
+        border: none;
+        border-radius: 999px;
+        padding: 7px 12px;
+        background: #1f9d55;
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .comment-empty,
+      .comment-login-hint {
+        font-size: 0.8rem;
+        color: #567563;
+        margin: 0;
       }
 
       .header-actions {
@@ -909,9 +1023,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-top: 16px;
-        padding-top: 14px;
-        border-top: 1px solid rgba(255,255,255,0.12);
+        margin: 0 0 14px;
       }
 
       .briefing-detail-controls[hidden] {
@@ -1120,6 +1232,18 @@
           <div class="filters-row">
             <div id="filterButtons" class="filter-buttons"></div>
           </div>
+          <div class="filters-row search-row">
+            <form id="topicSearchForm" class="search-form">
+              <input
+                id="topicSearchInput"
+                class="search-input"
+                type="search"
+                placeholder="Search for an AI topic or article type"
+                aria-label="Search feed topics"
+              />
+              <button type="submit" class="search-button">Search</button>
+            </form>
+          </div>
           <div class="filters-row">
             <div class="controls-inline">
               <div id="sortButtons" class="sort-buttons"></div>
@@ -1142,15 +1266,15 @@
           <div class="morning-buzz-actions">
             <button class="briefing-refresh" id="briefingRefresh">Refresh Briefing</button>
           </div>
-          <div id="briefingBody" class="morning-buzz-body">
-            <p class="briefing-loading">Brewing your morning briefing...</p>
-          </div>
-          <div id="briefingBuzz"></div>
           <div class="briefing-detail-controls" id="briefingDetailControls" hidden>
             <button type="button" class="detail-btn" id="detailBtnConcise">- Detail</button>
             <div class="detail-level-indicator" id="detailLevelIndicator"></div>
             <button type="button" class="detail-btn" id="detailBtnDetail">+ Detail</button>
           </div>
+          <div id="briefingBody" class="morning-buzz-body">
+            <p class="briefing-loading">Brewing your morning briefing...</p>
+          </div>
+          <div id="briefingBuzz"></div>
         </div>
       </section>
 
@@ -1195,6 +1319,8 @@
       const filterButtons = document.getElementById("filterButtons");
       const sortButtons = document.getElementById("sortButtons");
       const accountLink = document.getElementById("accountLink");
+      const topicSearchForm = document.getElementById("topicSearchForm");
+      const topicSearchInput = document.getElementById("topicSearchInput");
 
       // Layout elements
       const morningBuzzSection = document.getElementById("morningBuzz");
@@ -1290,6 +1416,7 @@
       let myPreferencesOn = false;
       let currentFilterTags = [];
       let userCustomInterests = null;
+      let activeSearchQuery = "";
 
       const sortOptions = [
         { label: "Trending", value: "attention" },
@@ -1300,6 +1427,12 @@
       let currentSortBy = "attention";
       let currentDbArticles = [];
       let currentLiveArticles = [];
+
+      const getActiveInterestQuery = () => {
+        if (activeSearchQuery && activeSearchQuery.trim()) return activeSearchQuery.trim();
+        if (userCustomInterests && userCustomInterests.trim()) return userCustomInterests.trim();
+        return "";
+      };
 
       const _SCORE_STOP = new Set([
         "a","an","the","and","or","but","in","on","at","to","for","of","with",
@@ -1326,8 +1459,9 @@
       }
 
       function renderPersonalizedFeed() {
-        const keywords = userCustomInterests
-          ? userCustomInterests.split(/\s+/).filter(w => w.length > 2 && !_SCORE_STOP.has(w.toLowerCase()))
+        const interests = getActiveInterestQuery();
+        const keywords = interests
+          ? interests.split(/\s+/).filter(w => w.length > 2 && !_SCORE_STOP.has(w.toLowerCase()))
           : [];
         const prefTagsLower = currentFilterTags.map(t => t.toLowerCase());
 
@@ -1357,14 +1491,15 @@
           final = scored.map(({ a }) => a);
         }
 
-        renderArticles(final, currentFilterTags, true);
+        renderArticles(final, currentFilterTags, isLoggedIn);
       }
 
       const buildArticleParams = (tags, sortBy) => {
         const params = new URLSearchParams();
         if (tags.length) params.set("tags", tags.join(","));
         params.set("sort_by", sortBy === "foryou" ? "attention" : sortBy);
-        if (userCustomInterests) params.set("custom_interests", userCustomInterests);
+        const interests = getActiveInterestQuery();
+        if (interests) params.set("custom_interests", interests);
         const query = params.toString();
         return query ? `?${query}` : "";
       };
@@ -1468,6 +1603,100 @@
         }
       };
 
+      const escapeHtml = (text) => String(text ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+      const formatCommentTime = (iso) => {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toLocaleString();
+      };
+
+      const buildCommentQuery = (articleId, articleUrl) => {
+        const params = new URLSearchParams();
+        if (Number.isFinite(articleId)) params.set("article_id", String(articleId));
+        else if (articleUrl) params.set("article_url", articleUrl);
+        return params.toString();
+      };
+
+      const renderCommentItems = (listEl, comments) => {
+        if (!comments.length) {
+          listEl.innerHTML = '<p class="comment-empty">No comments yet. Start the discussion.</p>';
+          return;
+        }
+        listEl.innerHTML = comments.map((c) => `
+          <div class="comment-item">
+            <div class="comment-meta">${escapeHtml(c.user_name)} · ${escapeHtml(formatCommentTime(c.created_at))}</div>
+            <p class="comment-text">${escapeHtml(c.comment)}</p>
+          </div>
+        `).join("");
+      };
+
+      const loadCommentsForPanel = async (panel) => {
+        const listEl = panel.querySelector(".comments-list");
+        if (!listEl) return;
+        const articleIdRaw = panel.dataset.articleId;
+        const articleUrl = panel.dataset.articleUrl || "";
+        const articleId = parseInt(articleIdRaw || "", 10);
+        const query = buildCommentQuery(articleId, articleUrl);
+        if (!query) {
+          listEl.innerHTML = '<p class="comment-empty">Comments unavailable for this article.</p>';
+          return;
+        }
+        try {
+          const res = await fetch(`/api/articles/comments?${query}`);
+          if (!res.ok) throw new Error("Failed to load comments");
+          const comments = await res.json();
+          renderCommentItems(listEl, comments);
+        } catch (_) {
+          listEl.innerHTML = '<p class="comment-empty">Could not load comments.</p>';
+        }
+      };
+
+      const wireCommentPanels = () => {
+        feed.querySelectorAll(".comments-panel").forEach((panel) => {
+          loadCommentsForPanel(panel);
+          const form = panel.querySelector(".comment-form");
+          const input = panel.querySelector(".comment-input");
+          const button = panel.querySelector(".comment-submit");
+          if (!form || !input || !button) return;
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem("nn_token");
+            const text = (input.value || "").trim();
+            if (!token || !text) return;
+            const articleId = parseInt(panel.dataset.articleId || "", 10);
+            const articleUrl = panel.dataset.articleUrl || "";
+            button.disabled = true;
+            try {
+              const res = await fetch("/api/articles/comments", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  article_id: Number.isFinite(articleId) ? articleId : null,
+                  article_url: articleUrl || null,
+                  comment: text,
+                }),
+              });
+              if (!res.ok) throw new Error("Failed to post comment");
+              input.value = "";
+              await loadCommentsForPanel(panel);
+            } catch (_) {
+              // Keep UX lightweight for now; no blocking toast.
+            } finally {
+              button.disabled = false;
+            }
+          });
+        });
+      };
+
       const renderArticles = (articles, activeFilterTags = [], showSaveButton = false) => {
         feed.innerHTML = "";
         if (!articles.length) {
@@ -1533,6 +1762,16 @@
               ${likeBtnHtml}
               ${saveBtnHtml}
             </div>
+            <div class="comments-panel" data-article-id="${article.id}" data-article-url="${article.url}">
+              <p class="comments-title">Comments</p>
+              <div class="comments-list"><p class="comment-empty">Loading comments...</p></div>
+              ${isLoggedIn
+                ? `<form class="comment-form">
+                    <input class="comment-input" type="text" maxlength="1000" placeholder="Share your thoughts..." />
+                    <button type="submit" class="comment-submit">Post</button>
+                  </form>`
+                : '<p class="comment-login-hint">Log in to add a comment.</p>'}
+            </div>
           `;
           feed.appendChild(card);
         });
@@ -1561,6 +1800,7 @@
             toggleLike(articleId, card.dataset.articleUrl || "", tags, btn);
           });
         });
+        wireCommentPanels();
       };
 
       const setActiveSort = (sortBy) => {
@@ -1599,16 +1839,24 @@
         if (isLoggedIn) {
           currentDbArticles = data.articles || [];
           renderPersonalizedFeed();
+          fetchLiveArticles(tags);
         } else {
-          renderArticles(data.articles, tags, false);
+          currentDbArticles = data.articles || [];
+          if (getActiveInterestQuery()) {
+            renderPersonalizedFeed();
+            fetchLiveArticles(tags);
+          } else {
+            renderArticles(data.articles, tags, false);
+          }
         }
       };
 
       // Fetch live articles from the web, merge into unified scored feed
       const fetchLiveArticles = async (tags = []) => {
-        if (!userCustomInterests && tags.length === 0) return;
+        const interests = getActiveInterestQuery();
+        if (!interests && tags.length === 0) return;
         const params = new URLSearchParams();
-        if (userCustomInterests) params.set("interests", userCustomInterests);
+        if (interests) params.set("interests", interests);
         if (tags.length) params.set("tags", tags.join(","));
         try {
           const res = await fetch(`/api/articles/live?${params}`);
@@ -1616,11 +1864,21 @@
           const data = await res.json();
           if (!data.articles?.length) return;
           currentLiveArticles = data.articles;
-          renderPersonalizedFeed(); // re-render with live articles merged in
+          if (isLoggedIn || getActiveInterestQuery()) {
+            renderPersonalizedFeed(); // re-render with live articles merged in
+          }
         } catch (e) {
           // Silent fail — DB articles already showing
         }
       };
+
+      if (topicSearchForm && topicSearchInput) {
+        topicSearchForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          activeSearchQuery = (topicSearchInput.value || "").trim();
+          fetchArticles(currentFilterTags, currentSortBy);
+        });
+      }
 
       const setActiveFilter = (tags) => {
         currentFilterTags = tags.slice();
@@ -2225,33 +2483,9 @@
       buildFilterButtons();
       buildSortButtons();
 
-      function buildGreeting(firstName, customInterests) {
-        if (!customInterests || !customInterests.trim()) {
-          return `Hello, ${firstName}! What AI news are you looking for?`;
-        }
-        const stop = new Set([
-          "i","i'm","want","to","know","about","more","me","my","we","show",
-          "focus","focused","interested","in","please","the","a","an","and",
-          "or","on","for","of","with","only","just","mostly","some","get",
-          "see","read","find","keep","stay","up","news","latest","stuff",
-        ]);
-        const words = customInterests
-          .replace(/[^a-zA-Z0-9\s]/g, " ")
-          .split(/\s+/)
-          .filter(w => w.length > 2 && !stop.has(w.toLowerCase()));
-        const topics = [...new Set(words.slice(0, 3).map(w => w.toLowerCase()))];
-        if (topics.length === 0) {
-          return `Hello, ${firstName}! What AI news are you looking for?`;
-        }
-        const topicStr = topics.length === 1
-          ? topics[0]
-          : topics.slice(0, -1).join(", ") + " & " + topics[topics.length - 1];
-        const templates = [
-          `Hello, ${firstName}! Your ${topicStr} briefing is ready.`,
-          `Welcome back, ${firstName}! Catching you up on ${topicStr}.`,
-          `Hey ${firstName}! Here's the latest on ${topicStr}.`,
-        ];
-        return templates[firstName.charCodeAt(0) % templates.length];
+      function buildGreeting(firstName) {
+        const displayName = (firstName || "there").trim() || "there";
+        return `Hi! Welcome ${displayName}, let's get learning`;
       }
 
       if (nnToken) {
@@ -2274,7 +2508,7 @@
             const link = document.getElementById("accountLink");
             link.textContent = firstName;
             link.title = "Your account";
-            startGreetingTypewriter(buildGreeting(firstName, user.custom_interests));
+            startGreetingTypewriter(buildGreeting(firstName));
             userCustomInterests = user.custom_interests || null;
 
             const prefs = user.preferred_tags || [];
@@ -2293,9 +2527,6 @@
               fetchArticles([], currentSortBy);
               updateMyPrefsControlUI();
             }
-            // Fetch live articles from the web in background (prepends to feed when ready)
-            fetchLiveArticles(prefs);
-
             // Load morning briefing — force refresh if preferences were just updated
             const needsRefresh = localStorage.getItem("nn_needs_refresh");
             if (needsRefresh) {

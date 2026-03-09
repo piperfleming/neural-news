@@ -12,13 +12,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.article import Article
+from app.models.article_comment import ArticleComment
 from app.models.user_metrics import ArticleClick, ArticleLike
+from app.models.user import User
+from app.dependencies import get_current_user
 from app.schemas.article import (
     ArticleCreate,
     ArticleIngestRequest,
     ArticleUpdate,
     ArticleResponse,
 )
+from app.schemas.comment import ArticleCommentCreate, ArticleCommentResponse
 from app.services.article_extractor import extract_article
 from app.services.llm_service import analyze_article
 
@@ -364,6 +368,84 @@ async def live_articles(
             })
 
     return {"count": len(articles), "articles": articles[:10]}
+
+
+@router.get("/comments", response_model=list[ArticleCommentResponse])
+async def list_comments(
+    db: AsyncSession = Depends(get_db),
+    article_id: int | None = Query(None, description="Article ID"),
+    article_url: str | None = Query(None, description="Article URL"),
+):
+    """Return comments for an article target (id or url), newest first."""
+    if article_id is None and not article_url:
+        raise HTTPException(status_code=400, detail="article_id or article_url is required")
+
+    query = (
+        select(
+            ArticleComment.id,
+            ArticleComment.user_id,
+            User.name,
+            ArticleComment.article_id,
+            ArticleComment.article_url,
+            ArticleComment.comment,
+            ArticleComment.created_at,
+        )
+        .join(User, User.id == ArticleComment.user_id)
+        .order_by(ArticleComment.created_at.desc())
+        .limit(100)
+    )
+    if article_id is not None:
+        query = query.where(ArticleComment.article_id == article_id)
+    else:
+        query = query.where(ArticleComment.article_url == article_url)
+
+    rows = (await db.execute(query)).all()
+    return [
+        ArticleCommentResponse(
+            id=row[0],
+            user_id=row[1],
+            user_name=row[2],
+            article_id=row[3],
+            article_url=row[4],
+            comment=row[5],
+            created_at=row[6],
+        )
+        for row in rows
+    ]
+
+
+@router.post("/comments", response_model=ArticleCommentResponse, status_code=201)
+async def create_comment(
+    payload: ArticleCommentCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a comment tied to an article id or url."""
+    comment_text = payload.comment.strip()
+    if not comment_text:
+        raise HTTPException(status_code=400, detail="Comment cannot be empty")
+    if payload.article_id is None and not (payload.article_url and payload.article_url.strip()):
+        raise HTTPException(status_code=400, detail="article_id or article_url is required")
+
+    db_comment = ArticleComment(
+        user_id=current_user.id,
+        article_id=payload.article_id,
+        article_url=(payload.article_url or "").strip() or None,
+        comment=comment_text,
+    )
+    db.add(db_comment)
+    await db.flush()
+    await db.refresh(db_comment)
+
+    return ArticleCommentResponse(
+        id=db_comment.id,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        article_id=db_comment.article_id,
+        article_url=db_comment.article_url,
+        comment=db_comment.comment,
+        created_at=db_comment.created_at,
+    )
 
 
 @router.get("/{article_id}", response_model=ArticleResponse)

@@ -99,6 +99,43 @@ async def _summarize_buzz_with_sources(social_results: list[dict]) -> list[dict]
     return topics
 
 
+def _summarize_buzz_fast(social_results: list[dict]) -> list[dict]:
+    """Fast local buzz summary (no LLM call) to keep briefing latency low."""
+    if not social_results:
+        return []
+
+    seen: set[str] = set()
+    topics: list[dict] = []
+    for r in social_results[:8]:
+        title = (r.get("title") or "").strip()
+        body = (r.get("body") or "").strip()
+        href = (r.get("href") or "").strip()
+        source = (r.get("source") or "web").strip()
+        if not title:
+            continue
+        normalized = title.lower()
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+
+        haystack = f"{title} {body}".lower()
+        tags = [tag for tag in VALID_TAGS if tag.lower() in haystack][:2]
+        topics.append(
+            {
+                "headline": title,
+                "summary": (body[:220] + "...") if len(body) > 220 else body,
+                "sentiment": "curious",
+                "tags": tags,
+                "source_links": (
+                    [{"title": title, "href": href, "source": source}] if href else []
+                ),
+            }
+        )
+        if len(topics) >= 5:
+            break
+    return topics
+
+
 async def _extract_topic_outline(
     article_summaries: str, buzz_text: str, user: User
 ) -> list[dict]:
@@ -270,7 +307,7 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     article_query = select(Article)
     if prefs:
         article_query = article_query.where(Article.tags.overlap(prefs))
-    article_query = article_query.order_by(Article.created_at.desc()).limit(15)
+    article_query = article_query.order_by(Article.created_at.desc()).limit(10)
     rows = await db.execute(article_query)
     articles = list(rows.scalars().all())
 
@@ -287,7 +324,7 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
             .where(or_(*ilike_conditions))
             .where(Article.id.notin_(existing_ids))
             .order_by(Article.created_at.desc())
-            .limit(5)
+            .limit(3)
         )
         articles.extend(supp_rows.scalars().all())
 
@@ -299,11 +336,18 @@ async def get_or_create_briefing(user: User, db: AsyncSession) -> dict:
     buzz_search_topics += [f"AI {tag}" for tag in prefs]
     if not buzz_search_topics:
         buzz_search_topics = None
-    social_results = await asyncio.to_thread(search_social_discussions, buzz_search_topics)
-    buzz_topics = await _summarize_buzz_with_sources(social_results)
+    try:
+        social_results = await asyncio.wait_for(
+            asyncio.to_thread(search_social_discussions, buzz_search_topics),
+            timeout=6,
+        )
+    except TimeoutError:
+        social_results = []
+    # Use the fast local summarizer to avoid an extra LLM round-trip.
+    buzz_topics = _summarize_buzz_fast(social_results)
 
     article_summaries = "\n".join(
-        f"- {a.title}: {(a.summary or '')[:200]}" for a in articles
+        f"- {a.title}: {(a.summary or '')[:160]}" for a in articles
     ) or "No recent articles available."
 
     buzz_text = "\n".join(
