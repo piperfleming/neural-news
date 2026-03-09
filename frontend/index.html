@@ -128,6 +128,7 @@
         padding: 16px 28px;
         border-radius: 16px;
         box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
+        margin-bottom: 20px;
       }
 
       .filters-row {
@@ -1320,17 +1321,6 @@
           <img src="/static/home_banner.jpg" alt="Neural News background" />
           <h1 id="greeting" class="banner-greeting"><span id="greetingText"></span><span id="greetingCursor" class="typing-cursor" aria-hidden="true">|</span></h1>
         </div>
-        <div class="filters">
-          <div class="filters-row">
-            <div id="filterButtons" class="filter-buttons"></div>
-          </div>
-          <div class="filters-row">
-            <div class="controls-inline">
-              <div id="sortButtons" class="sort-buttons"></div>
-            </div>
-          </div>
-          <span class="tag-hint">Tap a tag to filter the feed.</span>
-        </div>
       </header>
 
       <!-- Ask Buzz chat bar (logged-in users only) -->
@@ -1381,17 +1371,13 @@
         </div>
       </section>
 
-      <!-- Logged-in feed (always visible below Morning Buzz) -->
-      <section id="loggedInFeed" hidden>
+      <!-- Logged-in feed hint (above filters, logged-in only) -->
+      <section id="loggedInFeedHint" hidden>
         <p class="feed-hint">News cards are periodically refreshed and older cards will be removed. Use the <svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> button on each card to save articles you want to keep, and access them in the top right <a href="/saved">Saved</a> tab.</p>
-        <div id="feed" class="grid"></div>
-        <div id="emptyState" class="empty" hidden>
-          No articles found for those tags.
-        </div>
       </section>
 
-      <!-- Default layout for anonymous users -->
-      <div id="anonLayout">
+      <!-- Anon buzz section (above filters) -->
+      <div id="anonBuzzWrapper" hidden>
         <section class="buzz-section">
           <div class="buzz-teaser" id="buzzSectionTeaser">
             <div class="buzz-teaser-row">
@@ -1409,14 +1395,36 @@
             </div>
           </div>
         </section>
-
-        <section>
-          <div id="feedAnon" class="grid"></div>
-          <div id="emptyStateAnon" class="empty" hidden>
-            No articles found for those tags.
-          </div>
-        </section>
       </div>
+
+      <!-- Filters — directly above news cards -->
+      <div class="filters">
+        <div class="filters-row">
+          <div id="filterButtons" class="filter-buttons"></div>
+        </div>
+        <div class="filters-row">
+          <div class="controls-inline">
+            <div id="sortButtons" class="sort-buttons"></div>
+          </div>
+        </div>
+        <span class="tag-hint">Tap a tag to filter the feed.</span>
+      </div>
+
+      <!-- Logged-in feed grid -->
+      <section id="loggedInFeed" hidden>
+        <div id="feed" class="grid"></div>
+        <div id="emptyState" class="empty" hidden>
+          No articles found for those tags.
+        </div>
+      </section>
+
+      <!-- Anon feed grid -->
+      <section id="anonFeed" hidden>
+        <div id="feedAnon" class="grid"></div>
+        <div id="emptyStateAnon" class="empty" hidden>
+          No articles found for those tags.
+        </div>
+      </section>
     </div>
 
     <script>
@@ -1427,7 +1435,9 @@
       // Layout elements
       const morningBuzzSection = document.getElementById("morningBuzz");
       const loggedInFeed = document.getElementById("loggedInFeed");
-      const anonLayout = document.getElementById("anonLayout");
+      const loggedInFeedHint = document.getElementById("loggedInFeedHint");
+      const anonBuzzWrapper = document.getElementById("anonBuzzWrapper");
+      const anonFeed = document.getElementById("anonFeed");
 
       // Track whether we're in logged-in mode
       let isLoggedIn = false;
@@ -1480,10 +1490,12 @@
         buildSortButtons();
         removeSavedLink();
         removeAdminLink();
-        anonLayout.hidden = false;
+        anonBuzzWrapper.hidden = false;
+        anonFeed.hidden = false;
         morningBuzzSection.hidden = true;
         document.getElementById("askBuzzBar").classList.add("hidden");
         loggedInFeed.hidden = true;
+        loggedInFeedHint.hidden = true;
         feed = document.getElementById("feedAnon");
         emptyState = document.getElementById("emptyStateAnon");
         buzzContent = document.getElementById("buzzContentAnon");
@@ -1493,11 +1505,13 @@
       function activateLoggedInLayout() {
         isLoggedIn = true;
         buildSortButtons();
-        anonLayout.hidden = true;
+        anonBuzzWrapper.hidden = true;
+        anonFeed.hidden = true;
         morningBuzzSection.hidden = false;
         document.getElementById("askBuzzBar").classList.remove("hidden");
         requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
         loggedInFeed.hidden = false;
+        loggedInFeedHint.hidden = false;
         feed = document.getElementById("feed");
         emptyState = document.getElementById("emptyState");
         const expanded = document.getElementById("morningBuzzExpanded");
