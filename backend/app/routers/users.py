@@ -1,5 +1,6 @@
 """User profile and preferences endpoints."""
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +13,18 @@ from app.models.user_article import UserArticle
 from app.schemas.user import PreferencesResponse, UserResponse, UserUpdate
 
 router = APIRouter()
+
+
+class ExternalSaveIn(BaseModel):
+    url: str = Field(min_length=5)
+    title: str
+    summary: str = ""
+    org: str = "Web"
+    org_initials: str = "WEB"
+    logo_url: str | None = None
+    date: str = ""
+    author: str = "Unknown"
+    tags: list[str] = Field(default_factory=list)
 
 
 def _user_article_to_dict(ua: UserArticle) -> dict:
@@ -70,6 +83,18 @@ async def get_saved_article_ids(
     )
     ids = [row[0] for row in result.all()]
     return {"article_ids": ids}
+
+
+@router.get("/me/saved/urls")
+async def get_saved_article_urls(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(UserArticle.url).where(UserArticle.user_id == current_user.id)
+    )
+    urls = [row[0] for row in result.all() if row[0]]
+    return {"article_urls": urls}
 
 
 @router.get("/me/saved")
@@ -196,3 +221,57 @@ async def unsave_article(
             await db.delete(saved)
 
     await db.delete(ua)
+
+
+@router.post("/me/saved/external", status_code=201)
+async def save_external_article(
+    payload: ExternalSaveIn,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    existing = await db.execute(
+        select(UserArticle).where(
+            UserArticle.user_id == current_user.id,
+            UserArticle.url == payload.url,
+        )
+    )
+    if existing.scalar_one_or_none():
+        return {"saved": True, "url": payload.url}
+
+    ua = UserArticle(
+        user_id=current_user.id,
+        feed_article_id=None,
+        source="url",
+        title=payload.title,
+        content=payload.summary or payload.title,
+        url=payload.url,
+        org=payload.org or "Web",
+        org_initials=(payload.org_initials or "WEB")[:10],
+        logo_url=payload.logo_url,
+        summary=payload.summary or payload.title,
+        date=payload.date or "",
+        author=payload.author or "Unknown",
+        tags=payload.tags or [],
+    )
+    db.add(ua)
+    await db.flush()
+    return {"saved": True, "url": payload.url}
+
+
+@router.delete("/me/saved/external", status_code=204)
+async def unsave_external_article(
+    url: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    ua = (
+        await db.execute(
+            select(UserArticle).where(
+                UserArticle.user_id == current_user.id,
+                UserArticle.url == url,
+            )
+        )
+    ).scalar_one_or_none()
+    if ua is not None:
+        await db.delete(ua)
+        await db.flush()

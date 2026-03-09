@@ -182,6 +182,22 @@ async def my_article_like_ids(
     return {"article_ids": [row[0] for row in rows]}
 
 
+@router.get("/me/article-likes/urls")
+async def my_article_like_urls(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (
+        await db.execute(
+            select(ArticleLike.article_url).where(
+                ArticleLike.user_id == current_user.id,
+                ArticleLike.article_url.is_not(None),
+            )
+        )
+    ).all()
+    return {"article_urls": [row[0] for row in rows if row[0]]}
+
+
 @router.post("/article-like", status_code=201)
 async def article_like(
     payload: ArticleLikeIn,
@@ -191,14 +207,18 @@ async def article_like(
     if payload.article_id is None and not payload.article_url:
         raise HTTPException(status_code=422, detail="article_id or article_url is required")
 
-    existing = (
-        await db.execute(
-            select(ArticleLike).where(
-                ArticleLike.user_id == current_user.id,
-                ArticleLike.article_id == payload.article_id,
-            )
+    if payload.article_id is not None:
+        existing_query = select(ArticleLike).where(
+            ArticleLike.user_id == current_user.id,
+            ArticleLike.article_id == payload.article_id,
         )
-    ).scalar_one_or_none()
+    else:
+        existing_query = select(ArticleLike).where(
+            ArticleLike.user_id == current_user.id,
+            ArticleLike.article_url == payload.article_url,
+        )
+
+    existing = (await db.execute(existing_query)).scalar_one_or_none()
     if existing is not None:
         return {"ok": True, "liked": True}
 
@@ -225,6 +245,26 @@ async def article_unlike(
             select(ArticleLike).where(
                 ArticleLike.user_id == current_user.id,
                 ArticleLike.article_id == article_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        await db.delete(existing)
+        await db.flush()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/article-like-by-url", status_code=204)
+async def article_unlike_by_url(
+    article_url: str = Query(..., min_length=5),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    existing = (
+        await db.execute(
+            select(ArticleLike).where(
+                ArticleLike.user_id == current_user.id,
+                ArticleLike.article_url == article_url,
             )
         )
     ).scalar_one_or_none()

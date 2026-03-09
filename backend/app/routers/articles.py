@@ -16,6 +16,7 @@ from app.models.article_comment import ArticleComment
 from app.models.user_metrics import ArticleClick, ArticleLike
 from app.models.user import User
 from app.dependencies import get_current_user
+from app.constants import VALID_TAGS
 from app.schemas.article import (
     ArticleCreate,
     ArticleIngestRequest,
@@ -48,6 +49,31 @@ def _interest_score(article: dict, keywords: list[str]) -> int:
         " ".join(article.get("keywords") or []),
     ]).lower()
     return sum(1 for kw in keywords if kw in haystack)
+
+
+def _is_published_today(raw_date: str | None) -> bool:
+    if not raw_date:
+        return False
+    try:
+        return date.fromisoformat(str(raw_date)[:10]) == date.today()
+    except Exception:
+        return False
+
+
+def _infer_tags(title: str, summary: str) -> list[str]:
+    text = f"{title} {summary}".lower()
+    rules: dict[str, tuple[str, ...]] = {
+        "Research": ("paper", "study", "benchmark", "arxiv", "research"),
+        "Policy": ("policy", "regulation", "law", "eu ai act", "white house"),
+        "Models": ("model", "llm", "gpt", "claude", "gemini"),
+        "Companies": ("startup", "company", "openai", "google", "microsoft", "meta"),
+        "Hardware": ("gpu", "chip", "nvidia", "semiconductor"),
+        "Infrastructure": ("datacenter", "cloud", "inference", "serving", "api"),
+        "Security": ("vulnerability", "security", "breach", "exploit"),
+        "Misuse": ("misuse", "fraud", "deepfake", "scam", "abuse"),
+    }
+    tags = [tag for tag, keywords in rules.items() if any(k in text for k in keywords)]
+    return [t for t in tags if t in VALID_TAGS][:3]
 
 
 # ---------------------------------------------------------------------------
@@ -236,6 +262,7 @@ async def list_articles(
     for article, _, _, like_count, _ in rows:
         payload = ArticleResponse.model_validate(article).model_dump()
         payload["is_trending"] = article.id in trending_ids
+        payload["is_breaking"] = _is_published_today(payload.get("date"))
         payload["like_count"] = int(like_count or 0)
         articles.append(payload)
 
@@ -274,6 +301,7 @@ async def list_articles(
             for article in supp_rows:
                 payload = ArticleResponse.model_validate(article).model_dump()
                 payload["is_trending"] = article.id in trending_ids
+                payload["is_breaking"] = _is_published_today(payload.get("date"))
                 payload["like_count"] = 0
                 supp_articles.append(payload)
 
@@ -361,10 +389,11 @@ async def live_articles(
                 "summary": r.get("body", ""),
                 "date": (r.get("date") or "")[:10],
                 "author": org,
-                "tags": [],
+                "tags": _infer_tags(r.get("title", ""), r.get("body", "")),
                 "is_trending": False,
+                "is_breaking": _is_published_today((r.get("date") or "")[:10]),
                 "like_count": 0,
-                "is_live": True,
+                "is_external": True,
             })
 
     return {"count": len(articles), "articles": articles[:10]}

@@ -165,11 +165,12 @@
         display: flex;
         gap: 10px;
         width: 100%;
+        flex-wrap: wrap;
       }
 
       .search-input {
         flex: 1;
-        min-width: 220px;
+        min-width: 0;
         border: 1px solid rgba(26, 106, 58, 0.25);
         background: #fff;
         color: #0f1f14;
@@ -356,7 +357,7 @@
         text-transform: uppercase;
         box-shadow: 0 6px 14px rgba(185, 28, 28, 0.28);
       }
-      .live-alert {
+      .breaking-alert {
         position: absolute;
         top: 12px;
         right: 12px;
@@ -601,6 +602,36 @@
         gap: 8px;
       }
 
+      .comment-toggle {
+        border: none;
+        background: transparent;
+        color: #1a6a3a;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        margin: 2px 0 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .comment-toggle .arrow {
+        font-size: 0.75rem;
+        transition: transform 0.15s ease;
+      }
+
+      .comment-toggle[aria-expanded="true"] .arrow {
+        transform: rotate(180deg);
+      }
+
+      .comment-older-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 10px;
+      }
+
       .comment-input {
         flex: 1;
         border: 1px solid rgba(26, 106, 58, 0.25);
@@ -691,8 +722,11 @@
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
         border-radius: 18px;
         padding: 24px 28px;
+        margin-top: 8px;
         margin-bottom: 28px;
         box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
+        position: relative;
+        clear: both;
       }
 
       .buzz-header {
@@ -822,8 +856,11 @@
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
         border-radius: 18px;
         padding: 28px 28px;
+        margin-top: 8px;
         margin-bottom: 28px;
         box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
+        position: relative;
+        clear: both;
       }
 
       .morning-buzz.animate-in {
@@ -851,6 +888,13 @@
         color: #fff;
         font-weight: 700;
         letter-spacing: 0.3px;
+      }
+
+      .buzz-teaser-blurb {
+        margin: -2px 0 0;
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.72);
+        letter-spacing: 0.2px;
       }
 
       .buzz-teaser-arrow {
@@ -1440,7 +1484,7 @@
         <!-- Collapsed pill -->
         <div class="ask-buzz-collapsed" id="askBuzzCollapsed" onclick="openBuzzChat()">
           <span style="color:#1f9d55;">✦</span>
-          <span class="ask-buzz-prompt">Heard something from a friend? Ask <strong>Buzz</strong> anything...</span>
+          <span class="ask-buzz-prompt">Ask <strong>Buzz</strong>, your Neural News Expert</span>
           <span class="ask-buzz-caret">›</span>
         </div>
         <!-- Expanded chat panel -->
@@ -1448,23 +1492,6 @@
           <div class="ask-buzz-header">
             <span>✦ <strong>Buzz</strong></span>
             <button onclick="closeBuzzChat()">✕</button>
-          </div>
-          <div class="filters-row search-row">
-            <form id="topicSearchForm" class="search-form">
-              <input
-                id="topicSearchInput"
-                class="search-input"
-                type="search"
-                placeholder="Search for an AI topic or article type"
-                aria-label="Search feed topics"
-              />
-              <button type="submit" class="search-button">Search</button>
-            </form>
-          </div>
-          <div class="filters-row">
-            <div class="controls-inline">
-              <div id="sortButtons" class="sort-buttons"></div>
-            </div>
           </div>
           <div class="ask-buzz-messages" id="askBuzzMessages"></div>
           <div class="ask-buzz-input-row">
@@ -1482,6 +1509,7 @@
             <h2 class="buzz-teaser-title">&#9728; Your AI Buzz</h2>
             <button type="button" class="buzz-teaser-arrow" id="viewBriefingBtn" aria-label="Expand briefing" disabled><span class="arrow-icon">&#9654;</span></button>
           </div>
+          <p class="buzz-teaser-blurb">What People Are Saying</p>
           <p class="briefing-teaser-loading" id="briefingTeaserLoading">Brewing your morning briefing...</p>
         </div>
         <div id="morningBuzzExpanded" class="morning-buzz-expanded" hidden>
@@ -1498,11 +1526,6 @@
           </div>
           <div id="briefingBuzz"></div>
         </div>
-      </section>
-
-      <!-- Logged-in feed hint (above filters, logged-in only) -->
-      <section id="loggedInFeedHint" hidden>
-        <p class="feed-hint">News cards are periodically refreshed and older cards will be removed. Use the <svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> button on each card to save articles you want to keep, and access them in the top right <a href="/saved">Saved</a> tab.</p>
       </section>
 
       <!-- Anon buzz section (above filters) -->
@@ -1531,6 +1554,18 @@
         <div class="filters-row">
           <div id="filterButtons" class="filter-buttons"></div>
         </div>
+        <div class="filters-row search-row">
+          <form id="topicSearchForm" class="search-form">
+            <input
+              id="topicSearchInput"
+              class="search-input"
+              type="search"
+              placeholder="Search for an AI topic or article type"
+              aria-label="Search feed topics"
+            />
+            <button type="submit" class="search-button">Search</button>
+          </form>
+        </div>
         <div class="filters-row">
           <div class="controls-inline">
             <div id="sortButtons" class="sort-buttons"></div>
@@ -1538,6 +1573,11 @@
         </div>
         <span class="tag-hint">Tap a tag to filter the feed.</span>
       </div>
+
+      <!-- Logged-in feed hint (below filters, logged-in only) -->
+      <section id="loggedInFeedHint" hidden>
+        <p class="feed-hint">News cards are periodically refreshed and older cards will be removed. Use the <svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> button on each card to save articles you want to keep, and access them in the top right <a href="/saved">Saved</a> tab.</p>
+      </section>
 
       <!-- Logged-in feed grid -->
       <section id="loggedInFeed" hidden>
@@ -1676,6 +1716,7 @@
       let currentSortBy = "attention";
       let currentDbArticles = [];
       let currentLiveArticles = [];
+      let activeFeedRequestId = 0;
 
       const getActiveInterestQuery = () => {
         if (activeSearchQuery && activeSearchQuery.trim()) return activeSearchQuery.trim();
@@ -1707,26 +1748,69 @@
         return score;
       }
 
+      function normalizeSummary(article) {
+        const base = String(article.summary || article.content || "").replace(/\.{3,}|…/g, " ");
+        const fallback = String(article.content || "").replace(/\.{3,}|…/g, " ");
+        let text = `${base} ${fallback}`.replace(/\s+/g, " ").trim();
+        if (!text) text = String(article.title || "").trim();
+
+        // Keep summaries visually consistent in card height without appending ellipses.
+        const MIN_LEN = 170;
+        const MAX_LEN = 240;
+
+        if (text.length < MIN_LEN && article.title) {
+          text = `${text} ${article.title}`.replace(/\s+/g, " ").trim();
+        }
+        if (text.length > MAX_LEN) {
+          const sliced = text.slice(0, MAX_LEN + 1);
+          const cut = sliced.lastIndexOf(" ");
+          text = (cut > 120 ? sliced.slice(0, cut) : sliced.slice(0, MAX_LEN)).trim();
+        }
+        return text;
+      }
+
+      function inferFallbackTags(article) {
+        const text = `${article.title || ""} ${article.summary || ""}`.toLowerCase();
+        const tagRules = [
+          ["Research", ["paper", "study", "benchmark", "arxiv", "research"]],
+          ["Policy", ["policy", "regulation", "law", "act"]],
+          ["Models", ["model", "llm", "gpt", "claude", "gemini"]],
+          ["Companies", ["company", "startup", "openai", "google", "microsoft", "meta"]],
+          ["Hardware", ["gpu", "chip", "nvidia", "semiconductor"]],
+          ["Infrastructure", ["cloud", "datacenter", "inference", "api"]],
+          ["Security", ["security", "vulnerability", "exploit", "breach"]],
+          ["Misuse", ["misuse", "deepfake", "fraud", "scam", "abuse"]],
+        ];
+        const tags = tagRules
+          .filter(([_, kws]) => kws.some((k) => text.includes(k)))
+          .map(([tag]) => tag)
+          .slice(0, 3);
+        return tags.length ? tags : ["Research"];
+      }
+
       function renderPersonalizedFeed() {
         const interests = getActiveInterestQuery();
         const keywords = interests
           ? interests.split(/\s+/).filter(w => w.length > 2 && !_SCORE_STOP.has(w.toLowerCase()))
           : [];
+        const hasActiveSearch = !!(activeSearchQuery && activeSearchQuery.trim());
         const prefTagsLower = currentFilterTags.map(t => t.toLowerCase());
 
         const all = [...currentDbArticles, ...currentLiveArticles];
         const scored = all.map(a => ({ a, s: scoreArticle(a, keywords, prefTagsLower) }));
 
         let final;
-        if (currentSortBy === "foryou") {
+        if (hasActiveSearch) {
+          // Search mode: always show top 15 most relevant results.
+          scored.sort((x, y) => y.s - x.s);
+          final = scored.slice(0, 15).map(({ a }) => a);
+        } else if (currentSortBy === "foryou") {
           // For You: rank by relevance score — preferences + custom interests
           scored.sort((x, y) => y.s - x.s);
           final = scored.slice(0, 12).map(({ a }) => a);
         } else if (currentSortBy === "recent") {
-          // Most Recent: live articles first (freshest), then by date descending
+          // Most Recent: newest publish date first
           scored.sort((x, y) => {
-            if (x.a.is_live && !y.a.is_live) return -1;
-            if (!x.a.is_live && y.a.is_live) return 1;
             return new Date(y.a.date || 0) - new Date(x.a.date || 0);
           });
           final = scored.slice(0, 15).map(({ a }) => a);
@@ -1753,19 +1837,43 @@
         return query ? `?${query}` : "";
       };
 
+      const setFeedLoadingState = (message = "Loading articles...") => {
+        if (!feed || !emptyState) return;
+        feed.innerHTML = "";
+        emptyState.textContent = message;
+        emptyState.hidden = false;
+      };
+
+      const resetEmptyStateMessage = () => {
+        if (!emptyState) return;
+        emptyState.textContent = "No articles found for those tags.";
+      };
+
       let savedArticleIds = new Set();
+      let savedArticleUrls = new Set();
       let likedArticleIds = new Set();
+      let likedArticleUrls = new Set();
 
       const fetchSavedIds = async () => {
         const token = localStorage.getItem("nn_token");
         if (!token) return;
         try {
-          const res = await fetch("/api/users/me/saved/ids", {
-            headers: { "Authorization": `Bearer ${token}` },
-          });
-          if (!res.ok) return;
-          const data = await res.json();
-          savedArticleIds = new Set(data.article_ids || []);
+          const [idsRes, urlsRes] = await Promise.all([
+            fetch("/api/users/me/saved/ids", {
+              headers: { "Authorization": `Bearer ${token}` },
+            }),
+            fetch("/api/users/me/saved/urls", {
+              headers: { "Authorization": `Bearer ${token}` },
+            }),
+          ]);
+          if (idsRes.ok) {
+            const data = await idsRes.json();
+            savedArticleIds = new Set(data.article_ids || []);
+          }
+          if (urlsRes.ok) {
+            const data = await urlsRes.json();
+            savedArticleUrls = new Set(data.article_urls || []);
+          }
         } catch (err) {
           console.error("Could not load saved articles:", err);
         }
@@ -1775,35 +1883,82 @@
         const token = localStorage.getItem("nn_token");
         if (!token) return;
         try {
-          const res = await fetch("/api/metrics/me/article-likes/ids", {
-            headers: { "Authorization": `Bearer ${token}` },
-          });
-          if (!res.ok) return;
-          const data = await res.json();
-          likedArticleIds = new Set(data.article_ids || []);
+          const [idsRes, urlsRes] = await Promise.all([
+            fetch("/api/metrics/me/article-likes/ids", {
+              headers: { "Authorization": `Bearer ${token}` },
+            }),
+            fetch("/api/metrics/me/article-likes/urls", {
+              headers: { "Authorization": `Bearer ${token}` },
+            }),
+          ]);
+          if (idsRes.ok) {
+            const data = await idsRes.json();
+            likedArticleIds = new Set(data.article_ids || []);
+          }
+          if (urlsRes.ok) {
+            const data = await urlsRes.json();
+            likedArticleUrls = new Set(data.article_urls || []);
+          }
         } catch (err) {
           console.error("Could not load liked articles:", err);
         }
       };
 
-      const toggleSave = async (articleId, btn) => {
+      const isArticleSaved = (articleId, articleUrl) =>
+        (Number.isFinite(articleId) && savedArticleIds.has(articleId)) || !!(articleUrl && savedArticleUrls.has(articleUrl));
+
+      const isArticleLiked = (articleId, articleUrl) =>
+        (Number.isFinite(articleId) && likedArticleIds.has(articleId)) || !!(articleUrl && likedArticleUrls.has(articleUrl));
+
+      const toggleSave = async (articleId, articleUrl, articleData, btn) => {
         const token = localStorage.getItem("nn_token");
         if (!token || !isLoggedIn) return;
-        const isSaved = savedArticleIds.has(articleId);
+        const isExternal = !!articleData?.is_external;
+        const isSaved = isArticleSaved(articleId, articleUrl);
         btn.disabled = true;
         try {
           if (isSaved) {
-            await fetch(`/api/users/me/saved/${articleId}`, {
-              method: "DELETE",
-              headers: { "Authorization": `Bearer ${token}` },
-            });
-            savedArticleIds.delete(articleId);
+            if (isExternal) {
+              await fetch(`/api/users/me/saved/external?url=${encodeURIComponent(articleUrl || "")}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+              });
+              if (articleUrl) savedArticleUrls.delete(articleUrl);
+            } else {
+              await fetch(`/api/users/me/saved/${articleId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+              });
+              savedArticleIds.delete(articleId);
+            }
           } else {
-            await fetch(`/api/users/me/saved/${articleId}`, {
-              method: "POST",
-              headers: { "Authorization": `Bearer ${token}` },
-            });
-            savedArticleIds.add(articleId);
+            if (isExternal) {
+              await fetch("/api/users/me/saved/external", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  url: articleData?.url || articleUrl,
+                  title: articleData?.title || "",
+                  summary: articleData?.summary || "",
+                  org: articleData?.org || "Web",
+                  org_initials: articleData?.org_initials || "WEB",
+                  logo_url: articleData?.logo_url || null,
+                  date: articleData?.date || "",
+                  author: articleData?.author || "Unknown",
+                  tags: articleData?.tags || [],
+                }),
+              });
+              if (articleUrl) savedArticleUrls.add(articleUrl);
+            } else {
+              await fetch(`/api/users/me/saved/${articleId}`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+              });
+              savedArticleIds.add(articleId);
+            }
           }
           btn.classList.toggle("saved", !isSaved);
         } catch (err) {
@@ -1813,18 +1968,26 @@
         }
       };
 
-      const toggleLike = async (articleId, articleUrl, tags, btn) => {
+      const toggleLike = async (articleId, articleUrl, tags, isExternal, btn) => {
         const token = localStorage.getItem("nn_token");
         if (!token || !isLoggedIn) return;
-        const isLiked = likedArticleIds.has(articleId);
+        const isLiked = isArticleLiked(articleId, articleUrl);
         btn.disabled = true;
         try {
           if (isLiked) {
-            await fetch(`/api/metrics/article-like/${articleId}`, {
-              method: "DELETE",
-              headers: { "Authorization": `Bearer ${token}` },
-            });
-            likedArticleIds.delete(articleId);
+            if (isExternal) {
+              await fetch(`/api/metrics/article-like-by-url?article_url=${encodeURIComponent(articleUrl || "")}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+              });
+              if (articleUrl) likedArticleUrls.delete(articleUrl);
+            } else {
+              await fetch(`/api/metrics/article-like/${articleId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+              });
+              likedArticleIds.delete(articleId);
+            }
             const countEl = btn.querySelector(".like-count");
             if (countEl) countEl.textContent = `${Math.max(0, parseInt(countEl.textContent || "0", 10) - 1)}`;
           } else {
@@ -1835,12 +1998,16 @@
                 "Authorization": `Bearer ${token}`,
               },
               body: JSON.stringify({
-                article_id: articleId,
+                article_id: isExternal ? null : articleId,
                 article_url: articleUrl,
                 tags,
               }),
             });
-            likedArticleIds.add(articleId);
+            if (isExternal) {
+              if (articleUrl) likedArticleUrls.add(articleUrl);
+            } else {
+              likedArticleIds.add(articleId);
+            }
             const countEl = btn.querySelector(".like-count");
             if (countEl) countEl.textContent = `${parseInt(countEl.textContent || "0", 10) + 1}`;
           }
@@ -1865,9 +2032,9 @@
         return d.toLocaleString();
       };
 
-      const buildCommentQuery = (articleId, articleUrl) => {
+      const buildCommentQuery = (articleId, articleUrl, isExternal = false) => {
         const params = new URLSearchParams();
-        if (Number.isFinite(articleId)) params.set("article_id", String(articleId));
+        if (!isExternal && Number.isFinite(articleId)) params.set("article_id", String(articleId));
         else if (articleUrl) params.set("article_url", articleUrl);
         return params.toString();
       };
@@ -1877,12 +2044,40 @@
           listEl.innerHTML = '<p class="comment-empty">No comments yet. Start the discussion.</p>';
           return;
         }
-        listEl.innerHTML = comments.map((c) => `
+        const newest = comments[0];
+        const older = comments.slice(1);
+        const commentHtml = (c) => `
           <div class="comment-item">
             <div class="comment-meta">${escapeHtml(c.user_name)} · ${escapeHtml(formatCommentTime(c.created_at))}</div>
             <p class="comment-text">${escapeHtml(c.comment)}</p>
           </div>
-        `).join("");
+        `;
+
+        listEl.innerHTML = `
+          ${commentHtml(newest)}
+          ${older.length > 0
+            ? `<button type="button" class="comment-toggle" aria-expanded="false">
+                 See ${older.length} more <span class="arrow">▼</span>
+               </button>
+               <div class="comment-older-list hidden">
+                 ${older.map(commentHtml).join("")}
+               </div>`
+            : ""}
+        `;
+
+        const toggle = listEl.querySelector(".comment-toggle");
+        const olderList = listEl.querySelector(".comment-older-list");
+        if (toggle && olderList) {
+          const olderCount = older.length;
+          toggle.addEventListener("click", () => {
+            const expanded = toggle.getAttribute("aria-expanded") === "true";
+            toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+            toggle.childNodes[0].nodeValue = expanded
+              ? `See ${olderCount} more `
+              : "Show less ";
+            olderList.classList.toggle("hidden", expanded);
+          });
+        }
       };
 
       const loadCommentsForPanel = async (panel) => {
@@ -1890,8 +2085,9 @@
         if (!listEl) return;
         const articleIdRaw = panel.dataset.articleId;
         const articleUrl = panel.dataset.articleUrl || "";
+        const isExternal = panel.dataset.isExternal === "1";
         const articleId = parseInt(articleIdRaw || "", 10);
-        const query = buildCommentQuery(articleId, articleUrl);
+        const query = buildCommentQuery(articleId, articleUrl, isExternal);
         if (!query) {
           listEl.innerHTML = '<p class="comment-empty">Comments unavailable for this article.</p>';
           return;
@@ -1920,6 +2116,7 @@
             if (!token || !text) return;
             const articleId = parseInt(panel.dataset.articleId || "", 10);
             const articleUrl = panel.dataset.articleUrl || "";
+            const isExternal = panel.dataset.isExternal === "1";
             button.disabled = true;
             try {
               const res = await fetch("/api/articles/comments", {
@@ -1929,7 +2126,7 @@
                   "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                  article_id: Number.isFinite(articleId) ? articleId : null,
+                  article_id: !isExternal && Number.isFinite(articleId) ? articleId : null,
                   article_url: articleUrl || null,
                   comment: text,
                 }),
@@ -1955,9 +2152,14 @@
         emptyState.hidden = true;
 
         articles.forEach((article, index) => {
-          const isSaved = savedArticleIds.has(article.id);
-          const isLiked = likedArticleIds.has(article.id);
-          const canInteract = showSaveButton && !article.is_live;
+          const displaySummary = normalizeSummary(article);
+          const displayTags = (article.tags && article.tags.length)
+            ? article.tags
+            : inferFallbackTags(article);
+          const isExternal = !!article.is_external;
+          const isSaved = isArticleSaved(article.id, article.url);
+          const isLiked = isArticleLiked(article.id, article.url);
+          const canInteract = showSaveButton;
           const saveBtnHtml = canInteract
             ? `<button type="button" class="save-btn ${isSaved ? "saved" : ""}" data-article-id="${article.id}" aria-label="${isSaved ? "Unsave" : "Save"} article">
                 <svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
@@ -1976,9 +2178,17 @@
           card.style.animationDelay = `${index * 0.05}s`;
           card.dataset.articleId = article.id;
           card.dataset.articleUrl = article.url;
-          card.dataset.articleTags = (article.tags || []).join("|");
+          card.dataset.articleTitle = article.title || "";
+          card.dataset.articleSummary = displaySummary;
+          card.dataset.articleOrg = article.org || "Web";
+          card.dataset.articleOrgInitials = article.org_initials || "WEB";
+          card.dataset.articleLogo = article.logo_url || "";
+          card.dataset.articleDate = article.date || "";
+          card.dataset.articleAuthor = article.author || "Unknown";
+          card.dataset.articleTags = displayTags.join("|");
+          card.dataset.isExternal = article.is_external ? "1" : "0";
           card.innerHTML = `
-            ${article.is_live ? '<div class="live-alert">LIVE</div>' : article.is_trending ? '<div class="trending-alert">TRENDING</div>' : ""}
+            ${article.is_breaking ? '<div class="breaking-alert">BREAKING</div>' : article.is_trending ? '<div class="trending-alert">TRENDING</div>' : ""}
             <div class="card-header">
               <img class="logo-img" src="${article.logo_url}" alt="${article.org} logo" />
               <div>
@@ -1986,7 +2196,7 @@
                 <h2 class="title">${article.title}</h2>
               </div>
             </div>
-            <p class="summary">${article.summary}</p>
+            <p class="summary">${displaySummary}</p>
             <div class="meta">
               <span>${article.date}</span>
               <span>•</span>
@@ -1994,7 +2204,7 @@
             </div>
             <div class="tags">
               ${[
-                ...(article.tags || []).map((tag) => {
+                ...displayTags.map((tag) => {
                   const lower = tag.toLowerCase();
                   const isFeatured =
                     lower === "reader favorite" || lower === "editors choice";
@@ -2011,7 +2221,7 @@
               ${likeBtnHtml}
               ${saveBtnHtml}
             </div>
-            <div class="comments-panel" data-article-id="${article.id}" data-article-url="${article.url}">
+            <div class="comments-panel" data-article-id="${article.id}" data-article-url="${article.url}" data-is-external="${article.is_external ? "1" : "0"}">
               <p class="comments-title">Comments</p>
               <div class="comments-list"><p class="comment-empty">Loading comments...</p></div>
               ${isLoggedIn
@@ -2035,7 +2245,28 @@
         });
 
         feed.querySelectorAll(".save-btn").forEach((btn) => {
-          btn.addEventListener("click", () => toggleSave(parseInt(btn.dataset.articleId, 10), btn));
+          btn.addEventListener("click", () => {
+            const card = btn.closest(".card");
+            if (!card) return;
+            const articleId = parseInt(btn.dataset.articleId, 10);
+            const articleData = {
+              id: articleId,
+              url: card.dataset.articleUrl || "",
+              title: card.dataset.articleTitle || "",
+              summary: card.dataset.articleSummary || "",
+              org: card.dataset.articleOrg || "Web",
+              org_initials: card.dataset.articleOrgInitials || "WEB",
+              logo_url: card.dataset.articleLogo || null,
+              date: card.dataset.articleDate || "",
+              author: card.dataset.articleAuthor || "Unknown",
+              tags: (card.dataset.articleTags || "")
+                .split("|")
+                .map((t) => t.trim())
+                .filter(Boolean),
+              is_external: card.dataset.isExternal === "1",
+            };
+            toggleSave(articleId, articleData.url, articleData, btn);
+          });
         });
         feed.querySelectorAll(".like-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
@@ -2046,7 +2277,8 @@
               .split("|")
               .map((t) => t.trim())
               .filter(Boolean);
-            toggleLike(articleId, card.dataset.articleUrl || "", tags, btn);
+            const isExternal = card.dataset.isExternal === "1";
+            toggleLike(articleId, card.dataset.articleUrl || "", tags, isExternal, btn);
           });
         });
         wireCommentPanels();
@@ -2079,45 +2311,68 @@
       };
 
       const fetchArticles = async (tags = [], sortBy = currentSortBy) => {
+        const requestId = ++activeFeedRequestId;
         currentSortBy = sortBy;
         setActiveSort(currentSortBy);
         currentFilterTags = tags;
         currentLiveArticles = []; // reset live articles on filter change
+        const hasActiveSearch = !!(activeSearchQuery && activeSearchQuery.trim());
+        if (hasActiveSearch) setFeedLoadingState("Searching articles...");
         const response = await fetch(`/api/articles${buildArticleParams(tags, currentSortBy)}`);
         const data = await response.json();
+        if (requestId !== activeFeedRequestId) return;
         if (isLoggedIn) {
           currentDbArticles = data.articles || [];
-          renderPersonalizedFeed();
-          fetchLiveArticles(tags);
+          if (hasActiveSearch) {
+            const liveData = await fetchLiveArticles(tags, { renderOnSuccess: false });
+            if (requestId !== activeFeedRequestId) return;
+            currentLiveArticles = liveData;
+            renderPersonalizedFeed();
+            resetEmptyStateMessage();
+          } else {
+            renderPersonalizedFeed();
+            fetchLiveArticles(tags);
+          }
         } else {
           currentDbArticles = data.articles || [];
-          if (getActiveInterestQuery()) {
+          if (hasActiveSearch) {
+            const liveData = await fetchLiveArticles(tags, { renderOnSuccess: false });
+            if (requestId !== activeFeedRequestId) return;
+            currentLiveArticles = liveData;
+            renderPersonalizedFeed();
+            resetEmptyStateMessage();
+          } else if (getActiveInterestQuery()) {
             renderPersonalizedFeed();
             fetchLiveArticles(tags);
           } else {
             renderArticles(data.articles, tags, false);
+            resetEmptyStateMessage();
           }
         }
       };
 
       // Fetch live articles from the web, merge into unified scored feed
-      const fetchLiveArticles = async (tags = []) => {
+      const fetchLiveArticles = async (tags = [], options = {}) => {
+        const { renderOnSuccess = true } = options;
         const interests = getActiveInterestQuery();
-        if (!interests && tags.length === 0) return;
+        if (!interests && tags.length === 0) return [];
         const params = new URLSearchParams();
         if (interests) params.set("interests", interests);
         if (tags.length) params.set("tags", tags.join(","));
         try {
           const res = await fetch(`/api/articles/live?${params}`);
-          if (!res.ok) return;
+          if (!res.ok) return [];
           const data = await res.json();
-          if (!data.articles?.length) return;
-          currentLiveArticles = data.articles;
-          if (isLoggedIn || getActiveInterestQuery()) {
+          const liveArticles = data.articles || [];
+          if (!liveArticles.length) return [];
+          currentLiveArticles = liveArticles;
+          if (renderOnSuccess && (isLoggedIn || getActiveInterestQuery())) {
             renderPersonalizedFeed(); // re-render with live articles merged in
           }
+          return liveArticles;
         } catch (e) {
           // Silent fail — DB articles already showing
+          return [];
         }
       };
 
@@ -2125,7 +2380,10 @@
         topicSearchForm.addEventListener("submit", (e) => {
           e.preventDefault();
           activeSearchQuery = (topicSearchInput.value || "").trim();
-          fetchArticles(currentFilterTags, currentSortBy);
+          // Search should operate across the full feed, not a previously selected tag subset.
+          myPreferencesOn = false;
+          setActiveFilter([]);
+          fetchArticles([], currentSortBy);
         });
       }
 
@@ -2200,6 +2458,13 @@
         prefsPanel.addEventListener("click", async (e) => {
           e.preventDefault();
           e.stopPropagation();
+          // Instant toggle path: use the preferences already loaded at login.
+          if (userPreferredTags.length > 0) {
+            applyMyPrefs(userPreferredTags);
+            return;
+          }
+
+          // Fallback path if local preferences are empty/uninitialized.
           const token = localStorage.getItem("nn_token");
           if (!token) return;
           try {
