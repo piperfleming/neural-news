@@ -10,6 +10,7 @@ from app.config import settings
 from app.models.base import Base
 from app.models import (  # noqa: F401 - register tables with Base.metadata
     Article,
+    ArticleComment,
     ArticleClick,
     ArticleLike,
     BriefingFeedback,
