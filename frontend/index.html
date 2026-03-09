@@ -272,6 +272,15 @@
         background: #1a8a4a;
       }
 
+      .feed-hint {
+        font-size: 0.82rem;
+        color: #6b8a74;
+        text-align: center;
+        margin: 0 auto 14px;
+        max-width: 520px;
+        line-height: 1.5;
+      }
+
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -514,13 +523,16 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
+        gap: 5px;
         height: 40px;
-        padding: 0;
+        padding: 0 12px;
         background: #e1f3e6;
         color: #1a6a3a;
         border-radius: 10px;
         text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: inherit;
         transition: background 0.15s, color 0.15s;
       }
 
@@ -1371,6 +1383,7 @@
 
       <!-- Logged-in feed (always visible below Morning Buzz) -->
       <section id="loggedInFeed" hidden>
+        <p class="feed-hint">News cards are periodically refreshed and older cards will be removed. Use the <svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> button on each card to save articles you want to keep, and access them in the top right <a href="/saved">Saved</a> tab.</p>
         <div id="feed" class="grid"></div>
         <div id="emptyState" class="empty" hidden>
           No articles found for those tags.
@@ -1438,7 +1451,7 @@
         a.className = "saved-link";
         a.title = "Saved articles";
         a.setAttribute("aria-label", "Saved articles");
-        a.innerHTML = '<svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+        a.innerHTML = '<svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Saved</span>';
         actions.insertBefore(a, accountLink);
       }
 
