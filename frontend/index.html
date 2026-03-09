@@ -128,6 +128,7 @@
         padding: 16px 28px;
         border-radius: 16px;
         box-shadow: 0 12px 24px rgba(14, 36, 22, 0.08);
+        margin-bottom: 20px;
       }
 
       .filters-row {
@@ -312,6 +313,15 @@
 
       .my-prefs-combined .my-prefs-panel.active:hover {
         background: #1a8a4a;
+      }
+
+      .feed-hint {
+        font-size: 0.82rem;
+        color: #6b8a74;
+        text-align: center;
+        margin: 0 auto 14px;
+        max-width: 520px;
+        line-height: 1.5;
       }
 
       .grid {
@@ -628,13 +638,16 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
+        gap: 5px;
         height: 40px;
-        padding: 0;
+        padding: 0 12px;
         background: #e1f3e6;
         color: #1a6a3a;
         border-radius: 10px;
         text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: inherit;
         transition: background 0.15s, color 0.15s;
       }
 
@@ -1208,6 +1221,198 @@
         opacity: 0;
         animation: fadeInUp 0.35s ease-out forwards;
       }
+
+      .hidden { display: none !important; }
+
+      /* --- Ask Buzz Chat Bar --- */
+      .ask-buzz-bar {
+        margin-bottom: 12px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid #cfe4d4;
+        box-shadow: 0 8px 20px rgba(14, 36, 22, 0.06);
+        overflow: hidden;
+      }
+
+      .ask-buzz-collapsed {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+
+      .ask-buzz-collapsed:hover {
+        background: #f0f9f4;
+      }
+
+      .ask-buzz-prompt {
+        flex: 1;
+        font-size: 0.92rem;
+        color: #6b7280;
+      }
+
+      .ask-buzz-caret {
+        font-size: 1.1rem;
+        color: #1f9d55;
+        font-weight: 700;
+      }
+
+      .ask-buzz-expanded {
+        display: flex;
+        flex-direction: column;
+        max-height: 400px;
+      }
+
+      .ask-buzz-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 18px;
+        border-bottom: 1px solid #e8f4ec;
+        font-size: 0.95rem;
+        color: #0f1f14;
+      }
+
+      .ask-buzz-header button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6b7280;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 2px 6px;
+      }
+
+      .ask-buzz-header button:hover {
+        color: #0f1f14;
+      }
+
+      .ask-buzz-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 60px;
+      }
+
+      .buzz-msg-user {
+        align-self: flex-end;
+        background: #1f9d55;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 14px 14px 4px 14px;
+        max-width: 80%;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .buzz-msg-assistant {
+        align-self: flex-start;
+        background: #f7fbf7;
+        color: #0f1f14;
+        padding: 8px 14px;
+        border-radius: 14px 14px 14px 4px;
+        max-width: 85%;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        border: 1px solid #e1f0e6;
+      }
+
+      .buzz-msg-typing {
+        align-self: flex-start;
+        background: #f7fbf7;
+        color: #6b7280;
+        padding: 8px 14px;
+        border-radius: 14px 14px 14px 4px;
+        font-size: 0.85rem;
+        border: 1px solid #e1f0e6;
+        animation: shimmer 1.2s ease-in-out infinite;
+      }
+
+      .buzz-sources {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .buzz-sources-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+      }
+
+      .buzz-source-chip {
+        display: inline-block;
+        font-size: 0.78rem;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid #1f9d55;
+        color: #1a6a3a;
+        text-decoration: none;
+        background: #f0f9f4;
+        font-weight: 500;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .buzz-source-chip:hover {
+        background: #1f9d55;
+        color: #fff;
+      }
+
+      .ask-buzz-input-row {
+        display: flex;
+        gap: 8px;
+        padding: 10px 18px;
+        border-top: 1px solid #e8f4ec;
+      }
+
+      .ask-buzz-input-row input {
+        flex: 1;
+        border: 1px solid #cfe4d4;
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        outline: none;
+        color: #0f1f14;
+        background: #f7fbf7;
+      }
+
+      .ask-buzz-input-row input:focus {
+        border-color: #1f9d55;
+        background: #fff;
+      }
+
+      .ask-buzz-input-row button {
+        background: #1f9d55;
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 8px 18px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.15s;
+      }
+
+      .ask-buzz-input-row button:hover:not(:disabled) {
+        background: #1a8a4a;
+      }
+
+      .ask-buzz-input-row button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
@@ -1228,9 +1433,21 @@
           <img src="/static/home_banner.jpg" alt="Neural News background" />
           <h1 id="greeting" class="banner-greeting"><span id="greetingText"></span><span id="greetingCursor" class="typing-cursor" aria-hidden="true">|</span></h1>
         </div>
-        <div class="filters">
-          <div class="filters-row">
-            <div id="filterButtons" class="filter-buttons"></div>
+      </header>
+
+      <!-- Ask Buzz chat bar (logged-in users only) -->
+      <div id="askBuzzBar" class="ask-buzz-bar hidden">
+        <!-- Collapsed pill -->
+        <div class="ask-buzz-collapsed" id="askBuzzCollapsed" onclick="openBuzzChat()">
+          <span style="color:#1f9d55;">✦</span>
+          <span class="ask-buzz-prompt">Heard something from a friend? Ask <strong>Buzz</strong> anything...</span>
+          <span class="ask-buzz-caret">›</span>
+        </div>
+        <!-- Expanded chat panel -->
+        <div class="ask-buzz-expanded hidden" id="askBuzzExpanded">
+          <div class="ask-buzz-header">
+            <span>✦ <strong>Buzz</strong></span>
+            <button onclick="closeBuzzChat()">✕</button>
           </div>
           <div class="filters-row search-row">
             <form id="topicSearchForm" class="search-form">
@@ -1249,9 +1466,14 @@
               <div id="sortButtons" class="sort-buttons"></div>
             </div>
           </div>
-          <span class="tag-hint">Tap a tag to filter the feed.</span>
+          <div class="ask-buzz-messages" id="askBuzzMessages"></div>
+          <div class="ask-buzz-input-row">
+            <input id="askBuzzInput" type="text" placeholder="Ask anything about AI..."
+                   onkeydown="if(event.key==='Enter') sendBuzzMessage()" />
+            <button onclick="sendBuzzMessage()" id="askBuzzSendBtn">Ask</button>
+          </div>
         </div>
-      </header>
+      </div>
 
       <!-- Morning Buzz hero (logged-in users only) -->
       <section id="morningBuzz" class="morning-buzz" hidden>
@@ -1278,16 +1500,13 @@
         </div>
       </section>
 
-      <!-- Logged-in feed (always visible below Morning Buzz) -->
-      <section id="loggedInFeed" hidden>
-        <div id="feed" class="grid"></div>
-        <div id="emptyState" class="empty" hidden>
-          No articles found for those tags.
-        </div>
+      <!-- Logged-in feed hint (above filters, logged-in only) -->
+      <section id="loggedInFeedHint" hidden>
+        <p class="feed-hint">News cards are periodically refreshed and older cards will be removed. Use the <svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> button on each card to save articles you want to keep, and access them in the top right <a href="/saved">Saved</a> tab.</p>
       </section>
 
-      <!-- Default layout for anonymous users -->
-      <div id="anonLayout">
+      <!-- Anon buzz section (above filters) -->
+      <div id="anonBuzzWrapper" hidden>
         <section class="buzz-section">
           <div class="buzz-teaser" id="buzzSectionTeaser">
             <div class="buzz-teaser-row">
@@ -1305,14 +1524,36 @@
             </div>
           </div>
         </section>
-
-        <section>
-          <div id="feedAnon" class="grid"></div>
-          <div id="emptyStateAnon" class="empty" hidden>
-            No articles found for those tags.
-          </div>
-        </section>
       </div>
+
+      <!-- Filters — directly above news cards -->
+      <div class="filters">
+        <div class="filters-row">
+          <div id="filterButtons" class="filter-buttons"></div>
+        </div>
+        <div class="filters-row">
+          <div class="controls-inline">
+            <div id="sortButtons" class="sort-buttons"></div>
+          </div>
+        </div>
+        <span class="tag-hint">Tap a tag to filter the feed.</span>
+      </div>
+
+      <!-- Logged-in feed grid -->
+      <section id="loggedInFeed" hidden>
+        <div id="feed" class="grid"></div>
+        <div id="emptyState" class="empty" hidden>
+          No articles found for those tags.
+        </div>
+      </section>
+
+      <!-- Anon feed grid -->
+      <section id="anonFeed" hidden>
+        <div id="feedAnon" class="grid"></div>
+        <div id="emptyStateAnon" class="empty" hidden>
+          No articles found for those tags.
+        </div>
+      </section>
     </div>
 
     <script>
@@ -1325,7 +1566,9 @@
       // Layout elements
       const morningBuzzSection = document.getElementById("morningBuzz");
       const loggedInFeed = document.getElementById("loggedInFeed");
-      const anonLayout = document.getElementById("anonLayout");
+      const loggedInFeedHint = document.getElementById("loggedInFeedHint");
+      const anonBuzzWrapper = document.getElementById("anonBuzzWrapper");
+      const anonFeed = document.getElementById("anonFeed");
 
       // Track whether we're in logged-in mode
       let isLoggedIn = false;
@@ -1349,7 +1592,7 @@
         a.className = "saved-link";
         a.title = "Saved articles";
         a.setAttribute("aria-label", "Saved articles");
-        a.innerHTML = '<svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+        a.innerHTML = '<svg class="icon-outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><svg class="icon-filled" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Saved</span>';
         actions.insertBefore(a, accountLink);
       }
 
@@ -1378,9 +1621,12 @@
         buildSortButtons();
         removeSavedLink();
         removeAdminLink();
-        anonLayout.hidden = false;
+        anonBuzzWrapper.hidden = false;
+        anonFeed.hidden = false;
         morningBuzzSection.hidden = true;
+        document.getElementById("askBuzzBar").classList.add("hidden");
         loggedInFeed.hidden = true;
+        loggedInFeedHint.hidden = true;
         feed = document.getElementById("feedAnon");
         emptyState = document.getElementById("emptyStateAnon");
         buzzContent = document.getElementById("buzzContentAnon");
@@ -1390,10 +1636,13 @@
       function activateLoggedInLayout() {
         isLoggedIn = true;
         buildSortButtons();
-        anonLayout.hidden = true;
+        anonBuzzWrapper.hidden = true;
+        anonFeed.hidden = true;
         morningBuzzSection.hidden = false;
+        document.getElementById("askBuzzBar").classList.remove("hidden");
         requestAnimationFrame(() => morningBuzzSection.classList.add("animate-in"));
         loggedInFeed.hidden = false;
+        loggedInFeedHint.hidden = false;
         feed = document.getElementById("feed");
         emptyState = document.getElementById("emptyState");
         const expanded = document.getElementById("morningBuzzExpanded");
@@ -2479,6 +2728,103 @@
           nnToken
         );
       });
+
+      // --- Ask Buzz ---
+      const API = "";
+      let buzzHistory = [];
+
+      function openBuzzChat() {
+        document.getElementById("askBuzzCollapsed").classList.add("hidden");
+        document.getElementById("askBuzzExpanded").classList.remove("hidden");
+        if (buzzHistory.length === 0) {
+          appendBuzzMessage("assistant", "Hey! I'm **Buzz** — your AI news sidekick. Ask me anything: a concept from the briefing, something you heard from a friend, or just what's going on in AI right now. What's on your mind?");
+        }
+        document.getElementById("askBuzzInput").focus();
+      }
+
+      function closeBuzzChat() {
+        document.getElementById("askBuzzExpanded").classList.add("hidden");
+        document.getElementById("askBuzzCollapsed").classList.remove("hidden");
+      }
+
+      let _buzzTypingCounter = 0;
+      function appendBuzzTyping() {
+        const id = `buzz-typing-${++_buzzTypingCounter}`;
+        const div = document.createElement("div");
+        div.className = "buzz-msg-typing";
+        div.id = id;
+        div.textContent = "Buzz is thinking...";
+        document.getElementById("askBuzzMessages").appendChild(div);
+        div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        return id;
+      }
+
+      function removeBuzzTyping(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      }
+
+      function appendBuzzMessage(role, text, sources) {
+        const container = document.getElementById("askBuzzMessages");
+        const div = document.createElement("div");
+        div.className = role === "user" ? "buzz-msg-user" : "buzz-msg-assistant";
+        div.innerHTML = formatMarkdown(text);
+        if (role === "assistant" && sources && sources.length > 0) {
+          const chipsDiv = document.createElement("div");
+          chipsDiv.className = "buzz-sources";
+          const label = document.createElement("span");
+          label.className = "buzz-sources-label";
+          label.textContent = "Read more:";
+          chipsDiv.appendChild(label);
+          sources.forEach((s) => {
+            const a = document.createElement("a");
+            a.className = "buzz-source-chip";
+            a.href = s.url;
+            a.target = "_blank";
+            a.rel = "noreferrer";
+            const title = s.title.length > 40 ? s.title.slice(0, 40) + "…" : s.title;
+            a.textContent = (s.org ? s.org + " · " : "") + title + " ↗";
+            chipsDiv.appendChild(a);
+          });
+          div.appendChild(chipsDiv);
+        }
+        container.appendChild(div);
+        div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      async function sendBuzzMessage() {
+        const token = localStorage.getItem("nn_token");
+        const input = document.getElementById("askBuzzInput");
+        const q = (input.value || "").trim();
+        if (!q || !token) return;
+        input.value = "";
+        const sendBtn = document.getElementById("askBuzzSendBtn");
+        sendBtn.disabled = true;
+        appendBuzzMessage("user", q);
+        buzzHistory.push({ role: "user", content: q });
+
+        const typingId = appendBuzzTyping();
+        try {
+          const res = await fetch(`${API}/api/chat/ask`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({ question: q, history: buzzHistory.slice(-6) }),
+          });
+          removeBuzzTyping(typingId);
+          if (!res.ok) throw new Error("Request failed");
+          const data = await res.json();
+          buzzHistory.push({ role: "assistant", content: data.answer });
+          appendBuzzMessage("assistant", data.answer, data.sources || []);
+        } catch (err) {
+          removeBuzzTyping(typingId);
+          appendBuzzMessage("assistant", "Sorry, Buzz couldn't answer that right now. Try again.");
+        } finally {
+          sendBtn.disabled = false;
+        }
+      }
 
       buildFilterButtons();
       buildSortButtons();

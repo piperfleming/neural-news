@@ -1,5 +1,6 @@
 """Pydantic schemas for user authentication and profile."""
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
@@ -46,6 +47,7 @@ class UserResponse(BaseModel):
     role: str | None = None
     custom_interests: str | None = None
     theme_config: dict | None = None
+    email_daily_briefing: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -57,6 +59,7 @@ class UserUpdate(BaseModel):
     preferred_tags: list[str] | None = None
     role: str | None = None
     custom_interests: str | None = None
+    email_daily_briefing: Optional[bool] = None
 
     @field_validator("preferred_tags")
     @classmethod

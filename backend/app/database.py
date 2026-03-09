@@ -82,3 +82,6 @@ async def init_db() -> None:
         await conn.execute(text("ALTER TABLE daily_briefings ADD COLUMN IF NOT EXISTS source_context TEXT"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_detail_level INTEGER"))
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_config JSONB"))
+        await conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_daily_briefing BOOLEAN NOT NULL DEFAULT FALSE"
+        ))

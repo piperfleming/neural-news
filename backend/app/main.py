@@ -3,6 +3,7 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -11,10 +12,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.database import init_db
+from app.database import async_session_maker, init_db
+from app.services.briefing_service import send_briefing_emails
 from app.services.feed_service import refresh_article_feed
 
-from app.routers import articles, auth, briefing, buzz, metrics, users
+from app.routers import articles, auth, briefing, buzz, chat, metrics, users
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +39,32 @@ async def _periodic_feed():
         await asyncio.sleep(12 * 3600)  # every 12 hours
 
 
+async def _daily_briefing_emailer():
+    """Send daily briefing emails at 9 AM UTC."""
+    await asyncio.sleep(30)  # brief delay after startup
+    while True:
+        now = datetime.utcnow()
+        next_run = now.replace(hour=9, minute=0, second=0, microsecond=0)
+        if next_run <= now:
+            next_run += timedelta(days=1)
+        await asyncio.sleep((next_run - now).total_seconds())
+        try:
+            async with async_session_maker() as db:
+                await send_briefing_emails(db)
+                await db.commit()
+        except Exception:
+            logger.exception("Daily briefing email send failed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: init DB, launch periodic feed task."""
+    """Startup: init DB, launch periodic tasks."""
     await init_db()
-    task = asyncio.create_task(_periodic_feed())
+    feed_task = asyncio.create_task(_periodic_feed())
+    email_task = asyncio.create_task(_daily_briefing_emailer())
     yield
-    task.cancel()
+    feed_task.cancel()
+    email_task.cancel()
 
 
 app = FastAPI(
@@ -67,6 +88,7 @@ app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(metrics.router, prefix="/api/metrics", tags=["metrics"])
 app.include_router(briefing.router, prefix="/api/briefing", tags=["briefing"])
 app.include_router(buzz.router, prefix="/api/buzz", tags=["buzz"])
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
 
 @app.get("/")

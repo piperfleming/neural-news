@@ -454,6 +454,25 @@ async def adjust_detail_level(user: User, db: AsyncSession, action: str) -> dict
     return _briefing_response(existing, buzz_topics, is_cached=False, articles=adj_articles_meta)
 
 
+async def send_briefing_emails(db: AsyncSession) -> None:
+    """Send daily briefing emails to all opted-in users."""
+    from app.services.email_service import send_daily_briefing_email
+
+    result = await db.execute(
+        select(User).where(User.email_daily_briefing.is_(True))
+    )
+    users = result.scalars().all()
+    logger.info("Sending briefing emails to %d opted-in user(s)", len(users))
+
+    for user in users:
+        try:
+            briefing = await get_or_create_briefing(user, db)
+            await send_daily_briefing_email(user.email, user.name, briefing)
+            logger.info("Briefing email sent successfully to user %d (%s)", user.id, user.email)
+        except Exception:
+            logger.exception("Failed to send briefing email to user %d (%s)", user.id, user.email)
+
+
 async def delete_todays_briefing(user: User, db: AsyncSession) -> None:
     """Delete today's cached briefing so it can be regenerated."""
     result = await db.execute(
