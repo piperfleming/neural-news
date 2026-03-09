@@ -165,11 +165,12 @@
         display: flex;
         gap: 10px;
         width: 100%;
+        flex-wrap: wrap;
       }
 
       .search-input {
         flex: 1;
-        min-width: 220px;
+        min-width: 0;
         border: 1px solid rgba(26, 106, 58, 0.25);
         background: #fff;
         color: #0f1f14;
@@ -601,6 +602,36 @@
         gap: 8px;
       }
 
+      .comment-toggle {
+        border: none;
+        background: transparent;
+        color: #1a6a3a;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        margin: 2px 0 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .comment-toggle .arrow {
+        font-size: 0.75rem;
+        transition: transform 0.15s ease;
+      }
+
+      .comment-toggle[aria-expanded="true"] .arrow {
+        transform: rotate(180deg);
+      }
+
+      .comment-older-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 10px;
+      }
+
       .comment-input {
         flex: 1;
         border: 1px solid rgba(26, 106, 58, 0.25);
@@ -691,8 +722,11 @@
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
         border-radius: 18px;
         padding: 24px 28px;
+        margin-top: 8px;
         margin-bottom: 28px;
         box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
+        position: relative;
+        clear: both;
       }
 
       .buzz-header {
@@ -822,8 +856,11 @@
         background: linear-gradient(135deg, #0f1f14 0%, #1a4a2e 40%, #1f9d55 100%);
         border-radius: 18px;
         padding: 28px 28px;
+        margin-top: 8px;
         margin-bottom: 28px;
         box-shadow: 0 16px 30px rgba(14, 36, 22, 0.15);
+        position: relative;
+        clear: both;
       }
 
       .morning-buzz.animate-in {
@@ -851,6 +888,13 @@
         color: #fff;
         font-weight: 700;
         letter-spacing: 0.3px;
+      }
+
+      .buzz-teaser-blurb {
+        margin: -2px 0 0;
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.72);
+        letter-spacing: 0.2px;
       }
 
       .buzz-teaser-arrow {
@@ -1440,7 +1484,7 @@
         <!-- Collapsed pill -->
         <div class="ask-buzz-collapsed" id="askBuzzCollapsed" onclick="openBuzzChat()">
           <span style="color:#1f9d55;">✦</span>
-          <span class="ask-buzz-prompt">Heard something from a friend? Ask <strong>Buzz</strong> anything...</span>
+          <span class="ask-buzz-prompt">Ask <strong>Buzz</strong>, your Neural News Expert</span>
           <span class="ask-buzz-caret">›</span>
         </div>
         <!-- Expanded chat panel -->
@@ -1448,23 +1492,6 @@
           <div class="ask-buzz-header">
             <span>✦ <strong>Buzz</strong></span>
             <button onclick="closeBuzzChat()">✕</button>
-          </div>
-          <div class="filters-row search-row">
-            <form id="topicSearchForm" class="search-form">
-              <input
-                id="topicSearchInput"
-                class="search-input"
-                type="search"
-                placeholder="Search for an AI topic or article type"
-                aria-label="Search feed topics"
-              />
-              <button type="submit" class="search-button">Search</button>
-            </form>
-          </div>
-          <div class="filters-row">
-            <div class="controls-inline">
-              <div id="sortButtons" class="sort-buttons"></div>
-            </div>
           </div>
           <div class="ask-buzz-messages" id="askBuzzMessages"></div>
           <div class="ask-buzz-input-row">
@@ -1482,6 +1509,7 @@
             <h2 class="buzz-teaser-title">&#9728; Your AI Buzz</h2>
             <button type="button" class="buzz-teaser-arrow" id="viewBriefingBtn" aria-label="Expand briefing" disabled><span class="arrow-icon">&#9654;</span></button>
           </div>
+          <p class="buzz-teaser-blurb">What People Are Saying</p>
           <p class="briefing-teaser-loading" id="briefingTeaserLoading">Brewing your morning briefing...</p>
         </div>
         <div id="morningBuzzExpanded" class="morning-buzz-expanded" hidden>
@@ -1498,11 +1526,6 @@
           </div>
           <div id="briefingBuzz"></div>
         </div>
-      </section>
-
-      <!-- Logged-in feed hint (above filters, logged-in only) -->
-      <section id="loggedInFeedHint" hidden>
-        <p class="feed-hint">News cards are periodically refreshed and older cards will be removed. Use the <svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> button on each card to save articles you want to keep, and access them in the top right <a href="/saved">Saved</a> tab.</p>
       </section>
 
       <!-- Anon buzz section (above filters) -->
@@ -1531,6 +1554,18 @@
         <div class="filters-row">
           <div id="filterButtons" class="filter-buttons"></div>
         </div>
+        <div class="filters-row search-row">
+          <form id="topicSearchForm" class="search-form">
+            <input
+              id="topicSearchInput"
+              class="search-input"
+              type="search"
+              placeholder="Search for an AI topic or article type"
+              aria-label="Search feed topics"
+            />
+            <button type="submit" class="search-button">Search</button>
+          </form>
+        </div>
         <div class="filters-row">
           <div class="controls-inline">
             <div id="sortButtons" class="sort-buttons"></div>
@@ -1538,6 +1573,11 @@
         </div>
         <span class="tag-hint">Tap a tag to filter the feed.</span>
       </div>
+
+      <!-- Logged-in feed hint (below filters, logged-in only) -->
+      <section id="loggedInFeedHint" hidden>
+        <p class="feed-hint">News cards are periodically refreshed and older cards will be removed. Use the <svg style="display:inline-block;vertical-align:middle;width:16px;height:16px;margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg> button on each card to save articles you want to keep, and access them in the top right <a href="/saved">Saved</a> tab.</p>
+      </section>
 
       <!-- Logged-in feed grid -->
       <section id="loggedInFeed" hidden>
@@ -1712,13 +1752,21 @@
         const keywords = interests
           ? interests.split(/\s+/).filter(w => w.length > 2 && !_SCORE_STOP.has(w.toLowerCase()))
           : [];
+        const hasActiveSearch = !!(activeSearchQuery && activeSearchQuery.trim());
         const prefTagsLower = currentFilterTags.map(t => t.toLowerCase());
 
         const all = [...currentDbArticles, ...currentLiveArticles];
         const scored = all.map(a => ({ a, s: scoreArticle(a, keywords, prefTagsLower) }));
 
         let final;
-        if (currentSortBy === "foryou") {
+        if (hasActiveSearch) {
+          // Search mode: always show top 15 most relevant results.
+          scored.sort((x, y) => {
+            if (y.s !== x.s) return y.s - x.s;
+            return new Date(y.a.date || 0) - new Date(x.a.date || 0);
+          });
+          final = scored.slice(0, 15).map(({ a }) => a);
+        } else if (currentSortBy === "foryou") {
           // For You: rank by relevance score — preferences + custom interests
           scored.sort((x, y) => y.s - x.s);
           final = scored.slice(0, 12).map(({ a }) => a);
@@ -1877,12 +1925,40 @@
           listEl.innerHTML = '<p class="comment-empty">No comments yet. Start the discussion.</p>';
           return;
         }
-        listEl.innerHTML = comments.map((c) => `
+        const newest = comments[0];
+        const older = comments.slice(1);
+        const commentHtml = (c) => `
           <div class="comment-item">
             <div class="comment-meta">${escapeHtml(c.user_name)} · ${escapeHtml(formatCommentTime(c.created_at))}</div>
             <p class="comment-text">${escapeHtml(c.comment)}</p>
           </div>
-        `).join("");
+        `;
+
+        listEl.innerHTML = `
+          ${commentHtml(newest)}
+          ${older.length > 0
+            ? `<button type="button" class="comment-toggle" aria-expanded="false">
+                 See ${older.length} more <span class="arrow">▼</span>
+               </button>
+               <div class="comment-older-list hidden">
+                 ${older.map(commentHtml).join("")}
+               </div>`
+            : ""}
+        `;
+
+        const toggle = listEl.querySelector(".comment-toggle");
+        const olderList = listEl.querySelector(".comment-older-list");
+        if (toggle && olderList) {
+          const olderCount = older.length;
+          toggle.addEventListener("click", () => {
+            const expanded = toggle.getAttribute("aria-expanded") === "true";
+            toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+            toggle.childNodes[0].nodeValue = expanded
+              ? `See ${olderCount} more `
+              : "Show less ";
+            olderList.classList.toggle("hidden", expanded);
+          });
+        }
       };
 
       const loadCommentsForPanel = async (panel) => {
@@ -2125,7 +2201,10 @@
         topicSearchForm.addEventListener("submit", (e) => {
           e.preventDefault();
           activeSearchQuery = (topicSearchInput.value || "").trim();
-          fetchArticles(currentFilterTags, currentSortBy);
+          // Search should operate across the full feed, not a previously selected tag subset.
+          myPreferencesOn = false;
+          setActiveFilter([]);
+          fetchArticles([], currentSortBy);
         });
       }
 
@@ -2200,6 +2279,13 @@
         prefsPanel.addEventListener("click", async (e) => {
           e.preventDefault();
           e.stopPropagation();
+          // Instant toggle path: use the preferences already loaded at login.
+          if (userPreferredTags.length > 0) {
+            applyMyPrefs(userPreferredTags);
+            return;
+          }
+
+          // Fallback path if local preferences are empty/uninitialized.
           const token = localStorage.getItem("nn_token");
           if (!token) return;
           try {
