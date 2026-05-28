@@ -91,6 +91,11 @@ app.include_router(buzz.router, prefix="/api/buzz", tags=["buzz"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.get("/")
 async def root():
     """Serve the frontend."""
