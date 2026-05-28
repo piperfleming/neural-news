@@ -31,6 +31,8 @@ class Settings(BaseSettings):
                 "DATABASE_URL still contains placeholders. "
                 "Edit backend/.env and replace USER/PASSWORD/HOST/DATABASE_NAME with a real Postgres connection string."
             )
+        if v.startswith("postgresql://"):
+            v = "postgresql+asyncpg://" + v[len("postgresql://"):]
         if not v.startswith("postgresql+asyncpg://"):
             raise ValueError(
                 "DATABASE_URL must start with 'postgresql+asyncpg://'. "
